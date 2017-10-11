@@ -33,9 +33,19 @@
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/sync/sync_info.h"
 #include "jk_parse_options.h"
-#include "jk_sync.h"
+#include "reprompi_bench/sync/synchronization.h"
 
-const int WARMUP_ROUNDS = 5;
+typedef struct {
+    long n_rep; /* --repetitions */
+    double window_size_sec; /* --window-size */
+
+    int n_fitpoints; /* --fitpoints */
+    int n_exchanges; /* --exchanges */
+
+    double wait_time_sec; /* --wait-time */
+} reprompi_jk_options_t;
+
+static const int WARMUP_ROUNDS = 5;
 
 static double start_sync = 0; /* current window start timestamp (global time) */
 static int* invalid;
@@ -48,9 +58,9 @@ static reprompi_jk_options_t parameters;
 static double my_rtt;
 
 //linear model
-double slope, intercept;
+static double slope, intercept;
 
-void estimate_rtt(int master_rank, int other_rank, const int n_pingpongs,
+static void estimate_rtt(int master_rank, int other_rank, const int n_pingpongs,
         double *rtt) {
     int my_rank, np;
     MPI_Status stat;
@@ -136,7 +146,7 @@ void estimate_rtt(int master_rank, int other_rank, const int n_pingpongs,
     }
 }
 
-void warmup(int root_rank) {
+static void warmup(int root_rank) {
     int my_rank, np;
     MPI_Status status;
     int i, p;
@@ -165,7 +175,7 @@ void warmup(int root_rank) {
 
 }
 
-void learn_clock(const int root_rank, double *intercept, double *slope,
+static void learn_clock(const int root_rank, double *intercept, double *slope,
         const long n_fitpoints, const long n_exchanges, const double my_rtt) {
     int i, j, p;
     int my_rank, np;
@@ -266,29 +276,12 @@ void learn_clock(const int root_rank, double *intercept, double *slope,
     }
 }
 
-inline double jk_get_normalized_time(double local_time) {
+static inline double jk_get_normalized_time(double local_time) {
     return local_time - (local_time * slope + intercept);
 }
 
 
-void jk_init_synchronization_module(const reprompib_sync_options_t parsed_opts, const long nrep) {
-    int i;
-
-    parameters.n_exchanges = parsed_opts.n_exchanges;
-    parameters.n_fitpoints = parsed_opts.n_fitpoints;
-    parameters.wait_time_sec = parsed_opts.wait_time_sec;
-    parameters.window_size_sec = parsed_opts.window_size_sec;
-    parameters.n_rep = nrep;
-
-    invalid = (int*) calloc(parameters.n_rep, sizeof(int));
-    for (i = 0; i < parameters.n_rep; i++) {
-        invalid[i] = 0;
-    }
-    repetition_counter = 0;
-
-}
-
-void jk_sync_clocks(void) {
+static void jk_sync_clocks(void) {
     int p;
     int master_rank;
     double *rtts_s;
@@ -322,21 +315,7 @@ void jk_sync_clocks(void) {
 }
 
 
-void jk_init_synchronization(void) {
-    int my_rank;
-    int master_rank = 0;
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-
-    repetition_counter = 0;
-    if (my_rank == master_rank) {
-        start_sync = get_time() + parameters.wait_time_sec;
-    }
-    MPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
-}
-
-
-void jk_start_synchronization(void) {
+static void jk_start_synchronization(void) {
     int is_first = 1;
     double global_time;
 
@@ -353,7 +332,7 @@ void jk_start_synchronization(void) {
     }
 }
 
-void jk_stop_synchronization(void) {
+static void jk_stop_synchronization(void) {
     double global_time;
     global_time = jk_get_normalized_time(get_time());
 
@@ -365,23 +344,92 @@ void jk_stop_synchronization(void) {
     repetition_counter++;
 }
 
-int* jk_get_local_sync_errorcodes(void) {
+static int* jk_get_local_sync_errorcodes(void) {
     return invalid;
 }
 
-double jk_get_timediff_to_root(double local_time) {
+static double jk_get_timediff_to_root(double local_time) {
     return local_time - jk_get_normalized_time(local_time);
 }
 
-void jk_cleanup_synchronization_module(void) {
-    free(invalid);
-}
 
-void jk_print_sync_parameters(FILE* f) {
+static void jk_print_sync_parameters(FILE* f) {
     fprintf(f, "#@sync=JK\n");
     fprintf(f, "#@window_s=%.10f\n", parameters.window_size_sec);
     fprintf(f, "#@fitpoints=%d\n", parameters.n_fitpoints);
     fprintf(f, "#@exchanges=%d\n", parameters.n_exchanges);
     fprintf(f, "#@wait_time_s=%.10f\n", parameters.wait_time_sec);
 }
+
+
+static void jk_init_synchronization(const reprompib_sync_params_t* init_params) {
+    int i;
+    parameters.n_rep = init_params->nrep;
+
+    // initialize array of flags for invalid-measurements;
+    invalid  = (int*)calloc(parameters.n_rep, sizeof(int));
+    for(i = 0; i < parameters.n_rep; i++)
+    {
+        invalid[i] = 0;
+    }
+    repetition_counter = 0;
+}
+
+static void jk_finalize_synchronization(void)
+{
+    free(invalid);
+}
+
+static void jk_init_sync_round(void) {  // initialize the first synchronization window
+  int my_rank;
+  int master_rank = 0;
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+  if( my_rank == master_rank ) {
+      start_sync = get_time() + parameters.wait_time_sec;
+  }
+  MPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
+
+}
+
+
+
+static void jk_init_module(int argc, char** argv) {
+  reprompib_sync_options_t sync_opts;
+  jk_parse_options(argc, argv, &sync_opts);
+
+  parameters.n_exchanges = sync_opts.n_exchanges;
+  parameters.n_fitpoints = sync_opts.n_fitpoints;
+  parameters.wait_time_sec = sync_opts.wait_time_sec;
+  parameters.window_size_sec = sync_opts.window_size_sec;
+
+}
+
+
+static void jk_cleanup_module(void) {
+
+}
+
+
+void register_jk_module(reprompib_sync_module_t *sync_mod) {
+  sync_mod->name = "JK";
+  sync_mod->sync_type = REPROMPI_SYNCTYPE_WIN;
+
+  sync_mod->init_module = jk_init_module;
+  sync_mod->cleanup_module = jk_cleanup_module;
+
+  sync_mod->init_sync = jk_init_synchronization;
+  sync_mod->finalize_sync = jk_finalize_synchronization;
+  sync_mod->start_sync = jk_start_synchronization;
+  sync_mod->stop_sync = jk_stop_synchronization;
+
+  sync_mod->sync_clocks = jk_sync_clocks;
+  sync_mod->init_sync_round = jk_init_sync_round;
+
+  sync_mod->get_global_time = jk_get_normalized_time;
+  sync_mod->get_errorcodes = jk_get_local_sync_errorcodes;
+  sync_mod->print_sync_info = jk_print_sync_parameters;
+}
+
 

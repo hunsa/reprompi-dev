@@ -37,7 +37,7 @@
 static const int OUTPUT_ROOT_PROC = 0;
 
 void print_results_header(const reprompib_lib_output_info_t* output_info_p,
-    const reprompib_job_t* job_p) {
+    const reprompib_job_t* job_p, const reprompib_sync_module_t* sync_module) {
     FILE* f = stdout;
     int my_rank;
 
@@ -56,15 +56,13 @@ void print_results_header(const reprompib_lib_output_info_t* output_info_p,
         fprintf(f, "%20s %4s", "measure_type", "proc");
 
         if (output_info_p->verbose == 1 && output_info_p->print_summary_methods == 0) {
-#ifdef ENABLE_WINDOWSYNC
+          if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
             fprintf(f, " %12s", "errorcode");
-#endif
-
-#ifdef ENABLE_WINDOWSYNC
             fprintf(f," %8s %16s %16s %16s %16s\n", "nrep", "loc_tstart_sec", "loc_tend_sec", "gl_tstart_sec", "gl_tend_sec");
-#else
+          }
+          else {
             fprintf(f," %8s %16s %16s\n",  "nrep", "loc_tstart_sec", "loc_tend_sec");
-#endif
+          }
         } else {
 
             // print summary
@@ -80,10 +78,10 @@ void print_results_header(const reprompib_lib_output_info_t* output_info_p,
               fprintf(f, "\n");
             }
             else {
-#ifdef ENABLE_WINDOWSYNC
+              if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
                 fprintf(f, " %12s", "errorcode");
-#endif
-                fprintf(f, " %8s %16s\n", "nrep", "runtime_sec");
+              }
+              fprintf(f, " %8s %16s\n", "nrep", "runtime_sec");
             }
         }
 
@@ -135,7 +133,7 @@ void compute_runtimes_local_clocks_with_reduction(
 
 
 void print_runtimes(FILE* f, const reprompib_job_t* job_p,
-        sync_errorcodes_t get_errorcodes, sync_normtime_t get_global_time) {
+    const reprompib_sync_module_t* sync_module) {
 
     double* maxRuntimes_sec;
     int i;
@@ -150,24 +148,25 @@ void print_runtimes(FILE* f, const reprompib_job_t* job_p,
     if (my_rank == OUTPUT_ROOT_PROC) {
         maxRuntimes_sec = (double*) malloc(job_p->n_rep * sizeof(double));
 
-#ifdef ENABLE_WINDOWSYNC
-        sync_errorcodes = (int*) malloc(job_p->n_rep * sizeof(int));
-        for (i = 0; i < job_p->n_rep; i++) {
+        if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+          sync_errorcodes = (int*) malloc(job_p->n_rep * sizeof(int));
+          for (i = 0; i < job_p->n_rep; i++) {
             sync_errorcodes[i] = 0;
+          }
         }
-#endif
     }
 
     current_start_index = 0;
 
-#ifdef ENABLE_WINDOWSYNC
-    compute_runtimes_global_clocks(job_p->tstart_sec, job_p->tend_sec, current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC,
-            get_errorcodes, get_global_time,
-            maxRuntimes_sec, sync_errorcodes);
-#else
-    compute_runtimes_local_clocks_with_reduction(job_p->tstart_sec, job_p->tend_sec, current_start_index, job_p->n_rep,
-            maxRuntimes_sec, job_p->op);
-#endif
+    if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+      compute_runtimes_global_clocks(job_p->tstart_sec, job_p->tend_sec, current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC,
+          sync_module->get_errorcodes, sync_module->get_global_time,
+          maxRuntimes_sec, sync_errorcodes);
+    }
+    else {
+      compute_runtimes_local_clocks_with_reduction(job_p->tstart_sec, job_p->tend_sec, current_start_index, job_p->n_rep,
+          maxRuntimes_sec, job_p->op);
+    }
 
     if (my_rank == OUTPUT_ROOT_PROC) {
         for (i = 0; i < job_p->n_rep; i++) {
@@ -180,20 +179,22 @@ void print_runtimes(FILE* f, const reprompib_job_t* job_p,
                 fprintf(f, "%10d ", job_p->user_ivars[j]);
             }
 
-#if defined(ENABLE_WINDOWSYNC) && !defined(ENABLE_BARRIERSYNC)    // measurements with window-based synchronization
-            fprintf(f, "%20s %4s %12d %8d %16.10f\n", job_p->timername, "all",
+            // measurements with window-based synchronization
+            if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+              fprintf(f, "%20s %4s %12d %8d %16.10f\n", job_p->timername, "all",
                     sync_errorcodes[i],i,
                     maxRuntimes_sec[i]);
-#else   // measurements with Barrier-based synchronization
-            fprintf(f, "%20s %4s %8d %16.10f\n", job_p->timername, "all",
+            }
+            else {
+              // measurements with Barrier-based synchronization
+              fprintf(f, "%20s %4s %8d %16.10f\n", job_p->timername, "all",
                     i, maxRuntimes_sec[i]);
-#endif
+            }
         }
 
-#ifdef ENABLE_WINDOWSYNC
-        free(sync_errorcodes);
-#endif
-
+        if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+          free(sync_errorcodes);
+        }
         free(maxRuntimes_sec);
     }
 }
@@ -201,6 +202,7 @@ void print_runtimes(FILE* f, const reprompib_job_t* job_p,
 
 
 void print_runtimes_allprocs(FILE* f, const reprompib_job_t* job_p,
+    const reprompib_sync_module_t* sync_module,
     const double* global_start_sec, const double* global_end_sec,
     int* errorcodes) {
 
@@ -235,14 +237,17 @@ void print_runtimes_allprocs(FILE* f, const reprompib_job_t* job_p,
                     fprintf(f, "%10d ", job_p->user_ivars[j]);
                 }
 
-#if defined(ENABLE_WINDOWSYNC) && !defined(ENABLE_BARRIERSYNC)    // measurements with window-based synchronization
-                fprintf(f, "%20s %4d %12d %8d %16.10f\n", job_p->timername,
+                if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+                  // measurements with window-based synchronization
+                  fprintf(f, "%20s %4d %12d %8d %16.10f\n", job_p->timername,
                         proc_id, errorcodes[proc_id * job_p->n_rep + i], i,
                         maxRuntimes_sec[proc_id * job_p->n_rep + i]);
-#else   // measurements with Barrier-based synchronization
-                fprintf(f, "%20s %4d %8d %16.10f\n", job_p->timername,
+                }
+                else {
+                  // measurements with Barrier-based synchronization
+                  fprintf(f, "%20s %4d %8d %16.10f\n", job_p->timername,
                         proc_id,i, maxRuntimes_sec[proc_id * job_p->n_rep + i]);
-#endif
+                }
             }
         }
 
@@ -254,8 +259,7 @@ void print_runtimes_allprocs(FILE* f, const reprompib_job_t* job_p,
 void print_measurement_results(FILE* f,
     const reprompib_lib_output_info_t* output_info_p,
     const reprompib_job_t* job_p,
-    const sync_errorcodes_t get_errorcodes,
-    const sync_normtime_t get_global_time) {
+    const reprompib_sync_module_t* sync_module) {
 
     int i, proc_id;
     double* local_start_sec = NULL;
@@ -271,12 +275,14 @@ void print_measurement_results(FILE* f,
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
     if (output_info_p->verbose == 0 && strcmp(job_p->timertype, "all") != 0) {
-        print_runtimes(f, job_p, get_errorcodes, get_global_time);
+        print_runtimes(f, job_p, sync_module);
 
     }
     else {
 
-#ifdef ENABLE_WINDOWSYNC
+      if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+        int* local_errorcodes = sync_module->get_errorcodes();
+
         if (my_rank == OUTPUT_ROOT_PROC)
         {
             errorcodes = (int*)malloc(job_p->n_rep * np * sizeof(int));
@@ -285,18 +291,11 @@ void print_measurement_results(FILE* f,
             }
         }
 
-#ifndef ENABLE_BARRIERSYNC	// gather measurement results
-        {
-            int* local_errorcodes = get_errorcodes();
-
             MPI_Gather(local_errorcodes, job_p->n_rep, MPI_INT,
                     errorcodes, job_p->n_rep, MPI_INT, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
-        }
-#endif
+      }
 
-#endif
-
-        if (my_rank == OUTPUT_ROOT_PROC) {
+      if (my_rank == OUTPUT_ROOT_PROC) {
             local_start_sec = (double*) malloc(
                 job_p->n_rep * np * sizeof(double));
             local_end_sec = (double*) malloc(
@@ -319,8 +318,8 @@ void print_measurement_results(FILE* f,
         tmp_local_end_sec = (double*) malloc(
             job_p->n_rep * np * sizeof(double));
         for (i = 0; i < job_p->n_rep; i++) {
-            tmp_local_start_sec[i] = get_global_time(job_p->tstart_sec[i]);
-            tmp_local_end_sec[i] = get_global_time(job_p->tend_sec[i]);
+            tmp_local_start_sec[i] = sync_module->get_global_time(job_p->tstart_sec[i]);
+            tmp_local_end_sec[i] = sync_module->get_global_time(job_p->tend_sec[i]);
         }
         MPI_Gather(tmp_local_start_sec, job_p->n_rep, MPI_DOUBLE,
             global_start_sec, job_p->n_rep, MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
@@ -333,7 +332,7 @@ void print_measurement_results(FILE* f,
 
         if (output_info_p->verbose == 0  && strcmp(job_p->timertype, "all") == 0) {
 
-            print_runtimes_allprocs(f, job_p, global_start_sec, global_end_sec, errorcodes);
+            print_runtimes_allprocs(f, job_p, sync_module, global_start_sec, global_end_sec, errorcodes);
         }
 
         else {      // verbose == 1
@@ -349,21 +348,21 @@ void print_measurement_results(FILE* f,
                             fprintf(f, "%10d ", job_p->user_ivars[j]);
                         }
 
-#ifdef ENABLE_WINDOWSYNC
-                        fprintf(f, "%20s %4d %12d %8d %16.10f %16.10f %16.10f %16.10f\n",
+                        if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+                          fprintf(f, "%20s %4d %12d %8d %16.10f %16.10f %16.10f %16.10f\n",
                             job_p->timername, proc_id,
                                 errorcodes[proc_id * job_p->n_rep + i], i,
                                 local_start_sec[proc_id * job_p->n_rep + i],
                                 local_end_sec[proc_id * job_p->n_rep + i],
                                 global_start_sec[proc_id * job_p->n_rep + i],
                                 global_end_sec[proc_id * job_p->n_rep + i]);
-
-#else
-                        fprintf(f, "%20s %4d %8d %16.10f %16.10f\n", job_p->timername,
+                        }
+                        else {
+                          fprintf(f, "%20s %4d %8d %16.10f %16.10f\n", job_p->timername,
                                 proc_id, i,
                                 local_start_sec[proc_id * job_p->n_rep + i],
                                 local_end_sec[proc_id * job_p->n_rep + i]);
-#endif
+                        }
                     }
                 }
             }
@@ -374,10 +373,9 @@ void print_measurement_results(FILE* f,
             free(local_end_sec);
             free(global_start_sec);
             free(global_end_sec);
-#ifdef ENABLE_WINDOWSYNC
-            free(errorcodes);
-#endif
-
+            if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+              free(errorcodes);
+            }
         }
 
     }
@@ -388,8 +386,7 @@ void print_measurement_results(FILE* f,
 void print_summary(FILE* f,
         const reprompib_lib_output_info_t* output_info_p,
         const reprompib_job_t* job_p,
-        const sync_errorcodes_t get_errorcodes,
-        const sync_normtime_t get_global_time) {
+        const reprompib_sync_module_t* sync_module) {
 
     double* maxRuntimes_sec;
     int i, j;
@@ -406,28 +403,29 @@ void print_summary(FILE* f,
     if (my_rank == OUTPUT_ROOT_PROC) {
         maxRuntimes_sec = (double*) malloc(job_p->n_rep * np * sizeof(double));
 
-#ifdef ENABLE_WINDOWSYNC
-        sync_errorcodes = (int*) malloc(job_p->n_rep * np * sizeof(int));
-        for (i = 0; i < job_p->n_rep * np; i++) {
+        if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+          sync_errorcodes = (int*) malloc(job_p->n_rep * np * sizeof(int));
+          for (i = 0; i < job_p->n_rep * np; i++) {
             sync_errorcodes[i] = 0;
+          }
         }
-#endif
     }
 
     current_start_index = 0;
 
     if (strcmp(job_p->timertype, "all") !=0) { // one runtime for each nrep id (reduced over processes)
 
-#ifdef ENABLE_WINDOWSYNC
+      if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
         compute_runtimes_global_clocks(job_p->tstart_sec, job_p->tend_sec,
                 current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC,
-                get_errorcodes, get_global_time,
+                sync_module->get_errorcodes, sync_module->get_global_time,
                 maxRuntimes_sec, sync_errorcodes);
-#else
+      }
+      else {
         compute_runtimes_local_clocks_with_reduction(job_p->tstart_sec, job_p->tend_sec, current_start_index, job_p->n_rep,
                 maxRuntimes_sec, job_p->op);
-#endif
-        n_results = 1;
+      }
+      n_results = 1;
 
     }
     else {  // one runtime for each process and each nrep
@@ -438,17 +436,14 @@ void print_summary(FILE* f,
         double* tmp_local_start_sec = NULL;
         double* tmp_local_end_sec = NULL;
 
-#ifdef ENABLE_WINDOWSYNC
-#ifndef ENABLE_BARRIERSYNC  // gather measurement results
-        {
-            int* local_errorcodes = get_errorcodes();
+        if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+          // gather measurement results
+          int* local_errorcodes = sync_module->get_errorcodes();
 
-            MPI_Gather(local_errorcodes, job_p->n_rep, MPI_INT,
+          MPI_Gather(local_errorcodes, job_p->n_rep, MPI_INT,
                     sync_errorcodes, job_p->n_rep, MPI_INT, 0, MPI_COMM_WORLD);
         }
-#endif
 
-#endif
 
         if (my_rank == OUTPUT_ROOT_PROC) {
             local_start_sec = (double*) malloc(
@@ -473,8 +468,8 @@ void print_summary(FILE* f,
         tmp_local_end_sec = (double*) malloc(
             job_p->n_rep * np * sizeof(double));
         for (i = 0; i < job_p->n_rep; i++) {
-            tmp_local_start_sec[i] = get_global_time(job_p->tstart_sec[i]);
-            tmp_local_end_sec[i] = get_global_time(job_p->tend_sec[i]);
+            tmp_local_start_sec[i] = sync_module->get_global_time(job_p->tstart_sec[i]);
+            tmp_local_end_sec[i] = sync_module->get_global_time(job_p->tend_sec[i]);
         }
         MPI_Gather(tmp_local_start_sec, job_p->n_rep, MPI_DOUBLE, global_start_sec,
             job_p->n_rep, MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
@@ -520,18 +515,19 @@ void print_summary(FILE* f,
             current_error_codes = sync_errorcodes + (proc * job_p->n_rep);
 
             // remove measurements with out-of-window errors
-#ifdef ENABLE_WINDOWSYNC
-            for (i = 0; i < job_p->n_rep; i++) {
+            if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+              for (i = 0; i < job_p->n_rep; i++) {
                 if (current_error_codes[i] == 0) {
                     if (nreps < i) {
                         current_proc_runtimes[nreps] = current_proc_runtimes[i];
                     }
                     nreps++;
                 }
+              }
             }
-#else
+            else {
             nreps = job_p->n_rep;
-#endif
+            }
 
             gsl_sort(current_proc_runtimes, 1, nreps);
 
@@ -581,10 +577,9 @@ void print_summary(FILE* f,
         }
 
 
-#ifdef ENABLE_WINDOWSYNC
-        free(sync_errorcodes);
-#endif
-
+        if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+          free(sync_errorcodes);
+        }
         free(maxRuntimes_sec);
     }
 }

@@ -25,40 +25,67 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "reprompi_bench/sync/synchronization.h"
 #include "reprompi_bench/sync/sync_info.h"
-#include "barrier_sync.h"
 
-inline double mpibarrier_get_normalized_time(double local_time) {
+static inline double mpibarrier_get_normalized_time(double local_time) {
     return local_time;
 }
 
-void mpibarrier_init_synchronization_module(const reprompib_sync_options_t parsed_opts, const long nrep) {
-}
 
-void mpibarrier_parse_options(int argc, char **argv, reprompib_sync_options_t* opts_p) {
-}
-
-void mpibarrier_init_synchronization(void) {
+static void mpibarrier_init_synchronization(const reprompib_sync_params_t* sync_params) {
     MPI_Barrier(MPI_COMM_WORLD);
 }
 
-void mpibarrier_start_synchronization(void) {
+
+static void mpibarrier_start_synchronization(void) {
     MPI_Barrier(MPI_COMM_WORLD);
 #ifdef ENABLE_DOUBLE_BARRIER
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
 }
 
-void mpibarrier_stop_synchronization(void) {
+
+static int* mpibarrier_get_errorcodes(void) {
+  return NULL;
 }
 
-void mpibarrier_cleanup_synchronization_module(void) {
-}
-
-void mpibarrier_print_sync_parameters(FILE* f) {
+static void mpibarrier_print_sync_parameters(FILE* f) {
     fprintf(f, "#@sync=MPI_Barrier\n");
 #ifdef ENABLE_DOUBLE_BARRIER
     fprintf(f, "#@doublebarrier=true\n");
 #endif
 }
+
+
+static void mpibarrier_init_module(int argc, char** argv) {
+}
+
+
+static void empty(void) {
+}
+
+
+void register_mpibarrier_module(reprompib_sync_module_t *sync_mod) {
+  sync_mod->name = "MPI_Barrier";
+  sync_mod->sync_type = REPROMPI_SYNCTYPE_BARRIER;
+
+  sync_mod->init_module = mpibarrier_init_module;
+  sync_mod->cleanup_module = empty;
+
+  sync_mod->init_sync = mpibarrier_init_synchronization;
+  sync_mod->finalize_sync = empty;
+
+  sync_mod->sync_clocks = empty;
+  sync_mod->init_sync_round = empty;
+
+  sync_mod->start_sync = mpibarrier_start_synchronization;
+  sync_mod->stop_sync = empty;
+
+  sync_mod->get_global_time = mpibarrier_get_normalized_time;
+  sync_mod->get_errorcodes = mpibarrier_get_errorcodes;
+  sync_mod->print_sync_info = mpibarrier_print_sync_parameters;
+}
+
+
 

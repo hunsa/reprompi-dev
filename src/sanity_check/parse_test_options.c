@@ -29,6 +29,8 @@
 #include <getopt.h>
 #include <string.h>
 #include "mpi.h"
+
+#include "reprompi_bench/misc.h"
 #include "parse_test_options.h"
 
 static const struct option default_long_options[] = {
@@ -36,13 +38,6 @@ static const struct option default_long_options[] = {
         { "help", no_argument, 0, 'h' },
         { 0, 0, 0, 0 }
 };
-
-
-static char * const error_messages[] =
-        { "",
-          "Number of repetitions null or not specified"
-        };
-static const int N_ERRORS = sizeof(error_messages) / sizeof(error_messages[0]);
 
 
 void print_help(char* testname) {
@@ -100,9 +95,8 @@ void init_parameters(reprompib_st_opts_t* opts_p, char* name) {
 }
 
 
-reprompib_st_error_t parse_test_options(reprompib_st_opts_t* opts_p, int argc, char **argv) {
+int parse_test_options(reprompib_st_opts_t* opts_p, int argc, char **argv) {
     int c;
-    reprompib_st_error_t ret = SUCCESS;
     int printhelp = 0;
 
     init_parameters(opts_p, argv[0]);
@@ -135,11 +129,7 @@ reprompib_st_error_t parse_test_options(reprompib_st_opts_t* opts_p, int argc, c
     }
 
     if (opts_p->n_rep <= 0) {
-        ret |= ERROR_NREP_NULL;
-    }
-
-    if (printhelp) {
-        ret = SUCCESS;
+      reprompib_print_error_and_exit("Invalid number of repetitions (should be positive)");
     }
 
     if (optind < argc)
@@ -150,34 +140,6 @@ reprompib_st_error_t parse_test_options(reprompib_st_opts_t* opts_p, int argc, c
     optind = 1;	// reset optind to enable option re-parsing
     opterr = 1;	// reset opterr to catch invalid options
 
-    return ret;
-}
-
-
-
-void validate_test_options_or_abort(reprompib_st_error_t errorcode, reprompib_st_opts_t* opts_p) {
-    int my_rank;
-    int root_proc = 0;
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    if (my_rank == root_proc) {
-        if (errorcode > 0) {
-            print_help(opts_p->testname);
-
-            if (errorcode < N_ERRORS) {
-              printf(">>>>>>>>>>>>>>>> Error: %s\n", error_messages[errorcode]);
-            }
-            else {
-              printf(">>>>>>>>>>>>>>>> Error: Synchronization method parameters not specified\n");
-            }
-        }
-
-    }
-
-    if (errorcode != SUCCESS) {
-        /* shut down MPI */
-        MPI_Finalize();
-        exit(0);
-    }
+    return 0;
 }
 

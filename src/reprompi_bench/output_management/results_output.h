@@ -27,15 +27,15 @@
 #include "benchmark_job.h"
 #include "reprompi_bench/sync/synchronization.h"
 
-void print_results_header(const reprompib_options_t* opts, const char* output_file_path, int verbose);
+void print_results_header(const reprompib_options_t* opts, const reprompib_sync_module_t*  sync_module,
+    const char* output_file_path, int verbose);
 
 void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
-		sync_errorcodes_t get_errorcodes,
-		sync_normtime_t get_global_time,
+    const reprompib_sync_module_t*  sync_module,
 		int verbose);
 
 void print_summary(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
-        sync_errorcodes_t get_errorcodes, sync_normtime_t get_global_time,
-        const int print_summary_methods);
+    const reprompib_sync_module_t*  sync_module,
+    const int print_summary_methods);
 
 #endif /* RESULTS_OUTPUT_H_ */

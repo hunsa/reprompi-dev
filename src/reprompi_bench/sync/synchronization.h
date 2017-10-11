@@ -26,61 +26,59 @@
 
 #include "reprompi_bench/sync/sync_info.h"
 
+typedef enum {
+  REPROMPI_SYNCTYPE_WIN = 0,
+  REPROMPI_SYNCTYPE_BARRIER
+} reprompi_synctype_t;
 
-#if defined (ENABLE_WINDOWSYNC_SK)
-#define ENABLE_WINDOWSYNC
-#undef ENABLE_WINDOWSYNC_JK
-#undef ENABLE_WINDOWSYNC_HCA
-#undef ENABLE_GLOBAL_TIMES
+// parameters needed to initialize a synchronization round
+typedef struct reprompib_sync_params {
+    long nrep;
+}reprompib_sync_params_t;
 
-#elif defined (ENABLE_WINDOWSYNC_JK)
-#define ENABLE_WINDOWSYNC
-#undef ENABLE_WINDOWSYNC_SK
-#undef ENABLE_WINDOWSYNC_HCA
-#undef ENABLE_GLOBAL_TIMES
 
-#elif defined (ENABLE_WINDOWSYNC_HCA)
-#define ENABLE_WINDOWSYNC
-#undef ENABLE_WINDOWSYNC_JK
-#undef ENABLE_WINDOWSYNC_SK
-#undef ENABLE_GLOBAL_TIMES
 
-#else
-#undef ENABLE_WINDOWSYNC
-#endif
-
-#ifdef ENABLE_GLOBAL_TIMES
-#ifndef ENABLE_WINDOWSYNC
-#define ENABLE_WINDOWSYNC
-#endif
-#endif
-
-typedef void (*init_sync_module_t)(const reprompib_sync_options_t parsed_opts, const long nrep);
-typedef void (*sync_clocks_t)(void);
-typedef void (*init_sync_t)(void);
-typedef void (*start_sync_t)(void);
-typedef void (*stop_sync_t)(void);
-typedef void (*cleanup_sync_t)(void);
 typedef int* (*sync_errorcodes_t)(void);
 typedef double (*sync_normtime_t)(double local_time);
 typedef void (*print_sync_info_t)(FILE* f);
-typedef double (*sync_time_t)(void);
-typedef void (*parse_sync_params_t)(int argc, char** argv, reprompib_sync_options_t* parsed_opts);
 
-typedef struct {
-    init_sync_module_t init_sync_module;
-    sync_clocks_t sync_clocks;
-    init_sync_t init_sync;
-    start_sync_t start_sync;
-    stop_sync_t stop_sync;
-    cleanup_sync_t clean_sync_module;
-    sync_normtime_t get_normalized_time;
+
+typedef struct reprompib_sync_module{
+    void (*init_module)(int argc, char** argv);
+    void (*cleanup_module)(void);
+
+    void (*init_sync)(const reprompib_sync_params_t* init_params);
+    void (*finalize_sync)(void);
+
+    void (*sync_clocks)(void);
+    void (*init_sync_round)(void);
+
+    void (*start_sync)(void);
+    void (*stop_sync)(void);
+
     sync_errorcodes_t get_errorcodes;
+    sync_normtime_t get_global_time;
     print_sync_info_t print_sync_info;
-    sync_time_t get_time;
-    parse_sync_params_t parse_sync_params;
-} reprompib_sync_functions_t;
 
-void initialize_sync_implementation(reprompib_sync_functions_t *sync_f);
+    char* name;
+    reprompi_synctype_t sync_type;
+} reprompib_sync_module_t;
+
+
+void reprompib_register_sync_modules(void);
+void reprompib_deregister_sync_modules(void);
+
+void reprompib_init_sync_module(int argc, char** argv, reprompib_sync_module_t* sync_mod);
+void reprompib_cleanup_sync_module(reprompib_sync_module_t* sync_mod);
+
+void register_hca_module(reprompib_sync_module_t *sync_mod);
+void register_jk_module(reprompib_sync_module_t *sync_mod);
+void register_skampi_module(reprompib_sync_module_t *sync_mod);
+void register_mpibarrier_module(reprompib_sync_module_t *sync_mod);
+void register_dissem_barrier_module(reprompib_sync_module_t *sync_mod);
+
+
+
+void dissemination_barrier(void);
 
 #endif /* REPROMPIB_SYNCHRONIZATION_H_ */

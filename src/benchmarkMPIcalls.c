@@ -70,7 +70,7 @@ void print_initial_settings(const reprompib_options_t* opts, const reprompib_com
 
 
 void reprompib_print_bench_output(job_t job, double* tstart_sec, double* tend_sec,
-        sync_errorcodes_t get_errorcodes, sync_normtime_t get_global_time,
+        const reprompib_sync_module_t*  sync_module,
         const reprompib_options_t* opts, const reprompib_common_options_t* common_opts) {
     FILE* f = stdout;
     int my_rank;
@@ -83,19 +83,17 @@ void reprompib_print_bench_output(job_t job, double* tstart_sec, double* tend_se
     }
 
     if (opts->print_summary_methods >0)  {
-        print_summary(stdout, job, tstart_sec, tend_sec, get_errorcodes, get_global_time,
+        print_summary(stdout, job, tstart_sec, tend_sec, sync_module,
                 opts->print_summary_methods);
         if (common_opts->output_file != NULL) {
             print_measurement_results(f, job, tstart_sec, tend_sec,
-                    get_errorcodes, get_global_time,
-                    opts->verbose);
+                sync_module, opts->verbose);
         }
 
     }
     else {
         print_measurement_results(f, job, tstart_sec, tend_sec,
-                get_errorcodes, get_global_time,
-                opts->verbose);
+            sync_module, opts->verbose);
     }
 
     if (my_rank == OUTPUT_ROOT_PROC) {
@@ -149,14 +147,15 @@ int main(int argc, char* argv[]) {
     double* tstart_sec;
     double* tend_sec;
     reprompib_options_t opts;
-    reprompib_sync_options_t sync_opts;
     reprompib_common_options_t common_opts;
     job_list_t jlist;
     collective_params_t coll_params;
     basic_collective_params_t coll_basic_info;
     time_t start_time, end_time;
-    reprompib_sync_functions_t sync_f;
     reprompib_dictionary_t params_dict;
+
+    reprompib_sync_module_t sync_module;
+    reprompib_sync_params_t sync_params;
 
     /* start up MPI
      *
@@ -165,6 +164,8 @@ int main(int argc, char* argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &procs);
 
+    reprompib_register_sync_modules();
+
     // initialize time measurement functions
     init_timer();
     start_time = time(NULL);
@@ -172,8 +173,8 @@ int main(int argc, char* argv[]) {
     //initialize dictionary
     reprompib_init_dictionary(&params_dict, HASHTABLE_SIZE);
 
-    // initialize synchronization functions according to the configured synchronization method
-    initialize_sync_implementation(&sync_f);
+    // initialize synchronization module
+    reprompib_init_sync_module(argc, argv, &sync_module);
 
     // parse arguments and set-up benchmarking jobs
     print_command_line_args(argc, argv);
@@ -189,9 +190,6 @@ int main(int argc, char* argv[]) {
     // parse the benchmark-specific arguments (nreps, summary)
     reprompib_parse_options(&opts, argc, argv);
 
-    // parse the arguments related to the synchronization and timing method
-    sync_f.parse_sync_params( argc, argv, &sync_opts);
-
     if (common_opts.input_file == NULL && opts.n_rep <=0) { // make sure nrep is specified when there is no input file
       reprompib_print_error_and_exit("The number of repetitions is not defined (specify the \"--nrep\" command-line argument or provide an input file)\n");
     }
@@ -204,44 +202,43 @@ int main(int argc, char* argv[]) {
         job_t job;
         job = jlist.jobs[jlist.job_indices[jindex]];
 
-        // start synchronization module
-        sync_f.init_sync_module(sync_opts, job.n_rep);
-
         tstart_sec = (double*) malloc(job.n_rep * sizeof(double));
         tend_sec = (double*) malloc(job.n_rep * sizeof(double));
 
         if (jindex == 0) {
-            print_initial_settings(&opts, &common_opts, sync_f.print_sync_info, &params_dict);
-            print_results_header(&opts, common_opts.output_file, opts.verbose);
+            print_initial_settings(&opts, &common_opts, sync_module.print_sync_info, &params_dict);
+            print_results_header(&opts, &sync_module, common_opts.output_file, opts.verbose);
         }
 
         collective_calls[job.call_index].initialize_data(coll_basic_info, job.count, &coll_params);
 
         // initialize synchronization
-        sync_f.sync_clocks();
-        sync_f.init_sync();
+        sync_params.nrep = job.n_rep;
+        sync_module.init_sync(&sync_params);
+
+        sync_module.sync_clocks();
+        sync_module.init_sync_round();         // broadcast first window
 
         // execute MPI call nrep times
         for (i = 0; i < job.n_rep; i++) {
-            sync_f.start_sync();
+            sync_module.start_sync();
 
-            tstart_sec[i] = sync_f.get_time();
+            tstart_sec[i] = get_time();
             collective_calls[job.call_index].collective_call(&coll_params);
-            tend_sec[i] = sync_f.get_time();
+            tend_sec[i] = get_time();
 
-            sync_f.stop_sync();
+            sync_module.stop_sync();
         }
 
         //print summarized data
-        reprompib_print_bench_output(job, tstart_sec, tend_sec, sync_f.get_errorcodes,
-                sync_f.get_normalized_time, &opts, &common_opts);
+        reprompib_print_bench_output(job, tstart_sec, tend_sec, &sync_module, &opts, &common_opts);
+
+        sync_module.finalize_sync();
 
         free(tstart_sec);
         free(tend_sec);
 
         collective_calls[job.call_index].cleanup_data(&coll_params);
-
-        sync_f.clean_sync_module();
     }
 
 
@@ -252,7 +249,9 @@ int main(int argc, char* argv[]) {
     reprompib_free_common_parameters(&common_opts);
     reprompib_free_parameters(&opts);
     reprompib_cleanup_dictionary(&params_dict);
+    sync_module.cleanup_module();
 
+    reprompib_deregister_sync_modules();
     /* shut down MPI */
     MPI_Finalize();
 

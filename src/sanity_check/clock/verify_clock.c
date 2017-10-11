@@ -40,8 +40,6 @@ int main(int argc, char* argv[]) {
   double *local_runtimes;
   struct timespec sleep_time;
   double sleep_time_s, start_time;
-  ;
-
   int step;
   int nreps = 1;
   int print_all = 0;

@@ -35,6 +35,7 @@
 #include "reprompi_bench/option_parser/parse_common_options.h"
 #include "reprompi_bench/option_parser/parse_extra_key_value_options.h"
 #include "reprompi_bench/sync/synchronization.h"
+#include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/output_management/bench_info_output.h"
 #include "reprompi_bench/output_management/runtimes_computation.h"
 #include "collective_ops/collectives.h"
@@ -166,8 +167,6 @@ void nrep_pred_print_results_header(const char* filename) {
 #endif
 
 int main(int argc, char* argv[]) {
-
-#ifndef ENABLE_WINDOWSYNC
   int my_rank, procs;
   long i, jindex, current_index;
   double* tstart_sec;
@@ -177,9 +176,9 @@ int main(int argc, char* argv[]) {
   int stop_meas;
   basic_collective_params_t coll_basic_info;
   time_t start_time, end_time;
-  reprompib_sync_functions_t sync_f;
+  reprompib_sync_module_t  sync_module;
   reprompib_dictionary_t params_dict;
-  reprompib_sync_options_t sync_opts;
+  reprompib_sync_params_t sync_params;
 
   nrep_pred_options_t pred_params;
   job_list_t jlist;
@@ -195,9 +194,21 @@ int main(int argc, char* argv[]) {
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &procs);
-
-
   start_time = time(NULL);
+
+  reprompib_register_sync_modules();
+
+  // initialize synchronization functions according to the configured synchronization method
+  reprompib_init_sync_module(argc, argv, &sync_module);
+  if (sync_module.sync_type == REPROMPI_SYNCTYPE_WIN) {
+    printf("ERROR: Cannot use this NREP prediction module with window-based synchronization. \n");
+    printf("Please use either the MPI_Barrier (--sync=MPI_Barrier) or the dissemination barrier (--sync=Dissem_Barrier) for process synchronization.\n");
+
+    sync_module.cleanup_module();
+    /* shut down MPI */
+    MPI_Finalize();
+    return 0;
+  }
 
   // initialize global dictionary
   reprompib_init_dictionary(&params_dict, HASHTABLE_SIZE);
@@ -210,13 +221,6 @@ int main(int argc, char* argv[]) {
 
   // parse extra parameters into the global dictionary
   reprompib_parse_extra_key_value_options(&params_dict, argc, argv);
-
-  // initialize synchronization functions according to the configured synchronization method
-  initialize_sync_implementation(&sync_f);
-
-  // start synchronization module
-  sync_f.parse_sync_params(argc, argv, &sync_opts);
-  sync_f.init_sync_module(sync_opts, pred_params.max_nrep);
 
   max_nreps = 0;
   for (i = 0; i < pred_params.n_pred_rounds; i++) {
@@ -238,10 +242,14 @@ int main(int argc, char* argv[]) {
     job = jlist.jobs[jlist.job_indices[jindex]];
 
     if (jindex == 0) {
-      print_common_settings(&opts, sync_f.print_sync_info, &params_dict);
+      print_common_settings(&opts, sync_module.print_sync_info, &params_dict);
       nrep_pred_print_cli_args_to_file(opts.output_file, &pred_params);
       nrep_pred_print_results_header(opts.output_file);
     }
+
+    // initialize synchronization
+    sync_params.nrep = max_nreps;
+    sync_module.init_sync(&sync_params);
 
     tstart_sec = (double*) malloc(max_nreps * sizeof(double));
     tend_sec = (double*) malloc(max_nreps * sizeof(double));
@@ -260,14 +268,14 @@ int main(int argc, char* argv[]) {
 
       // start a new round of measurements
       for (i = 0; i < current_nreps; i++) {
-        sync_f.start_sync();
+        sync_module.start_sync();
 
-        tstart_sec[current_index] = sync_f.get_time();
+        tstart_sec[current_index] = get_time();
         collective_calls[job.call_index].collective_call(&coll_params);
-        tend_sec[current_index] = sync_f.get_time();
+        tend_sec[current_index] = get_time();
         current_index++;
 
-        sync_f.stop_sync();
+        sync_module.stop_sync();
       }
 
       // gather the run-times obtained in this round to the root
@@ -319,27 +327,23 @@ int main(int argc, char* argv[]) {
 
     collective_calls[job.call_index].cleanup_data(&coll_params);
 
+    sync_module.finalize_sync();
+
     free(tstart_sec);
     free(tend_sec);
     free(maxRuntimes_sec);
   }
 
-  sync_f.clean_sync_module();
   end_time = time(NULL);
   print_final_info(&opts, start_time, end_time);
 
   cleanup_job_list(jlist);
   reprompib_free_common_parameters(&opts);
-
   reprompib_cleanup_dictionary(&params_dict);
-
+  sync_module.cleanup_module();
+  reprompib_deregister_sync_modules();
   /* shut down MPI */
   MPI_Finalize();
-
-#else
-  printf("ERROR: Cannot use this NREP prediction module with window-based synchronization. \n");
-  printf("Please disable the HCA, SKaMPI or JK synchronization compile flags and use either the MPI_Barrier (default) or the dissemination barrier (ENABLE_BENCHMARK_BARRIER flag) for process synchronization.\n");
-#endif
 
   return 0;
 }

@@ -47,7 +47,8 @@ void cleanup_job_list(job_list_t jobs) {
  * Read jobs from input file into jlist
  *
  */
-void read_input_jobs(char* file_name, job_list_t* jlist) {
+int read_input_jobs(char* file_name, job_list_t* jlist) {
+  int error = 0;
   FILE* file;
   int result = 0;
   int expected_result = 0;
@@ -102,7 +103,7 @@ void read_input_jobs(char* file_name, job_list_t* jlist) {
     fclose(file);
   } else {
     fprintf(stderr, "ERROR: Cannot open input file: %s\n", file_name);
-    exit(0);
+    error = 1;
   }
 
   if (len_jobs > 0) {
@@ -110,13 +111,14 @@ void read_input_jobs(char* file_name, job_list_t* jlist) {
   }
 
   jlist->n_jobs = len_jobs;
-
+  return error;
 }
 
 void generate_job_list(const reprompib_common_options_t *opts, const int predefined_n_rep, job_list_t* jlist) {
   int sizeindex, cindex, i;
   int my_rank;
   int datatypesize;
+  int error;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
@@ -131,9 +133,16 @@ void generate_job_list(const reprompib_common_options_t *opts, const int predefi
     MPI_Aint disp[] = {0, sizeof(int), sizeof(size_t) + sizeof(int), 2 *sizeof(size_t) + sizeof(int)};
     MPI_Datatype job_info_dt;
 
+    error = 0;
     if (my_rank == INPUT_ROOT_PROC) {
-      read_input_jobs(opts->input_file, jlist);
+      error = read_input_jobs(opts->input_file, jlist);
     }
+    MPI_Bcast(&error, 1, MPI_INT, INPUT_ROOT_PROC, MPI_COMM_WORLD);
+    if (error) {
+      MPI_Finalize();
+      exit(0);
+    }
+
     // send the number of jobs to all processes
     MPI_Bcast(&(jlist->n_jobs), 1, MPI_INT, INPUT_ROOT_PROC, MPI_COMM_WORLD);
 

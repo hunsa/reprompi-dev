@@ -46,12 +46,12 @@ typedef struct {
 } reprompib_job_t;
 
 
-void reprompib_initialize_benchmark(int argc, char* argv[], reprompib_sync_functions_t* sync_f_p, reprompib_options_t* opts_p);
-void reprompib_cleanup_benchmark(reprompib_options_t* opts_p);
+void reprompib_initialize_benchmark(int argc, char* argv[], reprompib_options_t* opts_p, reprompib_sync_module_t* sync_module);
+void reprompib_cleanup_benchmark(reprompib_options_t* opts_p, reprompib_sync_module_t* sync_module);
 
 void reprompib_print_bench_output(const reprompib_job_t* job_p,
-        const reprompib_sync_functions_t* sync_f,
-        const reprompib_options_t* opts);
+    const reprompib_sync_module_t* sync_module,
+    const reprompib_options_t* opts);
 
 
 void reprompib_initialize_job(const long nrep, const double* tstart, const double* tend,

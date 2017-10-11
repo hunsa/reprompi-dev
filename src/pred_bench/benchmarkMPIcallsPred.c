@@ -208,7 +208,6 @@ int main(int argc, char* argv[]) {
   double* tstart_sec;
   double* tend_sec;
   double* maxRuntimes_sec = NULL;
-  //pred_job_list_t jlist;
   job_list_t jlist;
   collective_params_t coll_params;
   long nrep, stride;
@@ -218,11 +217,12 @@ int main(int argc, char* argv[]) {
   time_t start_time, end_time;
   double* batch_runtimes;
   long updated_batch_nreps;
-  reprompib_sync_functions_t sync_f;
   reprompib_dictionary_t params_dict;
-  reprompib_sync_options_t sync_opts;
   reprompib_common_options_t common_opt;
   nrep_pred_params_t pred_opts;
+
+  reprompib_sync_module_t sync_module;
+  reprompib_sync_params_t sync_params;
 
   /* start up MPI
    * */
@@ -234,11 +234,10 @@ int main(int argc, char* argv[]) {
   init_timer();
   start_time = time(NULL);
 
+  reprompib_register_sync_modules();
+
   // initialize global dictionary
   reprompib_init_dictionary(&params_dict, HASHTABLE_SIZE);
-
-  // initialize synchronization functions according to the configured synchronization method
-  initialize_sync_implementation(&sync_f);
 
   // parse arguments and set-up benchmarking jobs
   print_command_line_args(argc, argv);
@@ -252,7 +251,8 @@ int main(int argc, char* argv[]) {
   // parse extra parameters into the global dictionary
   reprompib_parse_extra_key_value_options(&params_dict, argc, argv);
 
-  sync_f.parse_sync_params(argc, argv, &sync_opts);
+  // initialize synchronization module
+  reprompib_init_sync_module(argc, argv, &sync_module);
 
   init_collective_basic_info(common_opt, procs, &coll_basic_info);
   //generate_pred_job_list(&pred_opts, &common_opt, &jlist);
@@ -263,11 +263,8 @@ int main(int argc, char* argv[]) {
     job_t job;
     job = jlist.jobs[jlist.job_indices[jindex]];
 
-    // start synchronization module
-    sync_f.init_sync_module(sync_opts, pred_opts.n_rep_max);
-
     if (jindex == 0) {
-      print_initial_settings_prediction(&common_opt, &pred_opts, &params_dict, sync_f.print_sync_info);
+      print_initial_settings_prediction(&common_opt, &pred_opts, &params_dict, sync_module.print_sync_info);
     }
 
     tstart_sec = (double*) malloc(pred_opts.n_rep_max * sizeof(double));
@@ -278,35 +275,36 @@ int main(int argc, char* argv[]) {
     nrep = pred_opts.n_rep_min;
     stride = pred_opts.n_rep_stride;
 
-    // compute clock drift models relative to the root node
-    sync_f.sync_clocks();
-
     current_index = 0;
     runtimes_index = 0;
 
     collective_calls[job.call_index].initialize_data(coll_basic_info, job.count, &coll_params);
 
-    // initialize synchronization window
-    sync_f.init_sync();
+    // initialize synchronization
+    sync_params.nrep = pred_opts.n_rep_max;
+    sync_module.init_sync(&sync_params);
+
+    sync_module.sync_clocks();      // compute clock drift models relative to the root node
+    sync_module.init_sync_round();  // broadcast first window
 
     while (1) {
 
       // main measurement loop
       for (i = 0; i < nrep; i++) {
-        sync_f.start_sync();
+        sync_module.start_sync();
 
-        tstart_sec[current_index] = sync_f.get_time();
+        tstart_sec[current_index] = get_time();
         collective_calls[job.call_index].collective_call(&coll_params);
-        tend_sec[current_index] = sync_f.get_time();
+        tend_sec[current_index] = get_time();
         current_index++;
         runtimes_index++;
 
-        sync_f.stop_sync();
+        sync_module.stop_sync();
       }
 
       batch_runtimes = maxRuntimes_sec + (runtimes_index - nrep);
-      compute_runtimes(tstart_sec, tend_sec, (current_index - nrep), nrep, sync_f.get_errorcodes,
-          sync_f.get_normalized_time, batch_runtimes, &updated_batch_nreps);
+      compute_runtimes(tstart_sec, tend_sec, (current_index - nrep), nrep, sync_module.get_errorcodes,
+          sync_module.get_global_time, batch_runtimes, &updated_batch_nreps);
 
       // set the number of correct measurements to take into account out-of-window measurement errors
       runtimes_index = (runtimes_index - nrep) + updated_batch_nreps;
@@ -351,7 +349,7 @@ int main(int argc, char* argv[]) {
     free(maxRuntimes_sec);
 
     collective_calls[job.call_index].cleanup_data(&coll_params);
-    sync_f.clean_sync_module();
+    sync_module.finalize_sync();
   }
 
   end_time = time(NULL);
@@ -360,7 +358,9 @@ int main(int argc, char* argv[]) {
   cleanup_job_list(jlist);
   reprompib_free_common_parameters(&common_opt);
   reprompib_cleanup_dictionary(&params_dict);
+  sync_module.cleanup_module();
 
+  reprompib_deregister_sync_modules();
   /* shut down MPI */
   MPI_Finalize();
 

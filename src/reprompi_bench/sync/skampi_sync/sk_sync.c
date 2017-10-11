@@ -40,9 +40,9 @@
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/sync/sync_info.h"
 #include "sk_parse_options.h"
-#include "sk_sync.h"
+#include "reprompi_bench/sync/synchronization.h"
 
-double *tds; /* tds[i] is the time difference between the
+static double *tds; /* tds[i] is the time difference between the
  current node and global node i */
 
 static int *invalid; /* invalid[max_count_repetitions] */
@@ -56,8 +56,15 @@ static double *ping_pong_min_time; /* ping_pong_min_time[i] is the minimum time 
  within 110% for the ping_pong_min_time)
  */
 
-double start_batch, start_sync, stop_sync;
+static double start_batch, start_sync, stop_sync;
 static int sync_index = 0; /* current window index within the current measurement batch */
+
+typedef struct {
+    long n_rep; /* --repetitions */
+    double window_size_sec; /* --window-size */
+
+    double wait_time_sec; /* --wait-time */
+} reprompi_sk_options_t;
 
 // options specified from the command line
 static reprompi_sk_options_t parameters;
@@ -68,29 +75,12 @@ enum {
 };
 
 
-void sk_init_synchronization_module(const reprompib_sync_options_t opts_p, const long nrep) {
-    int i;
-    int np;
+static void* skampi_malloc(int size);
+static void mpi_abort(int errorcode);
+static void error_with_abort(int errorcode, char *fmt, ...);
 
-    MPI_Comm_size(MPI_COMM_WORLD, &np);
 
-    parameters.wait_time_sec = opts_p.wait_time_sec;
-    parameters.window_size_sec = opts_p.window_size_sec;
-    parameters.n_rep = nrep;
-
-    tds = (double*) skampi_malloc(np * sizeof(double));
-    for (i = 0; i < np; i++)
-        tds[i] = 0.0;
-
-    invalid = (int*) skampi_malloc(parameters.n_rep * sizeof(int));
-    for (i = 0; i < parameters.n_rep; i++) {
-        invalid[i] = 0;
-    }
-    repetition_counter = 0;
-
-}
-
-void print_global_time_differences() {
+static void print_global_time_differences() {
     int i, p, name_len, pid;
     char my_name[MPI_MAX_PROCESSOR_NAME];
 
@@ -258,7 +248,7 @@ static void ping_pong(int p1, int p2, int my_rank, int np) {
 
 }
 
-void determine_time_differences(int my_rank, int np) {
+static void determine_time_differences(int my_rank, int np) {
     int i;
     double *tmp_tds;
 
@@ -294,7 +284,7 @@ void determine_time_differences(int my_rank, int np) {
 
 /*---------------------------------------------------------------------------*/
 
-int wait_till(double time_stamp, double *last_time_stamp) {
+static int wait_till(double time_stamp, double *last_time_stamp) {
     if ((*last_time_stamp = get_time()) > time_stamp) {
         return 0;
     }
@@ -306,35 +296,53 @@ int wait_till(double time_stamp, double *last_time_stamp) {
     }
 }
 
-inline double should_wait_till(int counter, double interval, double offset) {
+static inline double should_wait_till(int counter, double interval, double offset) {
     return (counter + 1) * interval + start_batch + offset;
 }
 
-void sk_sync_clocks(void) {
+static void sk_sync_clocks(void) {
     int my_rank, np;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
-
     determine_time_differences(my_rank, np);
 }
 
-void sk_init_synchronization(void) {
-    int my_rank, np;
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+static void sk_init_synchronization(const reprompib_sync_params_t* init_params) {
+    int np, i;
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
-    repetition_counter = 0;
-    if (my_rank == 0) {
-        start_batch = get_time() + parameters.wait_time_sec;
+    parameters.n_rep = init_params->nrep;
+
+    tds = (double*) skampi_malloc(np * sizeof(double));
+    for (i = 0; i < np; i++)
+        tds[i] = 0.0;
+
+    invalid = (int*) skampi_malloc(parameters.n_rep * sizeof(int));
+    for (i = 0; i < parameters.n_rep; i++) {
+        invalid[i] = 0;
     }
 
-    MPI_Bcast(&start_batch, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
+    repetition_counter = 0;
 }
 
-void sk_start_synchronization(void) {
+static void sk_finalize_synchronization(void) {
+    free(tds);
+    free(invalid);
+}
+
+static void sk_init_sync_round(void) { // initialize the first window
+  int my_rank;
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+  if (my_rank == 0) {
+      start_batch = get_time() + parameters.wait_time_sec;
+  }
+
+  MPI_Bcast(&start_batch, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+}
+
+static void sk_start_synchronization(void) {
     if (!wait_till(
             should_wait_till(sync_index, parameters.window_size_sec, -tds[0]),
             &start_sync)) {
@@ -345,7 +353,7 @@ void sk_start_synchronization(void) {
     }
 }
 
-void sk_stop_synchronization(void) {
+static void sk_stop_synchronization(void) {
     stop_sync = get_time();
 
     if (stop_sync - start_sync > parameters.window_size_sec) {
@@ -356,7 +364,7 @@ void sk_stop_synchronization(void) {
     sync_index++;
 }
 
-void print_sync_results(void) {
+static void print_sync_results(void) {
     int* sync_res = NULL;
     int i, j;
     int my_rank, np;
@@ -383,31 +391,27 @@ void print_sync_results(void) {
     }
 }
 
-int* sk_get_local_sync_errorcodes(void) {
+static int* sk_get_local_sync_errorcodes(void) {
     return invalid;
 }
 
-void sk_cleanup_synchronization_module(void) {
-    free(tds);
-    free(invalid);
-}
 
-void sk_print_sync_parameters(FILE* f) {
+static void sk_print_sync_parameters(FILE* f) {
     fprintf(f, "#@sync=SKaMPI\n");
     fprintf(f, "#@window_s=%.10f\n", parameters.window_size_sec);
     fprintf(f, "#@wait_time_s=%.10f\n", parameters.wait_time_sec);
 }
 
-inline double sk_get_timediff_to_root(void) {
+static inline double sk_get_timediff_to_root(void) {
     return tds[0];
 }
 
-inline double sk_get_normalized_time(double local_time) {
+static inline double sk_get_normalized_time(double local_time) {
     return local_time + tds[0];
 }
 
 
-void* skampi_malloc(int size) {
+static void* skampi_malloc(int size) {
     void *baseptr = NULL;
 
     if (size < 0) {
@@ -427,7 +431,7 @@ void* skampi_malloc(int size) {
     return baseptr;
 }
 
-void error_with_abort(int errorcode, char *fmt, ...) {
+static void error_with_abort(int errorcode, char *fmt, ...) {
     va_list args;
 
     /* we try to send a message to stderr whether we officialy can do I/O
@@ -443,7 +447,7 @@ void error_with_abort(int errorcode, char *fmt, ...) {
     mpi_abort(errorcode);
 }
 
-void mpi_abort(int errorcode) {
+static void mpi_abort(int errorcode) {
     /* we try to send a message to stderr whether we officialy can do I/O
      (i_can_do_io) or not */
     /*  if( i_can_do_io ) {*/
@@ -454,6 +458,40 @@ void mpi_abort(int errorcode) {
 }
 
 
+void sk_init_module(int argc, char** argv) {
+  reprompib_sync_options_t sync_opts;
+  sk_parse_options(argc, argv, &sync_opts);
+
+  parameters.wait_time_sec = sync_opts.wait_time_sec;
+  parameters.window_size_sec = sync_opts.window_size_sec;
+}
+
+
+void sk_cleanup_module(void) {
+
+}
+
+
+void register_skampi_module(reprompib_sync_module_t *sync_mod) {
+  sync_mod->name = "SKaMPI";
+  sync_mod->sync_type = REPROMPI_SYNCTYPE_WIN;
+
+  sync_mod->init_module = sk_init_module;
+  sync_mod->cleanup_module = sk_cleanup_module;
+
+  sync_mod->init_sync = sk_init_synchronization;
+  sync_mod->finalize_sync = sk_finalize_synchronization;
+
+  sync_mod->start_sync = sk_start_synchronization;
+  sync_mod->stop_sync = sk_stop_synchronization;
+
+  sync_mod->sync_clocks = sk_sync_clocks;
+  sync_mod->init_sync_round = sk_init_sync_round;
+
+  sync_mod->get_global_time = sk_get_normalized_time;
+  sync_mod->get_errorcodes = sk_get_local_sync_errorcodes;
+  sync_mod->print_sync_info = sk_print_sync_parameters;
+}
 
 
 

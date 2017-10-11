@@ -35,7 +35,6 @@ int main(int argc, char* argv[]) {
     int my_rank, nprocs, p;
     reprompib_st_opts_t opts;
     int master_rank;
-    reprompib_st_error_t ret;
 
     double *all_rdtsc_times = NULL;
     double *all_wtime_times = NULL;
@@ -50,8 +49,7 @@ int main(int argc, char* argv[]) {
     MPI_Init(&argc, &argv);
     master_rank = 0;
 
-    ret = parse_test_options(&opts, argc, argv);
-    validate_test_options_or_abort(ret, &opts);
+    parse_test_options(&opts, argc, argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 

@@ -25,143 +25,123 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "mpi.h"
+#include <string.h>
+#include <mpi.h>
 
+//#include "time_measurement.h"
+#include "reprompi_bench/misc.h"
 #include "synchronization.h"
-#include "time_measurement.h"
 
-#ifdef ENABLE_WINDOWSYNC_SK
-#include "skampi_sync/sk_sync.h"
-#include "skampi_sync/sk_parse_options.h"
 
-#elif  ENABLE_WINDOWSYNC_JK
-#include "joneskoenig_sync/jk_sync.h"
-#include "joneskoenig_sync/jk_parse_options.h"
+// Implemented synchronization modules
+static const int n_sync_modules = 5;
+static reprompib_sync_module_t* sync_modules;
 
-#elif ENABLE_WINDOWSYNC_HCA
-#include "hca_sync/hca_sync.h"
-#include "hca_sync/hca_parse_options.h"
 
-#elif ENABLE_GLOBAL_TIMES
-#include "hca_sync/hca_sync.h"
-#include "hca_sync/hca_parse_options.h"
-#include "mpibarrier_sync/barrier_sync.h"
-#endif
+/***********
+ * Get the name of the sync module from the command line
+ *********/
+typedef enum reprompi_sync_module_getopt_ids {
+  REPROMPI_ARGS_SYNC_TYPE
+} reprompi_sync_module_getopt_ids_t;
 
-#ifdef ENABLE_BENCHMARK_BARRIER
-#include "benchmark_barrier_sync/bbarrier_sync.h"
-#endif
 
-#ifndef ENABLE_WINDOWSYNC
-#include "mpibarrier_sync/barrier_sync.h"
-#endif
+static const struct option reprompi_sync_module_long_options[] = {
+        { "sync", required_argument, 0, REPROMPI_ARGS_SYNC_TYPE },
+        { 0, 0, 0, 0 }
+};
+static const char reprompi_sync_module_opts_str[] = "";
 
-void no_op(void) {
 
+typedef struct sync_module_info {
+  char* sync_type;
+} sync_module_info_t;
+
+static void parse_sync_options(int argc, char **argv, sync_module_info_t* opts_p) {
+    int c;
+
+    opts_p->sync_type = NULL;
+
+    optind = 1;
+    optopt = 0;
+    opterr = 0; // ignore invalid options
+    while (1) {
+
+        /* getopt_long stores the option index here. */
+        int option_index = 0;
+
+        c = getopt_long(argc, argv, reprompi_sync_module_opts_str, reprompi_sync_module_long_options,
+                &option_index);
+
+        /* Detect the end of the options. */
+        if (c == -1)
+            break;
+
+        switch (c) {
+        case REPROMPI_ARGS_SYNC_TYPE: /* synchronization module */
+            opts_p->sync_type = strdup(optarg);
+            break;
+        case '?':
+             break;
+        }
+    }
+
+    optind = 1; // reset optind to enable option re-parsing
+    opterr = 1; // reset opterr
 }
 
 
-#ifdef ENABLE_WINDOWSYNC_SK
-void initialize_sync_implementation(reprompib_sync_functions_t *sync_f)
-{
-    sync_f->init_sync_module = sk_init_synchronization_module;
-    sync_f->init_sync = sk_init_synchronization;
-    sync_f->sync_clocks = sk_sync_clocks;
-    sync_f->start_sync = sk_start_synchronization;
-    sync_f->stop_sync = sk_stop_synchronization;
-    sync_f->clean_sync_module = sk_cleanup_synchronization_module;
-    sync_f->get_normalized_time = sk_get_normalized_time;
-    sync_f->get_errorcodes = sk_get_local_sync_errorcodes;
-    sync_f->print_sync_info = sk_print_sync_parameters;
-    sync_f->get_time = get_time;
-    sync_f->parse_sync_params = sk_parse_options;
+static int get_sync_module_index(const char* name) {
+  int i;
+
+  if (name == NULL) {
+    return -1;
+  }
+
+  for (i=0; i<n_sync_modules; i++) {
+    if (strcmp(name, sync_modules[i].name) == 0) {
+        return i;
+    }
+  }
+
+  return -1;
 }
 
-#elif ENABLE_WINDOWSYNC_JK
-void initialize_sync_implementation(reprompib_sync_functions_t *sync_f)
-{
-    sync_f->init_sync_module = jk_init_synchronization_module;
-    sync_f->init_sync = jk_init_synchronization;
-    sync_f->sync_clocks = jk_sync_clocks;
-    sync_f->start_sync = jk_start_synchronization;
-    sync_f->stop_sync = jk_stop_synchronization;
-    sync_f->clean_sync_module = jk_cleanup_synchronization_module;
-    sync_f->get_normalized_time = jk_get_normalized_time;
-    sync_f->get_errorcodes = jk_get_local_sync_errorcodes;
-    sync_f->print_sync_info = jk_print_sync_parameters;
-    sync_f->get_time = get_time;
-    sync_f->parse_sync_params = jk_parse_options;
+
+/**********************************************
+ * Initialization/cleanup functions for the specified sync module
+ **********************************************/
+void reprompib_init_sync_module(int argc, char** argv, reprompib_sync_module_t* sync_mod) {
+  sync_module_info_t sync_module_info;
+  int index;
+
+  parse_sync_options(argc, argv, &sync_module_info);
+  index = get_sync_module_index(sync_module_info.sync_type);
+
+  if (index < 0) {
+    reprompib_print_error_and_exit("Invalid synchronization module selected (choose between: MPI_Barrier, Dissem_Barrier, HCA, SKaMPI, JK)");
+  }
+
+  *sync_mod = sync_modules[index];
+  sync_mod->init_module(argc, argv);
 }
 
-#elif ENABLE_WINDOWSYNC_HCA
-void initialize_sync_implementation(reprompib_sync_functions_t *sync_f)
-{
-    sync_f->init_sync_module = hca_init_synchronization_module;
-    sync_f->sync_clocks = hca_synchronize_clocks;
-    sync_f->init_sync = hca_init_synchronization;
-    sync_f->clean_sync_module = hca_cleanup_synchronization_module;
-    sync_f->get_normalized_time = hca_get_normalized_time;
-    sync_f->get_errorcodes = hca_get_local_sync_errorcodes;
 
-    sync_f->print_sync_info = hca_print_sync_parameters;
-    sync_f->start_sync = hca_start_synchronization;
-    sync_f->stop_sync = hca_stop_synchronization;
-    sync_f->get_time = hca_get_adjusted_time;
-    sync_f->parse_sync_params = hca_parse_options;
+void reprompib_register_sync_modules(void) {
+  sync_modules = calloc(n_sync_modules, sizeof(reprompib_sync_module_t));
+
+  register_hca_module(&(sync_modules[0]));
+  register_skampi_module(&(sync_modules[1]));
+  register_mpibarrier_module(&(sync_modules[2]));
+  register_dissem_barrier_module(&(sync_modules[3]));
+  register_jk_module(&(sync_modules[4]));
 }
 
-#elif ENABLE_GLOBAL_TIMES // barrier sync with HCA-global times
-void initialize_sync_implementation(reprompib_sync_functions_t *sync_f)
-{
-    sync_f->init_sync_module = hca_init_synchronization_module;
-    sync_f->sync_clocks = hca_synchronize_clocks;
-    sync_f->init_sync = hca_init_synchronization;
-    sync_f->clean_sync_module = hca_cleanup_synchronization_module;
-    sync_f->get_normalized_time = hca_get_normalized_time;
-    sync_f->get_errorcodes = hca_get_local_sync_errorcodes;
-    sync_f->get_time = hca_get_adjusted_time;
-    sync_f->parse_sync_params = hca_parse_options;
-
-#if ENABLE_BENCHMARK_BARRIER
-    sync_f->print_sync_info = bbarrier_print_sync_parameters;
-    sync_f->start_sync = bbarrier_start_synchronization;
-    sync_f->stop_sync = bbarrier_stop_synchronization;
-#else	// MPI_Barrier sync
-    sync_f->print_sync_info = mpibarrier_print_sync_parameters;
-    sync_f->start_sync = mpibarrier_start_synchronization;
-    sync_f->stop_sync = mpibarrier_stop_synchronization;
-#endif
+void reprompib_deregister_sync_modules(void) {
+  free(sync_modules);
 }
 
-#elif ENABLE_BENCHMARK_BARRIER
-void initialize_sync_implementation(reprompib_sync_functions_t *sync_f)
-{
-    sync_f->init_sync_module = bbarrier_init_synchronization_module;
-    sync_f->sync_clocks = no_op;
-    sync_f->init_sync = bbarrier_init_synchronization;
-    sync_f->start_sync = bbarrier_start_synchronization;
-    sync_f->stop_sync = bbarrier_stop_synchronization;
-    sync_f->clean_sync_module = bbarrier_cleanup_synchronization_module;
-    sync_f->get_normalized_time = bbarrier_get_normalized_time;
-    sync_f->get_errorcodes = NULL;
-    sync_f->print_sync_info = bbarrier_print_sync_parameters;
-    sync_f->get_time = get_time;
-    sync_f->parse_sync_params = bbarrier_parse_options;
-}
 
-#else	// MPI_Barrier
-void initialize_sync_implementation(reprompib_sync_functions_t *sync_f) {
-    sync_f->init_sync_module = mpibarrier_init_synchronization_module;
-    sync_f->sync_clocks = no_op;
-    sync_f->init_sync = mpibarrier_init_synchronization;
-    sync_f->start_sync = mpibarrier_start_synchronization;
-    sync_f->stop_sync = mpibarrier_stop_synchronization;
-    sync_f->clean_sync_module = mpibarrier_cleanup_synchronization_module;
-    sync_f->get_normalized_time = mpibarrier_get_normalized_time;
-    sync_f->get_errorcodes = NULL;
-    sync_f->print_sync_info = mpibarrier_print_sync_parameters;
-    sync_f->get_time = get_time;
-    sync_f->parse_sync_params = mpibarrier_parse_options;
-}
 
-#endif
+
+

@@ -28,7 +28,7 @@
 #include <limits.h>
 #include "mpi.h"
 #include "reprompi_bench/option_parser/parse_common_options.h"
-#include "reprompi_bench/sync/benchmark_barrier_sync/bbarrier_sync.h"
+#include "reprompi_bench/sync/synchronization.h"
 #include "buf_manager/mem_allocation.h"
 #include "collectives.h"
 

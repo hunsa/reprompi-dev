@@ -58,7 +58,7 @@ void print_initial_settings(long nrep, print_sync_info_t print_sync_info) {
 }
 
 void reprompib_print_bench_output(const reprompib_job_t* job_p,
-    const reprompib_sync_functions_t* sync_f, const reprompib_options_t* opts) {
+    const reprompib_sync_module_t* sync_module, const reprompib_options_t* opts) {
   FILE* f = stdout;
   reprompib_lib_output_info_t output_info;
   int my_rank;
@@ -68,23 +68,23 @@ void reprompib_print_bench_output(const reprompib_job_t* job_p,
   output_info.print_summary_methods = opts->print_summary_methods;
 
   if (first_print_call) {
-    print_initial_settings(opts->n_rep, sync_f->print_sync_info);
-    print_results_header(&output_info, job_p);
+    print_initial_settings(opts->n_rep, sync_module->print_sync_info);
+    print_results_header(&output_info, job_p, sync_module);
     first_print_call = 0;
   }
 
   if (opts->print_summary_methods > 0) {
-    print_summary(stdout, &output_info, job_p, sync_f->get_errorcodes, sync_f->get_normalized_time);
+    print_summary(stdout, &output_info, job_p, sync_module);
   } else {
-    print_measurement_results(f, &output_info, job_p, sync_f->get_errorcodes, sync_f->get_normalized_time);
+    print_measurement_results(f, &output_info, job_p, sync_module);
   }
 
 }
 
-void reprompib_initialize_benchmark(int argc, char* argv[], reprompib_sync_functions_t* sync_f_p,
-    reprompib_options_t *opts_p) {
+void reprompib_initialize_benchmark(int argc, char* argv[],
+    reprompib_options_t *opts_p, reprompib_sync_module_t* sync_module) {
   int my_rank;
-  reprompib_sync_options_t sync_opts;
+  reprompib_sync_params_t sync_params;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
@@ -103,13 +103,12 @@ void reprompib_initialize_benchmark(int argc, char* argv[], reprompib_sync_funct
   // parse the benchmark-specific arguments (nreps, summary)
   reprompib_parse_options(opts_p, argc, argv);
 
-  // initialize synchronization functions according to the configured synchronization method
-  initialize_sync_implementation(sync_f_p);
+  // initialize synchronization module
+  reprompib_init_sync_module(argc, argv, sync_module);
 
-  sync_f_p->parse_sync_params(argc, argv, &sync_opts);
-
-  // start synchronization module
-  sync_f_p->init_sync_module(sync_opts, opts_p->n_rep);
+  // initialize synchronization
+  sync_params.nrep = opts_p->n_rep;
+  sync_module->init_sync(&sync_params);
 }
 
 void reprompib_initialize_job(const long nrep,
@@ -192,8 +191,13 @@ int reprompib_add_parameter_to_bench(const char* key, const char* val) {
   return ret;
 }
 
-void reprompib_cleanup_benchmark(reprompib_options_t* opts_p) {
+void reprompib_cleanup_benchmark(reprompib_options_t* opts_p, reprompib_sync_module_t* sync_module) {
   reprompib_free_parameters(opts_p);
   reprompib_cleanup_dictionary(&params_dict);
+
+  sync_module->finalize_sync();
+  sync_module->cleanup_module();
+  reprompib_deregister_sync_modules();
+
 }
 

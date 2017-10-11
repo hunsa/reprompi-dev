@@ -36,21 +36,20 @@
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/sync/sync_info.h"
 #include "hca_parse_options.h"
-#include "hca_sync.h"
+#include "reprompi_bench/sync/synchronization.h"
 
-const int HCA_WARMUP_ROUNDS = 5;
-
-
-static double start_sync = 0;       /* current window start timestamp (global time) */
-static int* invalid;
-static int repetition_counter = 0;  /* current repetition index */
+static const int HCA_WARMUP_ROUNDS = 5;
 
 
-double initial_timestamp = 0;
+typedef struct {
+    long n_rep; /* --repetitions */
+    double window_size_sec; /* --window-size */
 
+    int n_fitpoints; /* --fitpoints */
+    int n_exchanges; /* --exchanges */
 
-// options specified from the command line
-static reprompi_hca_params_t parameters;
+    double wait_time_sec; /* --wait-time */
+} reprompi_hca_params_t;
 
 //linear model
 typedef struct {
@@ -58,7 +57,18 @@ typedef struct {
     double slope;
 } lm_t;
 
-lm_t lm;
+static lm_t lm;
+
+
+static double start_sync = 0;       /* current window start timestamp (global time) */
+static int* invalid;
+static int repetition_counter = 0;  /* current repetition index */
+static double initial_timestamp = 0;
+
+
+// options specified from the command line
+static reprompi_hca_params_t parameters;
+
 
 
 
@@ -68,8 +78,14 @@ enum {
 };
 
 
-inline double hca_get_adjusted_time(void) {
+static inline double hca_get_adjusted_time(void) {
     return get_time() - initial_timestamp;
+}
+
+static inline double hca_get_normalized_time(double local_time) {
+    //return local_time- (local_time * lm.slope + lm.intercept);
+    double adjusted_time = local_time - initial_timestamp;
+    return adjusted_time - (adjusted_time * lm.slope + lm.intercept);
 }
 
 
@@ -203,7 +219,7 @@ static double ping_pong_skampi(int p1, int p2)
 
 
 
-void compute_and_set_intercept(lm_t* lm, int client, int p_ref) {
+static void compute_and_set_intercept(lm_t* lm, int client, int p_ref) {
     int my_rank;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -222,7 +238,7 @@ void compute_and_set_intercept(lm_t* lm, int client, int p_ref) {
         }
 }
 
-void compute_and_set_all_intercepts(lm_t* lm)
+static void compute_and_set_all_intercepts(lm_t* lm)
 {
     int i;
     int my_rank, np;
@@ -246,7 +262,7 @@ void compute_and_set_all_intercepts(lm_t* lm)
 
 
 
-void compute_rtt(int master_rank, int other_rank, const int n_pingpongs, double *rtt) {
+static void compute_rtt(int master_rank, int other_rank, const int n_pingpongs, double *rtt) {
     int my_rank, np;
     MPI_Status stat;
     int i;
@@ -329,7 +345,7 @@ void compute_rtt(int master_rank, int other_rank, const int n_pingpongs, double 
 }
 
 
-lm_t hca_learn_model(const int root_rank, const int other_rank,
+static lm_t hca_learn_model(const int root_rank, const int other_rank,
         const reprompi_hca_params_t params, const double my_rtt) {
     int i, j;
     int my_rank, np;
@@ -419,15 +435,11 @@ lm_t hca_learn_model(const int root_rank, const int other_rank,
     return lm;
 }
 
-inline double hca_get_normalized_time(double local_time) {
-    return local_time- (local_time * lm.slope + lm.intercept);
-}
-
-inline int my_pow_2(int exp) {
+static inline int my_pow_2(int exp) {
     return (int)pow(2.0, (double)exp);
 }
 
-void print_models(int my_rank, lm_t *linear_models, int nprocs, int round) {
+static void print_models(int my_rank, lm_t *linear_models, int nprocs, int round) {
     int i;
 
     for(i=0; i<nprocs; i++) {
@@ -438,29 +450,7 @@ void print_models(int my_rank, lm_t *linear_models, int nprocs, int round) {
 }
 
 
-void hca_init_synchronization_module(const reprompib_sync_options_t parsed_opts, const long nrep)
-{
-    int i;
-
-    parameters.n_exchanges = parsed_opts.n_exchanges;
-    parameters.n_fitpoints = parsed_opts.n_fitpoints;
-    parameters.wait_time_sec = parsed_opts.wait_time_sec;
-    parameters.window_size_sec = parsed_opts.window_size_sec;
-    parameters.n_rep = nrep;
-
-    invalid  = (int*)calloc(parameters.n_rep, sizeof(int));
-    for(i = 0; i < parameters.n_rep; i++)
-    {
-        invalid[i] = 0;
-    }
-    repetition_counter = 0;
-
-    initial_timestamp = get_time();
-}
-
-
-
-void hca_synchronize_clocks(void)
+static void hca_synchronize_clocks(void)
 {
     int my_rank, nprocs;
     int i, j, p;
@@ -654,27 +644,50 @@ void hca_synchronize_clocks(void)
 }
 
 
-void hca_init_synchronization(void) {
-    int my_rank;
-    int master_rank = 0;
+static void hca_init_synchronization(const reprompib_sync_params_t* init_params) {
+    int i;
+    parameters.n_rep = init_params->nrep;
 
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-
-    repetition_counter = 0;
-    if( my_rank == master_rank ) {
-        start_sync = hca_get_adjusted_time() + parameters.wait_time_sec;
+    // initialize array of flags for invalid-measurements;
+    invalid  = (int*)calloc(parameters.n_rep, sizeof(int));
+    for(i = 0; i < parameters.n_rep; i++)
+    {
+        invalid[i] = 0;
     }
-    MPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
+    repetition_counter = 0;
+    initial_timestamp = get_time();
+}
+
+
+static void hca_finalize_synchronization(void)
+{
+    free(invalid);
+}
+
+
+// initialize first window
+static void hca_init_sync_round(void) {
+  int my_rank;
+  int master_rank = 0;
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+  if( my_rank == master_rank ) {
+    // we need a normalized time to use across processes as a start window
+    // (the local time on the master rank needs to be normalized to work as a reference time)
+    start_sync = hca_get_normalized_time(get_time()) + parameters.wait_time_sec;
+  }
+  MPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
 
 }
 
-void hca_start_synchronization(void)
+static void hca_start_synchronization(void)
 {
     int is_first = 1;
     double global_time;
 
     while(1) {
-        global_time = hca_get_normalized_time(hca_get_adjusted_time());
+        //global_time = hca_get_normalized_time(hca_get_adjusted_time());
+        global_time = hca_get_normalized_time(get_time());
 
         if( global_time >= start_sync ) {
             if( is_first == 1 ) {
@@ -687,10 +700,12 @@ void hca_start_synchronization(void)
 }
 
 
-void hca_stop_synchronization(void)
+static void hca_stop_synchronization(void)
 {
     double global_time;
-    global_time = hca_get_normalized_time(hca_get_adjusted_time());
+   // global_time = hca_get_normalized_time(hca_get_adjusted_time());
+    global_time = hca_get_normalized_time(get_time());
+
 
     if( global_time > start_sync + parameters.window_size_sec ) {
         invalid[repetition_counter] |= FLAG_SYNC_WIN_EXPIRED;
@@ -702,19 +717,13 @@ void hca_stop_synchronization(void)
 
 
 
-int* hca_get_local_sync_errorcodes(void)
+static int* hca_get_local_sync_errorcodes(void)
 {
     return invalid;
 }
 
 
-void hca_cleanup_synchronization_module(void)
-{
-    free(invalid);
-}
-
-
-void hca_print_sync_parameters(FILE* f)
+static void hca_print_sync_parameters(FILE* f)
 {
     fprintf (f, "#@sync=HCA\n");
     fprintf(f, "#@window_s=%.10f\n", parameters.window_size_sec);
@@ -729,3 +738,39 @@ void hca_print_sync_parameters(FILE* f)
 }
 
 
+static void hca_init_module(int argc, char** argv) {
+  reprompib_sync_options_t sync_opts;
+  hca_parse_options(argc, argv, &sync_opts);
+
+  parameters.n_exchanges = sync_opts.n_exchanges;
+  parameters.n_fitpoints = sync_opts.n_fitpoints;
+  parameters.wait_time_sec = sync_opts.wait_time_sec;
+  parameters.window_size_sec = sync_opts.window_size_sec;
+}
+
+
+static void hca_cleanup_module(void) {
+
+}
+
+
+void register_hca_module(reprompib_sync_module_t *sync_mod) {
+  sync_mod->name = "HCA";
+  sync_mod->sync_type = REPROMPI_SYNCTYPE_WIN;
+
+  sync_mod->init_module = hca_init_module;
+  sync_mod->cleanup_module = hca_cleanup_module;
+
+  sync_mod->init_sync = hca_init_synchronization;
+  sync_mod->finalize_sync = hca_finalize_synchronization;
+
+  sync_mod->start_sync = hca_start_synchronization;
+  sync_mod->stop_sync = hca_stop_synchronization;
+
+  sync_mod->sync_clocks = hca_synchronize_clocks;
+  sync_mod->init_sync_round = hca_init_sync_round;
+
+  sync_mod->get_global_time = hca_get_normalized_time;
+  sync_mod->get_errorcodes = hca_get_local_sync_errorcodes;
+  sync_mod->print_sync_info = hca_print_sync_parameters;
+}
