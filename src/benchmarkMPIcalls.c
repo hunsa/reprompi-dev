@@ -84,16 +84,16 @@ void reprompib_print_bench_output(job_t job, double* tstart_sec, double* tend_se
 
     if (opts->print_summary_methods >0)  {
         print_summary(stdout, job, tstart_sec, tend_sec, sync_module,
-                opts->print_summary_methods);
+                opts);
         if (common_opts->output_file != NULL) {
             print_measurement_results(f, job, tstart_sec, tend_sec,
-                sync_module, opts->verbose);
+                sync_module, opts);
         }
 
     }
     else {
         print_measurement_results(f, job, tstart_sec, tend_sec,
-            sync_module, opts->verbose);
+            sync_module, opts);
     }
 
     if (my_rank == OUTPUT_ROOT_PROC) {
@@ -173,9 +173,6 @@ int main(int argc, char* argv[]) {
     //initialize dictionary
     reprompib_init_dictionary(&params_dict, HASHTABLE_SIZE);
 
-    // initialize synchronization module
-    reprompib_init_sync_module(argc, argv, &sync_module);
-
     // parse arguments and set-up benchmarking jobs
     print_command_line_args(argc, argv);
 
@@ -189,6 +186,9 @@ int main(int argc, char* argv[]) {
 
     // parse the benchmark-specific arguments (nreps, summary)
     reprompib_parse_options(&opts, argc, argv);
+
+    // initialize synchronization module
+    reprompib_init_sync_module(argc, argv, &sync_module);
 
     if (common_opts.input_file == NULL && opts.n_rep <=0) { // make sure nrep is specified when there is no input file
       reprompib_print_error_and_exit("The number of repetitions is not defined (specify the \"--nrep\" command-line argument or provide an input file)\n");

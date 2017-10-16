@@ -414,6 +414,7 @@ static void jk_cleanup_module(void) {
 
 void register_jk_module(reprompib_sync_module_t *sync_mod) {
   sync_mod->name = "JK";
+  sync_mod->clocksync = REPROMPI_CLOCKSYNC_JK;
   sync_mod->sync_type = REPROMPI_SYNCTYPE_WIN;
 
   sync_mod->init_module = jk_init_module;

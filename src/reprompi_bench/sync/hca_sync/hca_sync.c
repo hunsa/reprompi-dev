@@ -36,6 +36,7 @@
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/sync/sync_info.h"
 #include "hca_parse_options.h"
+#include "reprompi_bench/sync/barrier_sync/barrier_sync.h"
 #include "reprompi_bench/sync/synchronization.h"
 
 static const int HCA_WARMUP_ROUNDS = 5;
@@ -68,8 +69,6 @@ static double initial_timestamp = 0;
 
 // options specified from the command line
 static reprompi_hca_params_t parameters;
-
-
 
 
 enum {
@@ -722,22 +721,6 @@ static int* hca_get_local_sync_errorcodes(void)
     return invalid;
 }
 
-
-static void hca_print_sync_parameters(FILE* f)
-{
-    fprintf (f, "#@sync=HCA\n");
-    fprintf(f, "#@window_s=%.10f\n", parameters.window_size_sec);
-    fprintf(f, "#@fitpoints=%d\n", parameters.n_fitpoints);
-    fprintf(f, "#@exchanges=%d\n", parameters.n_exchanges);
-    fprintf(f, "#@wait_time_s=%.10f\n", parameters.wait_time_sec);
-#ifdef ENABLE_LOGP_SYNC
-    fprintf(f, "#@hcasynctype=logp\n");
-#else
-    fprintf(f, "#@hcasynctype=linear\n");
-#endif
-}
-
-
 static void hca_init_module(int argc, char** argv) {
   reprompib_sync_options_t sync_opts;
   hca_parse_options(argc, argv, &sync_opts);
@@ -753,24 +736,99 @@ static void hca_cleanup_module(void) {
 
 }
 
+static void hca_common_print(FILE* f)
+{
+    fprintf (f, "#@clocksync=HCA\n");
+    fprintf(f, "#@window_s=%.10f\n", parameters.window_size_sec);
+    fprintf(f, "#@fitpoints=%d\n", parameters.n_fitpoints);
+    fprintf(f, "#@exchanges=%d\n", parameters.n_exchanges);
+    fprintf(f, "#@wait_time_s=%.10f\n", parameters.wait_time_sec);
+#ifdef ENABLE_LOGP_SYNC
+    fprintf(f, "#@hcasynctype=logp\n");
+#else
+    fprintf(f, "#@hcasynctype=linear\n");
+#endif
+}
+
+static void hca_print_sync_parameters(FILE* f)
+{
+  hca_common_print(f);
+  fprintf (f, "#@procsync=HCA\n");
+}
+
+static void hca_mpibarrier_print_sync_parameters(FILE* f)
+{
+  hca_common_print(f);
+  fprintf (f, "#@procsync=MPI_Barrier\n");
+}
+
+static void hca_dissembarrier_print_sync_parameters(FILE* f)
+{
+  hca_common_print(f);
+  fprintf (f, "#@procsync=dissem_barrier\n");
+}
+
+
+
+static void hca_common_clock_sync_init(reprompib_sync_module_t *sync_mod) {
+  sync_mod->clocksync = REPROMPI_CLOCKSYNC_HCA;
+
+  sync_mod->init_module = hca_init_module;
+  sync_mod->cleanup_module = hca_cleanup_module;
+  sync_mod->sync_clocks = hca_synchronize_clocks;
+
+  sync_mod->get_errorcodes = hca_get_local_sync_errorcodes;
+  sync_mod->get_global_time = hca_get_normalized_time;
+}
 
 void register_hca_module(reprompib_sync_module_t *sync_mod) {
   sync_mod->name = "HCA";
   sync_mod->sync_type = REPROMPI_SYNCTYPE_WIN;
 
-  sync_mod->init_module = hca_init_module;
-  sync_mod->cleanup_module = hca_cleanup_module;
+  hca_common_clock_sync_init(sync_mod);
 
   sync_mod->init_sync = hca_init_synchronization;
   sync_mod->finalize_sync = hca_finalize_synchronization;
 
+  sync_mod->init_sync_round = hca_init_sync_round;
   sync_mod->start_sync = hca_start_synchronization;
   sync_mod->stop_sync = hca_stop_synchronization;
 
-  sync_mod->sync_clocks = hca_synchronize_clocks;
-  sync_mod->init_sync_round = hca_init_sync_round;
-
-  sync_mod->get_global_time = hca_get_normalized_time;
-  sync_mod->get_errorcodes = hca_get_local_sync_errorcodes;
   sync_mod->print_sync_info = hca_print_sync_parameters;
 }
+
+
+void register_hca_mpibarrier_module(reprompib_sync_module_t *sync_mod) {
+  sync_mod->name = "HCA+MPI_Barrier";
+  sync_mod->sync_type = REPROMPI_SYNCTYPE_MPIBARRIER;
+
+  hca_common_clock_sync_init(sync_mod);
+
+  sync_mod->init_sync = barrier_init_synchronization;
+  sync_mod->finalize_sync = empty;
+
+  sync_mod->init_sync_round = empty;
+  sync_mod->start_sync = mpibarrier_start_synchronization;
+  sync_mod->stop_sync = empty;
+
+  sync_mod->print_sync_info = hca_mpibarrier_print_sync_parameters;
+}
+
+void register_hca_dissembarrier_module(reprompib_sync_module_t *sync_mod) {
+  sync_mod->name = "HCA+Dissem_Barrier";
+  sync_mod->sync_type = REPROMPI_SYNCTYPE_MPIBARRIER;
+
+  hca_common_clock_sync_init(sync_mod);
+
+
+  sync_mod->init_sync = barrier_init_synchronization;
+  sync_mod->finalize_sync = empty;
+
+  sync_mod->init_sync_round = empty;
+  sync_mod->start_sync = dissem_barrier_start_synchronization;
+  sync_mod->stop_sync = empty;
+
+  sync_mod->print_sync_info = hca_dissembarrier_print_sync_parameters;
+}
+
+

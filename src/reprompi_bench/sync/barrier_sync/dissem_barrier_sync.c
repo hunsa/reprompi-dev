@@ -26,34 +26,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "reprompi_bench/sync/sync_info.h"
 #include "reprompi_bench/sync/synchronization.h"
-
-static inline double bbarrier_get_normalized_time(double local_time) {
-  int my_rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-
-  if (my_rank == 0) {
-    fprintf(stderr, "WARNING: Global time is not defined for barrier-based synchronization.\n");
-  }
-
-  return local_time;
-}
-
-static int* bbarrier_get_errorcodes(void) {
-  int my_rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-
-  if (my_rank == 0) {
-    fprintf(stderr, "WARNING: Measurement errorcodes are not defined for barrier-based synchronization.\n");
-  }
-
-  return NULL;
-}
-
-static void bbarrier_init_synchronization(const reprompib_sync_params_t* sync_params) {
-}
-
+#include "reprompi_bench/sync/barrier_sync/barrier_sync.h"
 
 void dissemination_barrier(void) {
     int my_rank, np, send_rank, recv_rank;
@@ -80,47 +54,43 @@ void dissemination_barrier(void) {
 }
 
 
-static void bbarrier_start_synchronization(void) {
+void dissem_barrier_start_synchronization(void) {
     dissemination_barrier();
 #ifdef ENABLE_DOUBLE_BARRIER
     dissemination_barrier();
 #endif
 }
 
-static void empty(void) {
-}
 
-
-static void bbarrier_print_sync_parameters(FILE* f) {
-    fprintf(f, "#@sync=BBarrier\n");
+static void dissem_barrier_print_sync_parameters(FILE* f) {
+    fprintf(f, "#@clocksync=None\n");
+    fprintf(f, "#@procsync=dissem_barrier\n");
 #ifdef ENABLE_DOUBLE_BARRIER
     fprintf(f, "#@doublebarrier=true\n");
 #endif
 }
 
 
-static void bbarrier_init_module(int argc, char** argv) {
-}
-
 
 void register_dissem_barrier_module(reprompib_sync_module_t *sync_mod) {
   sync_mod->name = "Dissem_Barrier";
-  sync_mod->sync_type = REPROMPI_SYNCTYPE_BARRIER;
+  sync_mod->sync_type = REPROMPI_SYNCTYPE_DISSEMBARRIER;
+  sync_mod->clocksync = REPROMPI_CLOCKSYNC_NONE;
 
-  sync_mod->init_module = bbarrier_init_module;
+  sync_mod->init_module = barrier_init_module;
   sync_mod->cleanup_module = empty;
 
-  sync_mod->init_sync = bbarrier_init_synchronization;
+  sync_mod->init_sync = barrier_init_synchronization;
   sync_mod->finalize_sync = empty;
   sync_mod->sync_clocks = empty;
   sync_mod->init_sync_round = empty;
 
-  sync_mod->start_sync = bbarrier_start_synchronization;
+  sync_mod->start_sync = dissem_barrier_start_synchronization;
   sync_mod->stop_sync = empty;
 
-  sync_mod->get_global_time = bbarrier_get_normalized_time;
-  sync_mod->get_errorcodes = bbarrier_get_errorcodes;
-  sync_mod->print_sync_info = bbarrier_print_sync_parameters;
+  sync_mod->get_global_time = barrier_get_normalized_time;
+  sync_mod->get_errorcodes = barrier_get_errorcodes;
+  sync_mod->print_sync_info = dissem_barrier_print_sync_parameters;
 }
 
 

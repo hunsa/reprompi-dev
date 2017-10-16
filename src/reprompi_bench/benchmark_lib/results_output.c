@@ -436,65 +436,75 @@ void print_summary(FILE* f,
         double* tmp_local_start_sec = NULL;
         double* tmp_local_end_sec = NULL;
 
+        // use global timings if available
         if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
           // gather measurement results
           int* local_errorcodes = sync_module->get_errorcodes();
 
           MPI_Gather(local_errorcodes, job_p->n_rep, MPI_INT,
                     sync_errorcodes, job_p->n_rep, MPI_INT, 0, MPI_COMM_WORLD);
-        }
 
+          if (my_rank == OUTPUT_ROOT_PROC) {
+            global_start_sec = (double*) malloc(job_p->n_rep * np * sizeof(double));
+            global_end_sec = (double*) malloc(job_p->n_rep * np * sizeof(double));
+          }
 
-        if (my_rank == OUTPUT_ROOT_PROC) {
-            local_start_sec = (double*) malloc(
-                job_p->n_rep * np * sizeof(double));
-            local_end_sec = (double*) malloc(
-                job_p->n_rep * np * sizeof(double));
-            global_start_sec = (double*) malloc(
-                job_p->n_rep * np * sizeof(double));
-            global_end_sec = (double*) malloc(
-                job_p->n_rep * np * sizeof(double));
-        }
-
-        // gather measurement results
-        MPI_Gather(job_p->tstart_sec, job_p->n_rep, MPI_DOUBLE, local_start_sec,
-            job_p->n_rep, MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
-
-        MPI_Gather(job_p->tend_sec, job_p->n_rep, MPI_DOUBLE, local_end_sec, job_p->n_rep,
-                MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
-
-        tmp_local_start_sec = (double*) malloc(
-            job_p->n_rep * np * sizeof(double));
-        tmp_local_end_sec = (double*) malloc(
-            job_p->n_rep * np * sizeof(double));
-        for (i = 0; i < job_p->n_rep; i++) {
+          tmp_local_start_sec = (double*) malloc(job_p->n_rep * np * sizeof(double));
+          tmp_local_end_sec = (double*) malloc(job_p->n_rep * np * sizeof(double));
+          for (i = 0; i < job_p->n_rep; i++) {
             tmp_local_start_sec[i] = sync_module->get_global_time(job_p->tstart_sec[i]);
             tmp_local_end_sec[i] = sync_module->get_global_time(job_p->tend_sec[i]);
-        }
-        MPI_Gather(tmp_local_start_sec, job_p->n_rep, MPI_DOUBLE, global_start_sec,
+          }
+          MPI_Gather(tmp_local_start_sec, job_p->n_rep, MPI_DOUBLE, global_start_sec,
             job_p->n_rep, MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
 
-        MPI_Gather(tmp_local_end_sec, job_p->n_rep, MPI_DOUBLE, global_end_sec, job_p->n_rep,
+          MPI_Gather(tmp_local_end_sec, job_p->n_rep, MPI_DOUBLE, global_end_sec, job_p->n_rep,
                 MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
 
-        free(tmp_local_start_sec);
-        free(tmp_local_end_sec);
+          free(tmp_local_start_sec);
+          free(tmp_local_end_sec);
+
+          if (my_rank == OUTPUT_ROOT_PROC) {
+              int proc_id;
+
+              for (proc_id = 0; proc_id < np; proc_id++) {
+                  for (i = 0; i < job_p->n_rep; i++) {
+                      maxRuntimes_sec[proc_id * job_p->n_rep + i] = global_end_sec[proc_id * job_p->n_rep + i] -
+                              global_start_sec[proc_id * job_p->n_rep+ i];
+                  }
+              }
+
+              free(global_start_sec);
+              free(global_end_sec);
+          }
+
+        } else {      // use local times
+          if (my_rank == OUTPUT_ROOT_PROC) {
+              local_start_sec = (double*) malloc(job_p->n_rep * np * sizeof(double));
+              local_end_sec = (double*) malloc(job_p->n_rep * np * sizeof(double));
+          }
+
+          // gather local measurement results
+          MPI_Gather(job_p->tstart_sec, job_p->n_rep, MPI_DOUBLE, local_start_sec,
+              job_p->n_rep, MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
+
+          MPI_Gather(job_p->tend_sec, job_p->n_rep, MPI_DOUBLE, local_end_sec, job_p->n_rep,
+                  MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
 
 
-        if (my_rank == OUTPUT_ROOT_PROC) {
+          if (my_rank == OUTPUT_ROOT_PROC) {
             int proc_id;
 
             for (proc_id = 0; proc_id < np; proc_id++) {
                 for (i = 0; i < job_p->n_rep; i++) {
-                    maxRuntimes_sec[proc_id * job_p->n_rep + i] = global_end_sec[proc_id * job_p->n_rep + i] -
-                            global_start_sec[proc_id * job_p->n_rep+ i];
+                    maxRuntimes_sec[proc_id * job_p->n_rep + i] = local_end_sec[proc_id * job_p->n_rep + i] -
+                        local_start_sec[proc_id * job_p->n_rep+ i];
                 }
             }
 
             free(local_start_sec);
             free(local_end_sec);
-            free(global_start_sec);
-            free(global_end_sec);
+          }
         }
 
         n_results = np;
@@ -507,15 +517,15 @@ void print_summary(FILE* f,
 
         for (proc = 0; proc < n_results; proc++) {
             double* current_proc_runtimes;
-            int* current_error_codes;
 
             nreps = 0;
-
             current_proc_runtimes = maxRuntimes_sec + (proc * job_p->n_rep);
-            current_error_codes = sync_errorcodes + (proc * job_p->n_rep);
 
             // remove measurements with out-of-window errors
             if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+              int* current_error_codes;
+              current_error_codes = sync_errorcodes + (proc * job_p->n_rep);
+
               for (i = 0; i < job_p->n_rep; i++) {
                 if (current_error_codes[i] == 0) {
                     if (nreps < i) {

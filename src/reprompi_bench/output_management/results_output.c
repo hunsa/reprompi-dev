@@ -30,8 +30,8 @@
 
 #include "benchmark_job.h"
 #include "reprompi_bench/sync/synchronization.h"
-#include "reprompi_bench/option_parser/parse_options.h"
 #include "collective_ops/collectives.h"
+#include "reprompi_bench/misc.h"
 #include "runtimes_computation.h"
 #include "results_output.h"
 
@@ -130,33 +130,26 @@ void print_results_header(const reprompib_options_t* opts, const reprompib_sync_
 
 
 
-void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec, const reprompib_sync_module_t*  sync_module) {
+static void compute_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
+    const reprompib_sync_module_t*  sync_module, reprompi_timing_method_t runtime_type,
+    double** maxRuntimes_sec_p, int** sync_errorcodes_p) {
 
   double* maxRuntimes_sec;
   int i;
-  int my_rank;
   long current_start_index;
-  size_t msize_value;
-  //#ifdef ENABLE_WINDOWSYNC
-  int* sync_errorcodes = NULL;
-  //#endif
+  int* sync_errorcodes;
+  int my_rank;
+
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-  if (OUTPUT_MSIZE_TYPE == OUTPUT_MSIZE_BYTES) {
-    // print msize in bytes
-    msize_value = job.msize;
-  } else {    // print counts
-    msize_value = job.count;
-  }
-
-
   maxRuntimes_sec = NULL;
+  sync_errorcodes = NULL;
   if (my_rank == OUTPUT_ROOT_PROC) {
-    maxRuntimes_sec = (double*) malloc(job.n_rep * sizeof(double));
+    maxRuntimes_sec = (double*) calloc(job.n_rep, sizeof(double));
 
     //#ifdef ENABLE_WINDOWSYNC
     if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
-      sync_errorcodes = (int*) malloc(job.n_rep * sizeof(int));
+      sync_errorcodes = (int*) calloc(job.n_rep, sizeof(int));
       for (i = 0; i < job.n_rep; i++) {
         sync_errorcodes[i] = 0;
       }
@@ -168,16 +161,52 @@ void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec, co
 
   //#ifdef ENABLE_WINDOWSYNC
   if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
-    compute_runtimes_global_clocks(tstart_sec, tend_sec, current_start_index, job.n_rep, OUTPUT_ROOT_PROC,
-        sync_module->get_errorcodes, sync_module->get_global_time,
-        maxRuntimes_sec, sync_errorcodes);
+    switch (runtime_type) {
+      case(REPROMPI_RUNT_GLOBAL_TIMES):
+          compute_runtimes_global_clocks(tstart_sec, tend_sec, current_start_index, job.n_rep, OUTPUT_ROOT_PROC,
+              sync_module->get_errorcodes, sync_module->get_global_time,
+              maxRuntimes_sec, sync_errorcodes);
+          break;
+      default:
+          reprompib_print_error_and_exit("Unknown run-time computation method (it should be specified using the \"--runtime-type\" option).");
+    }
   }
   //#else
-  else {
-    compute_runtimes_local_clocks(tstart_sec, tend_sec, current_start_index, job.n_rep, OUTPUT_ROOT_PROC,
-        maxRuntimes_sec);
+  else {  // barrier-based clock synchronization
+    switch (runtime_type) {
+      case(REPROMPI_RUNT_MAX_OVER_LOCAL_RUNTIME):
+        compute_runtimes_local_clocks(tstart_sec, tend_sec, current_start_index, job.n_rep, OUTPUT_ROOT_PROC,
+                maxRuntimes_sec);
+        break;
+      default:
+        reprompib_print_error_and_exit("Unknown or unsupported run-time computation method (it should be specified using the \"--runtime-type\" option).");
+    }
   }
 //#endif
+
+  *sync_errorcodes_p = sync_errorcodes;
+  *maxRuntimes_sec_p = maxRuntimes_sec;
+}
+
+
+void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
+    const reprompib_sync_module_t*  sync_module, reprompi_timing_method_t runtime_type) {
+  double* maxRuntimes_sec = NULL;
+  int i;
+  int my_rank;
+  size_t msize_value;
+  int* sync_errorcodes = NULL;
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+  if (OUTPUT_MSIZE_TYPE == OUTPUT_MSIZE_BYTES) {
+    // print msize in bytes
+    msize_value = job.msize;
+  } else {    // print counts
+    msize_value = job.count;
+  }
+
+  // maxRuntimes_sec and sync_errorcodes are only defined for the root process
+  compute_runtimes(f, job, tstart_sec, tend_sec, sync_module, runtime_type, &maxRuntimes_sec, &sync_errorcodes);
 
   if (my_rank == OUTPUT_ROOT_PROC) {
 
@@ -197,12 +226,9 @@ void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec, co
       //#endif
     }
 
-    //#ifdef ENABLE_WINDOWSYNC
     if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
       free(sync_errorcodes);
     }
-    //#endif
-
     free(maxRuntimes_sec);
   }
 }
@@ -210,8 +236,7 @@ void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec, co
 
 
 void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
-    const reprompib_sync_module_t*  sync_module,
-    int verbose) {
+    const reprompib_sync_module_t*  sync_module, const reprompib_options_t* opts_p) {
 
   int i, proc_id;
   double* local_start_sec = NULL;
@@ -236,8 +261,8 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
     msize_value = job.count;
   }
 
-  if (verbose == 0) {
-    print_runtimes(f, job, tstart_sec, tend_sec, sync_module);
+  if (opts_p->verbose == 0) {
+    print_runtimes(f, job, tstart_sec, tend_sec, sync_module, opts_p->runtime_type);
   } else {
 
     // we gather data from processes in chunks of OUTPUT_NITERATIONS_CHUNK elements
@@ -279,28 +304,32 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
             chunk_nrep * np, sizeof(double));
         local_end_sec = (double*) calloc(
             chunk_nrep * np, sizeof(double));
-        global_start_sec = (double*) calloc(
-            chunk_nrep * np, sizeof(double));
-        global_end_sec = (double*) calloc(
-            chunk_nrep * np, sizeof(double));
       }
 
-      // gather measurement results
+      // gather local measurement results
       MPI_Gather(tstart_sec, chunk_nrep, MPI_DOUBLE, local_start_sec,
           chunk_nrep, MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
 
       MPI_Gather(tend_sec, chunk_nrep, MPI_DOUBLE, local_end_sec, chunk_nrep,
           MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
 
-      for (i = 0; i < chunk_nrep; i++) {
-        tstart_sec[i] = sync_module->get_global_time(tstart_sec[i]);
-        tend_sec[i] = sync_module->get_global_time(tend_sec[i]);
-      }
-      MPI_Gather(tstart_sec, chunk_nrep, MPI_DOUBLE, global_start_sec,
-          chunk_nrep, MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
+      // gather global times in case global clocks are used
+      if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+        if (my_rank == OUTPUT_ROOT_PROC) {
+          global_start_sec = (double*) calloc(chunk_nrep * np, sizeof(double));
+          global_end_sec = (double*) calloc(chunk_nrep * np, sizeof(double));
+        }
 
-      MPI_Gather(tend_sec, chunk_nrep, MPI_DOUBLE, global_end_sec, chunk_nrep,
-          MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
+        for (i = 0; i < chunk_nrep; i++) {
+          tstart_sec[i] = sync_module->get_global_time(tstart_sec[i]);
+          tend_sec[i] = sync_module->get_global_time(tend_sec[i]);
+        }
+        MPI_Gather(tstart_sec, chunk_nrep, MPI_DOUBLE, global_start_sec,
+            chunk_nrep, MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
+
+        MPI_Gather(tend_sec, chunk_nrep, MPI_DOUBLE, global_end_sec, chunk_nrep,
+            MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
+      }
 
       if (my_rank == OUTPUT_ROOT_PROC) {
 
@@ -348,16 +377,13 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
 
 void print_summary(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
     const reprompib_sync_module_t*  sync_module,
-    const int print_summary_methods) {
+    const reprompib_options_t* opts_p) {
 
-  double* maxRuntimes_sec;
+  double* maxRuntimes_sec = NULL;
   int my_rank;
-  long current_start_index;
   size_t msize_value;
-  //#ifdef ENABLE_WINDOWSYNC
   int i;
   int* sync_errorcodes = NULL;
-  //#endif
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
@@ -368,36 +394,9 @@ void print_summary(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
     msize_value = job.count;
   }
 
-
-  maxRuntimes_sec = NULL;
-  if (my_rank == OUTPUT_ROOT_PROC) {
-    maxRuntimes_sec = (double*) malloc(job.n_rep * sizeof(double));
-
-    //#ifdef ENABLE_WINDOWSYNC
-    if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
-      sync_errorcodes = (int*) malloc(job.n_rep * sizeof(int));
-      for (i = 0; i < job.n_rep; i++) {
-        sync_errorcodes[i] = 0;
-      }
-    }
-    //#endif
-  }
-
-  current_start_index = 0;
-
-  //#ifdef ENABLE_WINDOWSYNC
-  if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
-    compute_runtimes_global_clocks(tstart_sec, tend_sec, current_start_index, job.n_rep, OUTPUT_ROOT_PROC,
-        sync_module->get_errorcodes, sync_module->get_global_time,
-        maxRuntimes_sec, sync_errorcodes);
-  }
-  //#else
-  else {
-    compute_runtimes_local_clocks(tstart_sec, tend_sec, current_start_index, job.n_rep, OUTPUT_ROOT_PROC,
-        maxRuntimes_sec);
-  }
-  //#endif
-
+  // maxRuntimes_sec and sync_errorcodes are only defined for the root process
+  compute_runtimes(f, job, tstart_sec, tend_sec, sync_module, opts_p->runtime_type,
+      &maxRuntimes_sec, &sync_errorcodes);
 
   if (my_rank == OUTPUT_ROOT_PROC) {
     long nreps = 0;
@@ -423,12 +422,12 @@ void print_summary(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
     gsl_sort(maxRuntimes_sec, 1, nreps);
     fprintf(f, "%50s %12ld %10ld %10ld ", get_call_from_index(job.call_index), msize_value, job.n_rep, nreps);
 
-    if (print_summary_methods > 0) {
+    if (opts_p->print_summary_methods > 0) {
       int i;
       for (i=0; i<reprompib_get_number_summary_methods(); i++) {
         summary_method_info_t* s = reprompib_get_summary_method(i);
 
-        if (print_summary_methods & s->mask) {
+        if (opts_p->print_summary_methods & s->mask) {
           double value = 0;
 
           if (strcmp(s->name, "mean") == 0) {

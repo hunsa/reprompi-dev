@@ -27,8 +27,16 @@
 #include "reprompi_bench/sync/sync_info.h"
 
 typedef enum {
+  REPROMPI_CLOCKSYNC_HCA = 0,
+  REPROMPI_CLOCKSYNC_JK,
+  REPROMPI_CLOCKSYNC_SKAMPI,
+  REPROMPI_CLOCKSYNC_NONE
+} reprompi_clocksync_t;
+
+typedef enum {
   REPROMPI_SYNCTYPE_WIN = 0,
-  REPROMPI_SYNCTYPE_BARRIER
+  REPROMPI_SYNCTYPE_MPIBARRIER,
+  REPROMPI_SYNCTYPE_DISSEMBARRIER
 } reprompi_synctype_t;
 
 // parameters needed to initialize a synchronization round
@@ -61,6 +69,8 @@ typedef struct reprompib_sync_module{
     print_sync_info_t print_sync_info;
 
     char* name;
+    // a module is uniquely identified by the clock sync. method and the process synchronization method
+    reprompi_clocksync_t clocksync;
     reprompi_synctype_t sync_type;
 } reprompib_sync_module_t;
 
@@ -77,8 +87,7 @@ void register_skampi_module(reprompib_sync_module_t *sync_mod);
 void register_mpibarrier_module(reprompib_sync_module_t *sync_mod);
 void register_dissem_barrier_module(reprompib_sync_module_t *sync_mod);
 
-
-
-void dissemination_barrier(void);
+void register_hca_mpibarrier_module(reprompib_sync_module_t *sync_mod);
+void register_hca_dissembarrier_module(reprompib_sync_module_t *sync_mod);
 
 #endif /* REPROMPIB_SYNCHRONIZATION_H_ */

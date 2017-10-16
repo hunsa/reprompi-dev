@@ -89,6 +89,18 @@ void reprompib_print_common_help(void) {
         printf("%-40s %-40s\n", "--exchanges=<nexc>",
                 "number of exchanges (default: 10)\n");
 
+        printf("\nSynchronization options:\n");
+        printf("%-40s %-40s\n", "--sync=<sync>",
+                "process synchronization method (default: MPI_Barrier)");
+        printf("%40s Available methods:\n", "");
+        printf("%50s%s\n", "","MPI_Barrier, Dissem_Barrier, HCA, JK, SKaMPI");
+
+
+        printf("\nRun-time computation options:\n");
+        printf("%-40s %-40s\n", "--runtime-type=<type>",
+                "method used to compute the run-time of the benchmarked MPI function (default: local)");
+        printf("%40s Available methods:\n", "");
+        printf("%50s%s\n", "","local, global, local_avg");
     }
 }
 

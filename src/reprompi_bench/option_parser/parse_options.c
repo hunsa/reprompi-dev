@@ -53,23 +53,47 @@ static summary_method_info_t summary_methods[] = {
     { MASK_PRINT_MAX, "max" }
 };
 
+typedef struct runtime_type {
+    reprompi_timing_method_t type;
+    char* name;
+} runtime_type_t;
+
+static const runtime_type_t runtime_types[] = {
+    { REPROMPI_RUNT_MAX_OVER_LOCAL_RUNTIME, "local" },      // max over the local runtime of all processes for each iteration (default method when using local clocks)
+    { REPROMPI_RUNT_GLOBAL_TIMES, "global" },               // max global end_time - min global start_time (when global clocks are enabled)
+    { REPROMPI_RUNT_MAX_OVER_LOCAL_AVG, "local_avg" }       // OSU method: max over local averages of processes
+};
+static const int N_RUNTIME_TYPES = 3;
+
 
 enum reprompi_common_getopt_ids {
   REPROMPI_ARGS_VERBOSE = 'v',
   REPROMPI_ARGS_NREPS = 500,
-  REPROMPI_ARGS_SUMMARY
+  REPROMPI_ARGS_SUMMARY,
+  REPROMPI_ARGS_RUNTIME_TYPE    // local or global clocks
 };
 
 static const struct option reprompi_default_long_options[] = {
         {"verbose", optional_argument, 0, REPROMPI_ARGS_VERBOSE},
         { "nrep", required_argument, 0, REPROMPI_ARGS_NREPS },
         {"summary", optional_argument, 0, REPROMPI_ARGS_SUMMARY},
+        {"runtime-type", required_argument, 0, REPROMPI_ARGS_RUNTIME_TYPE},
 
         { 0, 0, 0, 0 }
 };
 static const char reprompi_default_opts_str[] = "v";
 
 
+
+const char* reprompib_get_runtime_type_name(int runtime_type) {
+   int i;
+   for (i=0; i<N_RUNTIME_TYPES; i++) {
+     if (runtime_types[i].type == runtime_type) {
+       return runtime_types[i].name;
+     }
+   }
+   return NULL;
+}
 
 summary_method_info_t* reprompib_get_summary_method(int index) {
    if (index <0 || index >= N_SUMMARY_METHODS) {
@@ -88,6 +112,7 @@ static void init_parameters(reprompib_options_t* opts_p) {
     opts_p->verbose = 0;
     opts_p->n_rep = 0;
     opts_p->print_summary_methods = 0;
+    opts_p->runtime_type = -1;
 }
 
 void reprompib_free_parameters(reprompib_options_t* opts_p) {
@@ -116,6 +141,23 @@ static void parse_summary_list(char* subopts, reprompib_options_t* opts_p) {
         }
     }
 }
+
+static void parse_runtime_type(char* optarg, reprompib_options_t* opts_p) {
+  int i;
+  int error = 1;
+
+  for (i=0; i<N_RUNTIME_TYPES; i++) {
+    if (strcmp(runtime_types[i].name, optarg) == 0) {
+      opts_p->runtime_type = runtime_types[i].type;
+      error = 0;
+      break;
+    }
+  }
+  if (error) {
+    reprompib_print_error_and_exit("Incorrect run-time type (--runtime-type=<type> (local, global, or local_avg))");
+  }
+}
+
 
 void reprompib_parse_options(reprompib_options_t* opts_p, int argc, char** argv) {
     int c, err;
@@ -150,9 +192,12 @@ void reprompib_parse_options(reprompib_options_t* opts_p, int argc, char** argv)
             parse_summary_list(optarg, opts_p);
             break;
 
-
         case REPROMPI_ARGS_VERBOSE: /* verbose flag */
             opts_p->verbose = 1;
+            break;
+
+        case REPROMPI_ARGS_RUNTIME_TYPE: /* runtime computation method */
+            parse_runtime_type(optarg, opts_p);
             break;
         case '?':
             break;

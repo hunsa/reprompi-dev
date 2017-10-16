@@ -169,8 +169,9 @@ ${SRC_DIR}/reprompi_bench/sync/skampi_sync/sk_parse_options.c
 ${SRC_DIR}/reprompi_bench/sync/skampi_sync/sk_sync.c
 ${SRC_DIR}/reprompi_bench/sync/joneskoenig_sync/jk_parse_options.c
 ${SRC_DIR}/reprompi_bench/sync/joneskoenig_sync/jk_sync.c
-${SRC_DIR}/reprompi_bench/sync/mpibarrier_sync/barrier_sync.c
-${SRC_DIR}/reprompi_bench/sync/benchmark_barrier_sync/bbarrier_sync.c
+${SRC_DIR}/reprompi_bench/sync/barrier_sync/barrier_sync.c
+${SRC_DIR}/reprompi_bench/sync/barrier_sync/mpi_barrier_sync.c
+${SRC_DIR}/reprompi_bench/sync/barrier_sync/dissem_barrier_sync.c
 ${HCA_FILES}
 )
 
@@ -252,7 +253,7 @@ if (COMPILE_PRED_BENCHMARK)
 endif()
 
 if (COMPILE_BENCH_TESTS)
-    ADD_SUBDIRECTORY(${SRC_DIR}/test)
+    ADD_SUBDIRECTORY(${SRC_DIR}/test/test_output)
 endif()
 
 if (COMPILE_SANITY_CHECK_CLOCK)

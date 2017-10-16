@@ -34,20 +34,41 @@
 
 
 // Implemented synchronization modules
-static const int n_sync_modules = 5;
+static const int n_sync_modules = 7;
 static reprompib_sync_module_t* sync_modules;
 
+typedef struct sync_type {
+  char* name;
+  int type;
+}sync_type_t;
+static const sync_type_t proc_sync_options[] = {
+        { "window", REPROMPI_SYNCTYPE_WIN},
+        { "MPI_Barrier", REPROMPI_SYNCTYPE_MPIBARRIER },
+        { "dissem_barrier", REPROMPI_SYNCTYPE_DISSEMBARRIER }
+};
+static const int N_PROC_SYNC_TYPES = sizeof(proc_sync_options)/sizeof(sync_type_t);
+
+
+static const sync_type_t clock_sync_options[] = {
+        { "HCA", REPROMPI_CLOCKSYNC_HCA},
+        { "JK", REPROMPI_CLOCKSYNC_JK },
+        { "SKaMPI", REPROMPI_CLOCKSYNC_SKAMPI },
+        { "None", REPROMPI_CLOCKSYNC_NONE }
+};
+static const int N_CLOCK_SYNC_TYPES = sizeof(clock_sync_options)/sizeof(sync_type_t);
 
 /***********
  * Get the name of the sync module from the command line
  *********/
 typedef enum reprompi_sync_module_getopt_ids {
-  REPROMPI_ARGS_SYNC_TYPE
+  REPROMPI_ARGS_SYNC_TYPE,            // clock sync: HCA, SKaMPI etc. (default: None)
+  REPROMPI_ARGS_PROC_SYNC_TYPE        // process sync: window, MPI_Barrier, Dissem_Barrier
 } reprompi_sync_module_getopt_ids_t;
 
 
 static const struct option reprompi_sync_module_long_options[] = {
-        { "sync", required_argument, 0, REPROMPI_ARGS_SYNC_TYPE },
+        { "clock-sync", required_argument, 0, REPROMPI_ARGS_SYNC_TYPE },
+        { "proc-sync", required_argument, 0, REPROMPI_ARGS_PROC_SYNC_TYPE },
         { 0, 0, 0, 0 }
 };
 static const char reprompi_sync_module_opts_str[] = "";
@@ -55,12 +76,14 @@ static const char reprompi_sync_module_opts_str[] = "";
 
 typedef struct sync_module_info {
   char* sync_type;
+  char* proc_sync;
 } sync_module_info_t;
 
 static void parse_sync_options(int argc, char **argv, sync_module_info_t* opts_p) {
     int c;
 
     opts_p->sync_type = NULL;
+    opts_p->proc_sync = NULL;
 
     optind = 1;
     optopt = 0;
@@ -81,25 +104,66 @@ static void parse_sync_options(int argc, char **argv, sync_module_info_t* opts_p
         case REPROMPI_ARGS_SYNC_TYPE: /* synchronization module */
             opts_p->sync_type = strdup(optarg);
             break;
+        case REPROMPI_ARGS_PROC_SYNC_TYPE: /* synchronization module */
+            opts_p->proc_sync = strdup(optarg);
+            break;
         case '?':
              break;
         }
+    }
+
+    if (opts_p->sync_type == NULL) {
+      opts_p->sync_type = strdup("None");
     }
 
     optind = 1; // reset optind to enable option re-parsing
     opterr = 1; // reset opterr
 }
 
+static void cleanup_sync_options(sync_module_info_t* opts_p) {
+  if (opts_p != NULL && opts_p->sync_type != NULL) {
+    free(opts_p->sync_type);
+  }
+  if (opts_p != NULL && opts_p->proc_sync != NULL) {
+    free(opts_p->proc_sync);
+  }
+}
 
-static int get_sync_module_index(const char* name) {
+
+static int get_sync_type(const int n_types, const sync_type_t* type_list, const char* name) {
   int i;
 
   if (name == NULL) {
     return -1;
   }
 
+  for (i=0; i<n_types; i++) {
+    if (strcmp(name, type_list[i].name) == 0) {
+      printf("\n%s %s\n", name, type_list[i].name);
+        return i;
+    }
+  }
+
+  return -1;
+}
+
+static int get_sync_module_index(const sync_module_info_t* sync_module_info) {
+  int i;
+  int clock_sync_type, proc_sync_type;
+
+  if (sync_module_info == NULL) {
+    return -1;
+  }
+
+  clock_sync_type = get_sync_type(N_CLOCK_SYNC_TYPES, clock_sync_options, sync_module_info->sync_type);
+  proc_sync_type = get_sync_type(N_PROC_SYNC_TYPES, proc_sync_options, sync_module_info->proc_sync);
+
+  if (clock_sync_type < 0 || proc_sync_type < 0) {
+    return -1;
+  }
+
   for (i=0; i<n_sync_modules; i++) {
-    if (strcmp(name, sync_modules[i].name) == 0) {
+    if (sync_modules[i].clocksync == clock_sync_type && sync_modules[i].sync_type == proc_sync_type) {
         return i;
     }
   }
@@ -116,14 +180,16 @@ void reprompib_init_sync_module(int argc, char** argv, reprompib_sync_module_t* 
   int index;
 
   parse_sync_options(argc, argv, &sync_module_info);
-  index = get_sync_module_index(sync_module_info.sync_type);
+  index = get_sync_module_index(&sync_module_info);
 
   if (index < 0) {
-    reprompib_print_error_and_exit("Invalid synchronization module selected (choose between: MPI_Barrier, Dissem_Barrier, HCA, SKaMPI, JK)");
+    reprompib_print_error_and_exit("No synchronization module defined for the selected combination of --clock-sync and --proc-sync paramters.");
   }
 
   *sync_mod = sync_modules[index];
   sync_mod->init_module(argc, argv);
+
+  cleanup_sync_options(&sync_module_info);
 }
 
 
@@ -135,6 +201,9 @@ void reprompib_register_sync_modules(void) {
   register_mpibarrier_module(&(sync_modules[2]));
   register_dissem_barrier_module(&(sync_modules[3]));
   register_jk_module(&(sync_modules[4]));
+
+  register_hca_mpibarrier_module(&(sync_modules[5]));
+  register_hca_dissembarrier_module(&(sync_modules[6]));
 }
 
 void reprompib_deregister_sync_modules(void) {

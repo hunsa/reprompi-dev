@@ -198,18 +198,6 @@ int main(int argc, char* argv[]) {
 
   reprompib_register_sync_modules();
 
-  // initialize synchronization functions according to the configured synchronization method
-  reprompib_init_sync_module(argc, argv, &sync_module);
-  if (sync_module.sync_type == REPROMPI_SYNCTYPE_WIN) {
-    printf("ERROR: Cannot use this NREP prediction module with window-based synchronization. \n");
-    printf("Please use either the MPI_Barrier (--sync=MPI_Barrier) or the dissemination barrier (--sync=Dissem_Barrier) for process synchronization.\n");
-
-    sync_module.cleanup_module();
-    /* shut down MPI */
-    MPI_Finalize();
-    return 0;
-  }
-
   // initialize global dictionary
   reprompib_init_dictionary(&params_dict, HASHTABLE_SIZE);
 
@@ -221,6 +209,18 @@ int main(int argc, char* argv[]) {
 
   // parse extra parameters into the global dictionary
   reprompib_parse_extra_key_value_options(&params_dict, argc, argv);
+
+  // initialize synchronization functions according to the configured synchronization method
+  reprompib_init_sync_module(argc, argv, &sync_module);
+  if (sync_module.sync_type == REPROMPI_SYNCTYPE_WIN) {
+    printf("ERROR: Cannot use this NREP prediction module with window-based synchronization. \n");
+    printf("Please use either the MPI_Barrier (--sync=MPI_Barrier) or the dissemination barrier (--sync=Dissem_Barrier) for process synchronization.\n");
+
+    sync_module.cleanup_module();
+    /* shut down MPI */
+    MPI_Finalize();
+    return 0;
+  }
 
   max_nreps = 0;
   for (i = 0; i < pred_params.n_pred_rounds; i++) {

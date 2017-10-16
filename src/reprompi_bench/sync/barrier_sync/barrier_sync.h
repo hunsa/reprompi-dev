@@ -21,35 +21,28 @@
 </license>
 */
 
-#ifndef REPROMPIB_PARSE_OPTIONS_H_
-#define REPROMPIB_PARSE_OPTIONS_H_
+#ifndef REPROMPIB_SYNCHRONIZATION_BARRIER_SYNC_H_
+#define REPROMPIB_SYNCHRONIZATION_BARRIER_SYNC_H_
+
+#include "mpi.h"
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "reprompi_bench/sync/synchronization.h"
+
+void dissemination_barrier(void);
+
+double barrier_get_normalized_time(double local_time);
+int* barrier_get_errorcodes(void);
+void barrier_init_module(int argc, char** argv);
+void barrier_init_synchronization(const reprompib_sync_params_t* sync_params);
+
+void empty(void);
 
 
-typedef enum reprompi_timing_method {
-  REPROMPI_RUNT_MAX_OVER_LOCAL_RUNTIME = 0,
-  REPROMPI_RUNT_GLOBAL_TIMES,
-  REPROMPI_RUNT_MAX_OVER_LOCAL_AVG
-} reprompi_timing_method_t;
 
-typedef struct reprompib_opt {
-    long n_rep; /* --nrep */
-    int verbose; /* -v */
-    int print_summary_methods; /* --summary */
-    reprompi_timing_method_t runtime_type; /* --runtime-type */
-} reprompib_options_t;
-
-void reprompib_parse_options(reprompib_options_t* opts_p, int argc, char** argv);
-void reprompib_print_benchmark_help(void);
-void reprompib_free_parameters(reprompib_options_t* opts_p);
+void mpibarrier_start_synchronization(void);
+void dissem_barrier_start_synchronization(void);
 
 
-typedef struct {
-  int mask;
-  char *name;
-} summary_method_info_t;
-
-summary_method_info_t* reprompib_get_summary_method(int index);
-int reprompib_get_number_summary_methods(void);
-
-
-#endif /* REPROMPIB_PARSE_OPTIONS_H_ */
+#endif /* REPROMPIB_SYNCHRONIZATION_BARRIER_SYNC_H_ */
