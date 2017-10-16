@@ -16,6 +16,7 @@ parse_options.c
 ${SRC_DIR}/benchmark_job.c
 ${SRC_DIR}/reprompi_bench/misc.c
 ${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
+${SRC_DIR}/reprompi_bench/option_parser/parse_timing_options.c
 ${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
 ${PREDICTION_SRC_FILES}
 ${SYNC_SRC_FILES}

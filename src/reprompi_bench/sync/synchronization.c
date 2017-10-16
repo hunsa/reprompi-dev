@@ -139,7 +139,6 @@ static int get_sync_type(const int n_types, const sync_type_t* type_list, const 
 
   for (i=0; i<n_types; i++) {
     if (strcmp(name, type_list[i].name) == 0) {
-      printf("\n%s %s\n", name, type_list[i].name);
         return i;
     }
   }

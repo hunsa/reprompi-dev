@@ -21,27 +21,21 @@
 </license>
 */
 
-#ifndef REPROMPIB_PARSE_OPTIONS_H_
-#define REPROMPIB_PARSE_OPTIONS_H_
-
-typedef struct reprompib_opt {
-    long n_rep; /* --nrep */
-    int verbose; /* -v */
-    int print_summary_methods; /* --summary */
-} reprompib_options_t;
-
-void reprompib_parse_options(reprompib_options_t* opts_p, int argc, char** argv);
-void reprompib_print_benchmark_help(void);
-void reprompib_free_parameters(reprompib_options_t* opts_p);
+#ifndef REPROMPIB_PARSE_TIMING_OPTIONS_H_
+#define REPROMPIB_PARSE_TIMING_OPTIONS_H_
 
 
-typedef struct {
-  int mask;
-  char *name;
-} summary_method_info_t;
-
-summary_method_info_t* reprompib_get_summary_method(int index);
-int reprompib_get_number_summary_methods(void);
+typedef enum reprompi_timing_method {
+  REPROMPI_RUNT_MAX_OVER_LOCAL_RUNTIME = 0,
+  REPROMPI_RUNT_GLOBAL_TIMES
+  //REPROMPI_RUNT_MAX_OVER_LOCAL_AVG
+} reprompi_timing_method_t;
 
 
-#endif /* REPROMPIB_PARSE_OPTIONS_H_ */
+void reprompib_parse_timing_options(reprompi_timing_method_t* runtime_type, int argc, char** argv);
+void reprompib_print_timing_help(void);
+
+const char* reprompib_get_timing_method_name(reprompi_timing_method_t t);
+
+
+#endif /* REPROMPIB_PARSE_TIMING_OPTIONS_H_ */

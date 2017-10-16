@@ -34,6 +34,7 @@
 #include "reprompi_bench/option_parser/option_parser_helpers.h"
 #include "reprompi_bench/option_parser/parse_options.h"
 #include "reprompi_bench/option_parser/parse_common_options.h"
+#include "reprompi_bench/option_parser/parse_timing_options.h"
 #include "reprompi_bench/option_parser/parse_extra_key_value_options.h"
 #include "reprompi_bench/output_management/bench_info_output.h"
 #include "reprompi_bench/output_management/runtimes_computation.h"
@@ -44,7 +45,7 @@
 static const int OUTPUT_ROOT_PROC = 0;
 static const int HASHTABLE_SIZE=100;
 
-void print_initial_settings(const reprompib_options_t* opts, const reprompib_common_options_t* common_opts, print_sync_info_t print_sync_info, const reprompib_dictionary_t* dict) {
+static void print_initial_settings(const reprompib_options_t* opts, const reprompib_common_options_t* common_opts, print_sync_info_t print_sync_info, const reprompib_dictionary_t* dict) {
     int my_rank, np;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -69,9 +70,10 @@ void print_initial_settings(const reprompib_options_t* opts, const reprompib_com
 }
 
 
-void reprompib_print_bench_output(job_t job, double* tstart_sec, double* tend_sec,
+static void reprompib_print_bench_output(job_t job, double* tstart_sec, double* tend_sec,
         const reprompib_sync_module_t*  sync_module,
-        const reprompib_options_t* opts, const reprompib_common_options_t* common_opts) {
+        const reprompib_options_t* opts, const reprompib_common_options_t* common_opts,
+        const reprompi_timing_method_t runtime_type) {
     FILE* f = stdout;
     int my_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -84,16 +86,16 @@ void reprompib_print_bench_output(job_t job, double* tstart_sec, double* tend_se
 
     if (opts->print_summary_methods >0)  {
         print_summary(stdout, job, tstart_sec, tend_sec, sync_module,
-                opts);
+                opts, runtime_type);
         if (common_opts->output_file != NULL) {
             print_measurement_results(f, job, tstart_sec, tend_sec,
-                sync_module, opts);
+                sync_module, opts, runtime_type);
         }
 
     }
     else {
         print_measurement_results(f, job, tstart_sec, tend_sec,
-            sync_module, opts);
+            sync_module, opts, runtime_type);
     }
 
     if (my_rank == OUTPUT_ROOT_PROC) {
@@ -106,7 +108,7 @@ void reprompib_print_bench_output(job_t job, double* tstart_sec, double* tend_se
 }
 
 
-void reprompib_parse_bench_options(int argc, char** argv) {
+static void reprompib_parse_bench_options(int argc, char** argv) {
     int c;
     opterr = 0;
 
@@ -156,6 +158,7 @@ int main(int argc, char* argv[]) {
 
     reprompib_sync_module_t sync_module;
     reprompib_sync_params_t sync_params;
+    reprompi_timing_method_t runtime_type;
 
     /* start up MPI
      *
@@ -183,6 +186,9 @@ int main(int argc, char* argv[]) {
 
     // parse extra parameters into the global dictionary
     reprompib_parse_extra_key_value_options(&params_dict, argc, argv);
+
+    // parse timing options
+    reprompib_parse_timing_options(&runtime_type, argc, argv);
 
     // parse the benchmark-specific arguments (nreps, summary)
     reprompib_parse_options(&opts, argc, argv);
@@ -231,7 +237,7 @@ int main(int argc, char* argv[]) {
         }
 
         //print summarized data
-        reprompib_print_bench_output(job, tstart_sec, tend_sec, &sync_module, &opts, &common_opts);
+        reprompib_print_bench_output(job, tstart_sec, tend_sec, &sync_module, &opts, &common_opts, runtime_type);
 
         sync_module.finalize_sync();
 

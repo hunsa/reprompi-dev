@@ -159,9 +159,9 @@ void print_runtimes(FILE* f, const reprompib_job_t* job_p,
     current_start_index = 0;
 
     if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+      collect_errorcodes(current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC, sync_module->get_errorcodes, sync_errorcodes);
       compute_runtimes_global_clocks(job_p->tstart_sec, job_p->tend_sec, current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC,
-          sync_module->get_errorcodes, sync_module->get_global_time,
-          maxRuntimes_sec, sync_errorcodes);
+          sync_module->get_global_time, maxRuntimes_sec);
     }
     else {
       compute_runtimes_local_clocks_with_reduction(job_p->tstart_sec, job_p->tend_sec, current_start_index, job_p->n_rep,
@@ -416,10 +416,10 @@ void print_summary(FILE* f,
     if (strcmp(job_p->timertype, "all") !=0) { // one runtime for each nrep id (reduced over processes)
 
       if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+        collect_errorcodes(current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC, sync_module->get_errorcodes, sync_errorcodes);
         compute_runtimes_global_clocks(job_p->tstart_sec, job_p->tend_sec,
                 current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC,
-                sync_module->get_errorcodes, sync_module->get_global_time,
-                maxRuntimes_sec, sync_errorcodes);
+                sync_module->get_global_time, maxRuntimes_sec);
       }
       else {
         compute_runtimes_local_clocks_with_reduction(job_p->tstart_sec, job_p->tend_sec, current_start_index, job_p->n_rep,

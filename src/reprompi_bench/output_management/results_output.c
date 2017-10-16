@@ -126,69 +126,6 @@ void print_results_header(const reprompib_options_t* opts, const reprompib_sync_
 }
 
 
-
-
-
-
-static void compute_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
-    const reprompib_sync_module_t*  sync_module, reprompi_timing_method_t runtime_type,
-    double** maxRuntimes_sec_p, int** sync_errorcodes_p) {
-
-  double* maxRuntimes_sec;
-  int i;
-  long current_start_index;
-  int* sync_errorcodes;
-  int my_rank;
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-
-  maxRuntimes_sec = NULL;
-  sync_errorcodes = NULL;
-  if (my_rank == OUTPUT_ROOT_PROC) {
-    maxRuntimes_sec = (double*) calloc(job.n_rep, sizeof(double));
-
-    //#ifdef ENABLE_WINDOWSYNC
-    if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
-      sync_errorcodes = (int*) calloc(job.n_rep, sizeof(int));
-      for (i = 0; i < job.n_rep; i++) {
-        sync_errorcodes[i] = 0;
-      }
-    }
-    //#endif
-  }
-
-  current_start_index = 0;
-
-  //#ifdef ENABLE_WINDOWSYNC
-  if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
-    switch (runtime_type) {
-      case(REPROMPI_RUNT_GLOBAL_TIMES):
-          compute_runtimes_global_clocks(tstart_sec, tend_sec, current_start_index, job.n_rep, OUTPUT_ROOT_PROC,
-              sync_module->get_errorcodes, sync_module->get_global_time,
-              maxRuntimes_sec, sync_errorcodes);
-          break;
-      default:
-          reprompib_print_error_and_exit("Unknown run-time computation method (it should be specified using the \"--runtime-type\" option).");
-    }
-  }
-  //#else
-  else {  // barrier-based clock synchronization
-    switch (runtime_type) {
-      case(REPROMPI_RUNT_MAX_OVER_LOCAL_RUNTIME):
-        compute_runtimes_local_clocks(tstart_sec, tend_sec, current_start_index, job.n_rep, OUTPUT_ROOT_PROC,
-                maxRuntimes_sec);
-        break;
-      default:
-        reprompib_print_error_and_exit("Unknown or unsupported run-time computation method (it should be specified using the \"--runtime-type\" option).");
-    }
-  }
-//#endif
-
-  *sync_errorcodes_p = sync_errorcodes;
-  *maxRuntimes_sec_p = maxRuntimes_sec;
-}
-
-
 void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
     const reprompib_sync_module_t*  sync_module, reprompi_timing_method_t runtime_type) {
   double* maxRuntimes_sec = NULL;
@@ -206,7 +143,8 @@ void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
   }
 
   // maxRuntimes_sec and sync_errorcodes are only defined for the root process
-  compute_runtimes(f, job, tstart_sec, tend_sec, sync_module, runtime_type, &maxRuntimes_sec, &sync_errorcodes);
+  compute_runtimes(job.n_rep, tstart_sec, tend_sec, OUTPUT_ROOT_PROC, sync_module, runtime_type,
+      &maxRuntimes_sec, &sync_errorcodes);
 
   if (my_rank == OUTPUT_ROOT_PROC) {
 
@@ -236,7 +174,8 @@ void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
 
 
 void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
-    const reprompib_sync_module_t*  sync_module, const reprompib_options_t* opts_p) {
+    const reprompib_sync_module_t*  sync_module, const reprompib_options_t* opts_p,
+    const reprompi_timing_method_t runtime_type) {
 
   int i, proc_id;
   double* local_start_sec = NULL;
@@ -262,7 +201,7 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
   }
 
   if (opts_p->verbose == 0) {
-    print_runtimes(f, job, tstart_sec, tend_sec, sync_module, opts_p->runtime_type);
+    print_runtimes(f, job, tstart_sec, tend_sec, sync_module, runtime_type);
   } else {
 
     // we gather data from processes in chunks of OUTPUT_NITERATIONS_CHUNK elements
@@ -377,7 +316,8 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
 
 void print_summary(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
     const reprompib_sync_module_t*  sync_module,
-    const reprompib_options_t* opts_p) {
+    const reprompib_options_t* opts_p,
+    const reprompi_timing_method_t runtime_type) {
 
   double* maxRuntimes_sec = NULL;
   int my_rank;
@@ -395,7 +335,7 @@ void print_summary(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
   }
 
   // maxRuntimes_sec and sync_errorcodes are only defined for the root process
-  compute_runtimes(f, job, tstart_sec, tend_sec, sync_module, opts_p->runtime_type,
+  compute_runtimes(job.n_rep, tstart_sec, tend_sec, OUTPUT_ROOT_PROC, sync_module, runtime_type,
       &maxRuntimes_sec, &sync_errorcodes);
 
   if (my_rank == OUTPUT_ROOT_PROC) {

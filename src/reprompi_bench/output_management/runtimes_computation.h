@@ -25,15 +25,20 @@
 #define RUNTIMES_COMPUTATION_H_
 
 #include "reprompi_bench/sync/synchronization.h"
+#include "reprompi_bench/option_parser/parse_timing_options.h"
 
 void compute_runtimes_local_clocks(const double* tstart_sec, const double* tend_sec,
         long current_start_index, long current_nreps, int root_proc,
         double* maxRuntimes_sec);
 void compute_runtimes_global_clocks(const double* tstart_sec, const double* tend_sec,
         long current_start_index, long current_nreps, int root_proc,
-        sync_errorcodes_t get_errorcodes, sync_normtime_t get_global_time,
-        double* maxRuntimes_sec, int* sync_errorcodes);
+        sync_normtime_t get_global_time, double* maxRuntimes_sec);
+void collect_errorcodes(long current_start_index, long current_nreps, int root_proc,
+        sync_errorcodes_t get_errorcodes, int* sync_errorcodes);
 
 
+void compute_runtimes(int nrep, double* tstart_sec, double* tend_sec, int root_proc,
+    const reprompib_sync_module_t*  sync_module, reprompi_timing_method_t runtime_type,
+    double** maxRuntimes_sec_p, int** sync_errorcodes_p);
 
 #endif /* RUNTIMES_COMPUTATION_H_ */

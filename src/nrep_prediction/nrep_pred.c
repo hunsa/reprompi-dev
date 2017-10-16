@@ -42,8 +42,6 @@
 #include "benchmark_job.h"
 #include "parse_nrep_pred_options.h"
 
-#ifndef ENABLE_WINDOWSYNC
-
 static const int OUTPUT_ROOT_PROC = 0;
 static const int HASHTABLE_SIZE=100;
 
@@ -164,7 +162,7 @@ void nrep_pred_print_results_header(const char* filename) {
     }
   }
 }
-#endif
+
 
 int main(int argc, char* argv[]) {
   int my_rank, procs;
