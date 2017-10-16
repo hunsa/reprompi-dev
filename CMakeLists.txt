@@ -25,10 +25,6 @@ endif(GSL_INCLUDE_DIR)
 INCLUDE_DIRECTORIES(${GSL_INCLUDE_DIR} "src")
 set(COMMON_LIBRARIES ${GSL_LIBRARIES} )
 
-option(ENABLE_WINDOWSYNC_SK "SKaMPI window-based synchronization [default: MPI_Barrier() synchronization]" off)
-option(ENABLE_BENCHMARK_BARRIER "MPI_Barrier implementation [default: MPI_Barrier() synchronization]" off)
-option(ENABLE_WINDOWSYNC_HCA "Window-based synchronization with a hierarchical linear model of the clock skew [default: MPI_Barrier() synchronization]" off)
-option(ENABLE_GLOBAL_TIMES "MPI_Barrier synchronization with HCA-global times [default: local times]" off)
 option(ENABLE_LOGP_SYNC "Enable O(log(p)) clock synchronization for the HCA algorithm [default: disabled]" off)
 option(RDTSC_CALIBRATION "Calibrate the frequency of RTDSC [default: off (uses FREQUENCY_MHZ)]" off)
 
@@ -87,28 +83,8 @@ endif()
 ###############################################
 ############ Set synchronization flags ########
 ###############################################
-if(ENABLE_WINDOWSYNC_HCA)
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_WINDOWSYNC_HCA")
-endif()
-
-if(ENABLE_GLOBAL_TIMES)
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_GLOBAL_TIMES")
-endif()
-
 if(ENABLE_LOGP_SYNC)
     SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_LOGP_SYNC")
-endif()
-
-if(ENABLE_WINDOWSYNC_SK)
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_WINDOWSYNC_SK")
-endif()
-
-if(ENABLE_WINDOWSYNC_JK)
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_WINDOWSYNC_JK")
-endif()
-
-if(ENABLE_BENCHMARK_BARRIER)
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_BENCHMARK_BARRIER")
 endif()
 
 if(ENABLE_DOUBLE_BARRIER)
