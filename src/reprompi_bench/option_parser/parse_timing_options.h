@@ -33,7 +33,6 @@ typedef enum reprompi_timing_method {
 
 
 void reprompib_parse_timing_options(reprompi_timing_method_t* runtime_type, int argc, char** argv);
-void reprompib_print_timing_help(void);
 
 const char* reprompib_get_timing_method_name(reprompi_timing_method_t t);
 

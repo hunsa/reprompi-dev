@@ -176,7 +176,6 @@ void reprompib_print_benchmark_help(void) {
     }
 
     reprompib_print_common_help();
-    reprompib_print_timing_help();
 
     if (my_rank == OUTPUT_ROOT_PROC) {
         printf("\nSpecific options for the benchmark execution:\n");

@@ -33,7 +33,6 @@
 #include "reprompi_bench/misc.h"
 #include "parse_timing_options.h"
 
-static const int OUTPUT_ROOT_PROC = 0;
 
 typedef struct runtime_type {
     reprompi_timing_method_t type;
@@ -115,19 +114,5 @@ void reprompib_parse_timing_options(reprompi_timing_method_t* timing_method, int
 
     optind = 1;	// reset optind to enable option re-parsing
     opterr = 1;	// reset opterr to catch invalid options
-}
-
-
-void reprompib_print_timing_help(void) {
-    int my_rank;
-
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    if (my_rank == OUTPUT_ROOT_PROC) {
-      printf("\nRun-time computation options:\n");
-      printf("%-40s %-40s\n", "--runtime-type=<type>",
-              "method used to compute the run-time of the benchmarked MPI function (default: local)");
-      printf("%40s Available methods:\n", "");
-      printf("%50s%s\n", "","local, global");
-    }
 }
 

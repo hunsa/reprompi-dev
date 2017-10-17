@@ -98,7 +98,14 @@ void reprompib_print_common_help(void) {
                 "process synchronization method (default: MPI_Barrier)");
         printf("%40s Available methods:\n", "");
         printf("%50s%s\n", "","window, MPI_Barrier, dissem_barrier");
+
+        printf("\nRun-time computation options:\n");
+        printf("%-40s %-40s\n", "--runtime-type=<type>",
+                "method used to compute the run-time of the benchmarked MPI function (default: local)");
+        printf("%40s Available methods:\n", "");
+        printf("%50s%s\n", "","local, global");
     }
+
 }
 
 
