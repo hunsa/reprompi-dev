@@ -70,14 +70,16 @@ int main(int argc, char* argv[]) {
     double *all_runtimes = NULL;
     int dummy_nrep = 1;
 
+    /* start up MPI */
+    MPI_Init(&argc, &argv);
+    master_rank = 0;
+
+    parse_test_options(&opts, argc, argv);
+
     reprompib_register_sync_modules();
     reprompib_init_sync_module(argc, argv, &sync_module);
 
     init_timer();
-
-    /* start up MPI */
-    MPI_Init(&argc, &argv);
-    master_rank = 0;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -85,8 +87,6 @@ int main(int argc, char* argv[]) {
     if (my_rank == master_rank) {
         all_runtimes = (double*) calloc(nprocs, sizeof(double));
     }
-
-    parse_test_options(&opts, argc, argv);
 
     print_initial_settings(argc, argv, sync_module.print_sync_info);
     sync_params.nrep = dummy_nrep;

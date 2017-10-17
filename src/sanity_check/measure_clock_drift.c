@@ -184,10 +184,11 @@ int main(int argc, char* argv[]) {
     master_rank = 0;
 
     reprompib_register_sync_modules();
-    reprompib_init_sync_module(argc, argv, &sync_module);
-    init_timer();
 
     parse_test_options(&opts, argc, argv);
+
+    reprompib_init_sync_module(argc, argv, &sync_module);
+    init_timer();
 
     n_wait_steps = opts.steps + 1;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -293,9 +294,9 @@ int main(int argc, char* argv[]) {
                         local_time = all_local_times[step * nprocs * opts.n_rep
                                                      + p * opts.n_rep + i];
                         //global_time_comp = local_time / linear_models[p].slope - linear_models[p].intercept  / linear_models[p].slope;
-                        fprintf(f, "%14.9f %3d %4d %14.9f %14.9f %14.9f %14.9f\n",
+                        fprintf(f, "%14.9f %3d %4d %14.9f %14.9f %14.9f\n",
                                 step * wait_time_s, p, i, global_time,
-                                local_time, global_time - local_time, rtts_s[p]);
+                                local_time, global_time - local_time);
                     }
                 }
             }
