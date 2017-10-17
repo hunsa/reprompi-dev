@@ -90,11 +90,14 @@ void reprompib_print_common_help(void) {
                 "number of exchanges (default: 10)\n");
 
         printf("\nSynchronization options:\n");
-        printf("%-40s %-40s\n", "--sync=<sync>",
+        printf("%-40s %-40s\n", "--clock-sync=<sync>",
+                "clock synchronization method (default: None)");
+        printf("%40s Available methods:\n", "");
+        printf("%50s%s\n", "","HCA, JK, SKaMPI");
+        printf("%-40s %-40s\n", "--proc-sync=<sync>",
                 "process synchronization method (default: MPI_Barrier)");
         printf("%40s Available methods:\n", "");
-        printf("%50s%s\n", "","MPI_Barrier, Dissem_Barrier, HCA, JK, SKaMPI");
-
+        printf("%50s%s\n", "","window, MPI_Barrier, dissem_barrier");
     }
 }
 

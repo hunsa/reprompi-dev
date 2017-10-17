@@ -164,6 +164,15 @@ void compute_runtimes(int nrep, double* tstart_sec, double* tend_sec, int root_p
         compute_runtimes_local_clocks(tstart_sec, tend_sec, current_start_index, nrep, root_proc,
                 maxRuntimes_sec);
         break;
+      case(REPROMPI_RUNT_GLOBAL_TIMES):
+          if (sync_module->clocksync != REPROMPI_CLOCKSYNC_NONE) {  // global times are available
+            compute_runtimes_global_clocks(tstart_sec, tend_sec, current_start_index, nrep, root_proc,
+              sync_module->get_global_time, maxRuntimes_sec);
+          }
+          else {
+            reprompib_print_error_and_exit("Unsupported run-time computation method without a global clock (it should be specified using the \"--runtime-type\" option).");
+          }
+          break;
       default:
         reprompib_print_error_and_exit("Unknown or unsupported run-time computation method with Barrier-based process sync (it should be specified using the \"--runtime-type\" option).");
     }
