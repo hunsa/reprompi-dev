@@ -92,7 +92,7 @@ void print_results_header(const reprompib_options_t* opts, const reprompib_sync_
       }
 
 //#ifdef ENABLE_WINDOWSYNC
-      if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+      if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
         fprintf(f, "%50s %10s %12s %10s ", "test", "nrep", msize_str, "errorcode");
       }
       else {
@@ -103,7 +103,7 @@ void print_results_header(const reprompib_options_t* opts, const reprompib_sync_
 
       if (verbose == 1) {
 //#ifdef ENABLE_WINDOWSYNC
-        if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+        if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
           fprintf(f, "%14s %14s %14s %14s \n", "loc_tstart_sec", "loc_tend_sec", "gl_tstart_sec", "gl_tend_sec");
         }
         else {
@@ -151,7 +151,7 @@ void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
     for (i = 0; i < job.n_rep; i++) {
 
       //#if defined(ENABLE_WINDOWSYNC) && !defined(ENABLE_BARRIERSYNC)    // measurements with window-based synchronization
-      if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+      if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
         fprintf(f, "%50s %10d %12ld %10d %14.10f\n", get_call_from_index(job.call_index), i,
             msize_value, sync_errorcodes[i],
             maxRuntimes_sec[i]);
@@ -164,7 +164,7 @@ void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
       //#endif
     }
 
-    if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+    if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
       free(sync_errorcodes);
     }
     free(maxRuntimes_sec);
@@ -219,7 +219,7 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
       }
 
       //#ifdef ENABLE_WINDOWSYNC
-      if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+      if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
         int* local_errorcodes = sync_module->get_errorcodes();
 
         if (my_rank == OUTPUT_ROOT_PROC)
@@ -253,7 +253,7 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
           MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
 
       // gather global times in case global clocks are used
-      if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+      if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
         if (my_rank == OUTPUT_ROOT_PROC) {
           global_start_sec = (double*) calloc(chunk_nrep * np, sizeof(double));
           global_end_sec = (double*) calloc(chunk_nrep * np, sizeof(double));
@@ -276,7 +276,7 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
           for (i = 0; i < chunk_nrep; i++) {
             current_rep_id = chunk_id * OUTPUT_NITERATIONS_CHUNK + i;
             //#ifdef ENABLE_WINDOWSYNC
-            if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+            if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
               fprintf(f, "%7d %50s %10d %12ld %10d %14.10f %14.10f %14.10f %14.10f\n", proc_id,
                   get_call_from_index(job.call_index), current_rep_id, msize_value,
                   errorcodes[proc_id * chunk_nrep + i],
@@ -301,7 +301,7 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
         free(global_start_sec);
         free(global_end_sec);
         //#ifdef ENABLE_WINDOWSYNC
-        if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+        if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
           free(errorcodes);
         }
         //#endif
@@ -343,7 +343,7 @@ void print_summary(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
 
     // remove measurements with out-of-window errors
     //#ifdef ENABLE_WINDOWSYNC
-    if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+    if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
       for (i = 0; i < job.n_rep; i++) {
         if (sync_errorcodes[i] == 0) {
           if (nreps < i) {
@@ -393,7 +393,7 @@ void print_summary(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
     fprintf(f, "\n");
 
     //#ifdef ENABLE_WINDOWSYNC
-    if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+    if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
       free(sync_errorcodes);
     }
     //#endif

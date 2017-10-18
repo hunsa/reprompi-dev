@@ -59,7 +59,7 @@ static const char reprompi_timing_opts_str[] = "v";
 
 
 
-const char* reprompib_get_runtime_type_name(int runtime_type) {
+const char* reprompib_get_timing_method_name(reprompi_timing_method_t runtime_type) {
    int i;
    for (i=0; i<N_RUNTIME_TYPES; i++) {
      if (runtime_types[i].type == runtime_type) {
@@ -115,4 +115,5 @@ void reprompib_parse_timing_options(reprompi_timing_method_t* timing_method, int
     optind = 1;	// reset optind to enable option re-parsing
     opterr = 1;	// reset opterr to catch invalid options
 }
+
 

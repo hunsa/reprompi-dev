@@ -42,9 +42,9 @@ typedef struct sync_type {
   int type;
 }sync_type_t;
 static const sync_type_t proc_sync_options[] = {
-        { "window", REPROMPI_SYNCTYPE_WIN},
-        { "MPI_Barrier", REPROMPI_SYNCTYPE_MPIBARRIER },
-        { "dissem_barrier", REPROMPI_SYNCTYPE_DISSEMBARRIER }
+        { "window", REPROMPI_PROCSYNC_WIN},
+        { "MPI_Barrier", REPROMPI_PROCSYNC_MPIBARRIER },
+        { "dissem_barrier", REPROMPI_PROCSYNC_DISSEMBARRIER }
 };
 static const int N_PROC_SYNC_TYPES = sizeof(proc_sync_options)/sizeof(sync_type_t);
 
@@ -162,7 +162,7 @@ static int get_sync_module_index(const sync_module_info_t* sync_module_info) {
   }
 
   for (i=0; i<n_sync_modules; i++) {
-    if (sync_modules[i].clocksync == clock_sync_type && sync_modules[i].sync_type == proc_sync_type) {
+    if (sync_modules[i].clocksync == clock_sync_type && sync_modules[i].procsync == proc_sync_type) {
         return i;
     }
   }

@@ -210,9 +210,9 @@ int main(int argc, char* argv[]) {
 
   // initialize synchronization functions according to the configured synchronization method
   reprompib_init_sync_module(argc, argv, &sync_module);
-  if (sync_module.sync_type == REPROMPI_SYNCTYPE_WIN) {
+  if (sync_module.procsync == REPROMPI_PROCSYNC_WIN) {
     printf("ERROR: Cannot use this NREP prediction module with window-based synchronization. \n");
-    printf("Please use either the MPI_Barrier (--sync=MPI_Barrier) or the dissemination barrier (--sync=Dissem_Barrier) for process synchronization.\n");
+    printf("Please use either the MPI_Barrier (--proc-sync=MPI_Barrier) or the dissemination barrier (--proc-sync=dissem_barrier) for process synchronization.\n");
 
     sync_module.cleanup_module();
     /* shut down MPI */
@@ -240,7 +240,7 @@ int main(int argc, char* argv[]) {
     job = jlist.jobs[jlist.job_indices[jindex]];
 
     if (jindex == 0) {
-      print_common_settings(&opts, sync_module.print_sync_info, &params_dict);
+      print_common_settings(&opts, sync_module.print_sync_info, &params_dict, REPROMPI_RUNT_MAX_OVER_LOCAL_RUNTIME);
       nrep_pred_print_cli_args_to_file(opts.output_file, &pred_params);
       nrep_pred_print_results_header(opts.output_file);
     }

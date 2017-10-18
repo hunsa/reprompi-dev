@@ -5,6 +5,7 @@ ${SRC_DIR}/reprompi_bench/benchmark_lib/results_output.c
 ${SRC_DIR}/reprompi_bench/option_parser/parse_options.c
 ${SRC_DIR}/reprompi_bench/option_parser/option_parser_helpers.c
 ${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
+${SRC_DIR}/reprompi_bench/option_parser/parse_timing_options.c
 ${SRC_DIR}/reprompi_bench/misc.c
 ${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
 )

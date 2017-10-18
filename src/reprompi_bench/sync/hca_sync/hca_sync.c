@@ -738,7 +738,6 @@ static void hca_cleanup_module(void) {
 
 static void hca_common_print(FILE* f)
 {
-    fprintf (f, "#@clocksync=HCA\n");
     fprintf(f, "#@window_s=%.10f\n", parameters.window_size_sec);
     fprintf(f, "#@fitpoints=%d\n", parameters.n_fitpoints);
     fprintf(f, "#@exchanges=%d\n", parameters.n_exchanges);
@@ -748,6 +747,7 @@ static void hca_common_print(FILE* f)
 #else
     fprintf(f, "#@hcasynctype=linear\n");
 #endif
+    fprintf (f, "#@clocksync=HCA\n");
 }
 
 static void hca_print_sync_parameters(FILE* f)
@@ -783,7 +783,7 @@ static void hca_common_clock_sync_init(reprompib_sync_module_t *sync_mod) {
 
 void register_hca_module(reprompib_sync_module_t *sync_mod) {
   sync_mod->name = "HCA";
-  sync_mod->sync_type = REPROMPI_SYNCTYPE_WIN;
+  sync_mod->procsync = REPROMPI_PROCSYNC_WIN;
 
   hca_common_clock_sync_init(sync_mod);
 
@@ -800,7 +800,7 @@ void register_hca_module(reprompib_sync_module_t *sync_mod) {
 
 void register_hca_mpibarrier_module(reprompib_sync_module_t *sync_mod) {
   sync_mod->name = "HCA+MPI_Barrier";
-  sync_mod->sync_type = REPROMPI_SYNCTYPE_MPIBARRIER;
+  sync_mod->procsync = REPROMPI_PROCSYNC_MPIBARRIER;
 
   hca_common_clock_sync_init(sync_mod);
 
@@ -816,7 +816,7 @@ void register_hca_mpibarrier_module(reprompib_sync_module_t *sync_mod) {
 
 void register_hca_dissembarrier_module(reprompib_sync_module_t *sync_mod) {
   sync_mod->name = "HCA+Dissem_Barrier";
-  sync_mod->sync_type = REPROMPI_SYNCTYPE_MPIBARRIER;
+  sync_mod->procsync = REPROMPI_PROCSYNC_DISSEMBARRIER;
 
   hca_common_clock_sync_init(sync_mod);
 

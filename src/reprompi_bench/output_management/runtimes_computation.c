@@ -132,7 +132,7 @@ void compute_runtimes(int nrep, double* tstart_sec, double* tend_sec, int root_p
   if (my_rank == root_proc) {
     maxRuntimes_sec = (double*) calloc(nrep, sizeof(double));
 
-    if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+    if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
       sync_errorcodes = (int*) calloc(nrep, sizeof(int));
       for (i = 0; i < nrep; i++) {
         sync_errorcodes[i] = 0;
@@ -142,7 +142,7 @@ void compute_runtimes(int nrep, double* tstart_sec, double* tend_sec, int root_p
 
   current_start_index = 0;
 
-  if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+  if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
     collect_errorcodes(current_start_index, nrep, root_proc, sync_module->get_errorcodes, sync_errorcodes);
 
     switch (runtime_type) {

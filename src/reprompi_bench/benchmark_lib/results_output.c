@@ -56,7 +56,7 @@ void print_results_header(const reprompib_lib_output_info_t* output_info_p,
         fprintf(f, "%20s %4s", "measure_type", "proc");
 
         if (output_info_p->verbose == 1 && output_info_p->print_summary_methods == 0) {
-          if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+          if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
             fprintf(f, " %12s", "errorcode");
             fprintf(f," %8s %16s %16s %16s %16s\n", "nrep", "loc_tstart_sec", "loc_tend_sec", "gl_tstart_sec", "gl_tend_sec");
           }
@@ -78,7 +78,7 @@ void print_results_header(const reprompib_lib_output_info_t* output_info_p,
               fprintf(f, "\n");
             }
             else {
-              if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+              if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
                 fprintf(f, " %12s", "errorcode");
               }
               fprintf(f, " %8s %16s\n", "nrep", "runtime_sec");
@@ -148,7 +148,7 @@ void print_runtimes(FILE* f, const reprompib_job_t* job_p,
     if (my_rank == OUTPUT_ROOT_PROC) {
         maxRuntimes_sec = (double*) malloc(job_p->n_rep * sizeof(double));
 
-        if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+        if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
           sync_errorcodes = (int*) malloc(job_p->n_rep * sizeof(int));
           for (i = 0; i < job_p->n_rep; i++) {
             sync_errorcodes[i] = 0;
@@ -158,7 +158,7 @@ void print_runtimes(FILE* f, const reprompib_job_t* job_p,
 
     current_start_index = 0;
 
-    if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+    if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
       collect_errorcodes(current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC, sync_module->get_errorcodes, sync_errorcodes);
       compute_runtimes_global_clocks(job_p->tstart_sec, job_p->tend_sec, current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC,
           sync_module->get_global_time, maxRuntimes_sec);
@@ -180,7 +180,7 @@ void print_runtimes(FILE* f, const reprompib_job_t* job_p,
             }
 
             // measurements with window-based synchronization
-            if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+            if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
               fprintf(f, "%20s %4s %12d %8d %16.10f\n", job_p->timername, "all",
                     sync_errorcodes[i],i,
                     maxRuntimes_sec[i]);
@@ -192,7 +192,7 @@ void print_runtimes(FILE* f, const reprompib_job_t* job_p,
             }
         }
 
-        if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+        if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
           free(sync_errorcodes);
         }
         free(maxRuntimes_sec);
@@ -237,7 +237,7 @@ void print_runtimes_allprocs(FILE* f, const reprompib_job_t* job_p,
                     fprintf(f, "%10d ", job_p->user_ivars[j]);
                 }
 
-                if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+                if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
                   // measurements with window-based synchronization
                   fprintf(f, "%20s %4d %12d %8d %16.10f\n", job_p->timername,
                         proc_id, errorcodes[proc_id * job_p->n_rep + i], i,
@@ -280,7 +280,7 @@ void print_measurement_results(FILE* f,
     }
     else {
 
-      if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+      if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
         int* local_errorcodes = sync_module->get_errorcodes();
 
         if (my_rank == OUTPUT_ROOT_PROC)
@@ -348,7 +348,7 @@ void print_measurement_results(FILE* f,
                             fprintf(f, "%10d ", job_p->user_ivars[j]);
                         }
 
-                        if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+                        if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
                           fprintf(f, "%20s %4d %12d %8d %16.10f %16.10f %16.10f %16.10f\n",
                             job_p->timername, proc_id,
                                 errorcodes[proc_id * job_p->n_rep + i], i,
@@ -373,7 +373,7 @@ void print_measurement_results(FILE* f,
             free(local_end_sec);
             free(global_start_sec);
             free(global_end_sec);
-            if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+            if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
               free(errorcodes);
             }
         }
@@ -403,7 +403,7 @@ void print_summary(FILE* f,
     if (my_rank == OUTPUT_ROOT_PROC) {
         maxRuntimes_sec = (double*) malloc(job_p->n_rep * np * sizeof(double));
 
-        if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+        if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
           sync_errorcodes = (int*) malloc(job_p->n_rep * np * sizeof(int));
           for (i = 0; i < job_p->n_rep * np; i++) {
             sync_errorcodes[i] = 0;
@@ -415,7 +415,7 @@ void print_summary(FILE* f,
 
     if (strcmp(job_p->timertype, "all") !=0) { // one runtime for each nrep id (reduced over processes)
 
-      if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+      if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
         collect_errorcodes(current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC, sync_module->get_errorcodes, sync_errorcodes);
         compute_runtimes_global_clocks(job_p->tstart_sec, job_p->tend_sec,
                 current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC,
@@ -437,7 +437,7 @@ void print_summary(FILE* f,
         double* tmp_local_end_sec = NULL;
 
         // use global timings if available
-        if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+        if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
           // gather measurement results
           int* local_errorcodes = sync_module->get_errorcodes();
 
@@ -522,7 +522,7 @@ void print_summary(FILE* f,
             current_proc_runtimes = maxRuntimes_sec + (proc * job_p->n_rep);
 
             // remove measurements with out-of-window errors
-            if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+            if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
               int* current_error_codes;
               current_error_codes = sync_errorcodes + (proc * job_p->n_rep);
 
@@ -587,7 +587,7 @@ void print_summary(FILE* f,
         }
 
 
-        if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+        if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
           free(sync_errorcodes);
         }
         free(maxRuntimes_sec);

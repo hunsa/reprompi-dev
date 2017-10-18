@@ -30,6 +30,7 @@
 #include "reprompi_bench/sync/synchronization.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/option_parser/parse_common_options.h"
+#include "reprompi_bench/option_parser/parse_timing_options.h"
 #include "collective_ops/collectives.h"
 #include "reprompi_bench/utils/keyvalue_store.h"
 #include "bench_info_output.h"
@@ -39,7 +40,7 @@
 static const int OUTPUT_ROOT_PROC = 0;
 
 
-char* get_mpi_operation_str (MPI_Op op) {
+static char* get_mpi_operation_str (MPI_Op op) {
     if (op == MPI_BAND) return "MPI_BAND";
     if (op == MPI_BOR) return "MPI_BOR";
     if (op == MPI_BAND) return "MPI_LAND";
@@ -78,25 +79,15 @@ void print_common_settings_to_file(FILE* f, const print_sync_info_t print_sync_i
 
         fprintf(f, "#@reproMPIcommitSHA1=%s\n", git_commit);
         fprintf(f, "#@nprocs=%d\n", np);
-#ifdef ENABLE_GLOBAL_TIMES
-        fprintf(f, "#@clocktype=global\n");
-#ifdef ENABLE_LOGP_SYNC
-        fprintf(f, "#@hcasynctype=logp\n");
-#else
-        fprintf(f, "#@hcasynctype=linear\n");
-#endif
-#elif defined(ENABLE_WINDOWSYNC)
-        fprintf(f, "#@clocktype=global\n");
-#else
-        fprintf(f, "#@clocktype=local\n");
-#endif
         print_time_parameters(f);
         print_sync_info(f);
+
     }
 }
 
-void print_benchmark_common_settings_to_file(FILE* f, const reprompib_common_options_t* opts,
-    const print_sync_info_t print_sync_info, const reprompib_dictionary_t* dict) {
+static void print_benchmark_common_settings_to_file(FILE* f, const reprompib_common_options_t* opts,
+    const print_sync_info_t print_sync_info, const reprompib_dictionary_t* dict,
+    const reprompi_timing_method_t timing_method) {
     int my_rank, len;
     char type_name[MPI_MAX_OBJECT_NAME];
     MPI_Aint lb, extent;
@@ -134,21 +125,22 @@ void print_benchmark_common_settings_to_file(FILE* f, const reprompib_common_opt
           fprintf(f, "#@pingpong_ranks=%d,%d\n", opts->pingpong_ranks[0], opts->pingpong_ranks[1]);
         }
         print_common_settings_to_file(f, print_sync_info, dict);
+        fprintf(f, "#@runtime_type=%s\n", reprompib_get_timing_method_name(timing_method));
     }
 }
 
 
 void print_common_settings(const reprompib_common_options_t* opts, const print_sync_info_t print_sync_info,
-                           const reprompib_dictionary_t* dict) {
+                           const reprompib_dictionary_t* dict, const reprompi_timing_method_t timing_method) {
     FILE* f = stdout;
     int my_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    print_benchmark_common_settings_to_file(stdout, opts, print_sync_info, dict);
+    print_benchmark_common_settings_to_file(stdout, opts, print_sync_info, dict, timing_method);
     if (my_rank == OUTPUT_ROOT_PROC) {
         if (opts->output_file != NULL) {
             f = fopen(opts->output_file, "a");
-            print_benchmark_common_settings_to_file(f, opts, print_sync_info, dict);
+            print_benchmark_common_settings_to_file(f, opts, print_sync_info, dict, timing_method);
             fflush(f);
             fclose(f);
         }

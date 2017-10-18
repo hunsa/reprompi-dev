@@ -45,13 +45,15 @@
 static const int OUTPUT_ROOT_PROC = 0;
 static const int HASHTABLE_SIZE=100;
 
-static void print_initial_settings(const reprompib_options_t* opts, const reprompib_common_options_t* common_opts, print_sync_info_t print_sync_info, const reprompib_dictionary_t* dict) {
+static void print_initial_settings(const reprompib_options_t* opts, const reprompib_common_options_t* common_opts,
+    print_sync_info_t print_sync_info, const reprompib_dictionary_t* dict,
+    const reprompi_timing_method_t timing_method) {
     int my_rank, np;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
-    print_common_settings(common_opts, print_sync_info, dict);
+    print_common_settings(common_opts, print_sync_info, dict, timing_method);
 
     if (my_rank == OUTPUT_ROOT_PROC) {
         FILE* f;
@@ -212,7 +214,7 @@ int main(int argc, char* argv[]) {
         tend_sec = (double*) malloc(job.n_rep * sizeof(double));
 
         if (jindex == 0) {
-            print_initial_settings(&opts, &common_opts, sync_module.print_sync_info, &params_dict);
+            print_initial_settings(&opts, &common_opts, sync_module.print_sync_info, &params_dict, runtime_type);
             print_results_header(&opts, &sync_module, common_opts.output_file, opts.verbose);
         }
 

@@ -121,14 +121,14 @@ static void print_initial_settings_prediction_to_file(FILE* f, const nrep_pred_p
 
 static void print_initial_settings_prediction(const reprompib_common_options_t* common_opts_p,
     const nrep_pred_params_t* pred_params_p, const reprompib_dictionary_t* dict,
-    print_sync_info_t print_sync_info) {
+    print_sync_info_t print_sync_info, const reprompi_timing_method_t runtime_type) {
   FILE* f;
   int my_rank;
   const char header[] = "test nrep count mean_runtime_sec median_runtime_sec pred_method pred_value";
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-  print_common_settings(common_opts_p, print_sync_info, dict);
+  print_common_settings(common_opts_p, print_sync_info, dict, runtime_type);
 
   print_initial_settings_prediction_to_file(stdout, pred_params_p, print_sync_info);
 
@@ -157,7 +157,7 @@ static void compute_runtimes_prediction(double* tstart_sec, double* tend_sec, lo
   compute_runtimes(current_nreps, tstart_sec, tend_sec, OUTPUT_ROOT_PROC,
       sync_module, runtime_type, &maxRuntimes_sec, &sync_errorcodes);
 
-  if (sync_module->sync_type == REPROMPI_SYNCTYPE_WIN) {
+  if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
     // remove measurements that resulted in an window error
     long nreps = 0;
 
@@ -251,7 +251,8 @@ int main(int argc, char* argv[]) {
     job = jlist.jobs[jlist.job_indices[jindex]];
 
     if (jindex == 0) {
-      print_initial_settings_prediction(&common_opt, &pred_opts, &params_dict, sync_module.print_sync_info);
+      print_initial_settings_prediction(&common_opt, &pred_opts, &params_dict,
+          sync_module.print_sync_info, runtime_type);
     }
 
     tstart_sec = (double*) malloc(pred_opts.n_rep_max * sizeof(double));

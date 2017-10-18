@@ -34,10 +34,10 @@ typedef enum {
 } reprompi_clocksync_t;
 
 typedef enum {
-  REPROMPI_SYNCTYPE_WIN = 0,
-  REPROMPI_SYNCTYPE_MPIBARRIER,
-  REPROMPI_SYNCTYPE_DISSEMBARRIER
-} reprompi_synctype_t;
+  REPROMPI_PROCSYNC_WIN = 0,
+  REPROMPI_PROCSYNC_MPIBARRIER,
+  REPROMPI_PROCSYNC_DISSEMBARRIER
+} reprompi_procsync_t;
 
 // parameters needed to initialize a synchronization round
 typedef struct reprompib_sync_params {
@@ -71,7 +71,7 @@ typedef struct reprompib_sync_module{
     char* name;
     // a module is uniquely identified by the clock sync. method and the process synchronization method
     reprompi_clocksync_t clocksync;
-    reprompi_synctype_t sync_type;
+    reprompi_procsync_t procsync;
 } reprompib_sync_module_t;
 
 

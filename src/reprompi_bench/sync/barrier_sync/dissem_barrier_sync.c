@@ -74,7 +74,7 @@ static void dissem_barrier_print_sync_parameters(FILE* f) {
 
 void register_dissem_barrier_module(reprompib_sync_module_t *sync_mod) {
   sync_mod->name = "Dissem_Barrier";
-  sync_mod->sync_type = REPROMPI_SYNCTYPE_DISSEMBARRIER;
+  sync_mod->procsync = REPROMPI_PROCSYNC_DISSEMBARRIER;
   sync_mod->clocksync = REPROMPI_CLOCKSYNC_NONE;
 
   sync_mod->init_module = barrier_init_module;

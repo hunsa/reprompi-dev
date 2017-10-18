@@ -190,7 +190,7 @@ int main(int argc, char* argv[]) {
 
   // init sync module
   sync_module.name = "test";
-  sync_module.sync_type = atoi(argv[1]);;
+  sync_module.procsync = atoi(argv[1]);;
 
   sync_module.get_global_time = mock_get_global_time;
   sync_module.get_errorcodes = mock_get_errorcodes;

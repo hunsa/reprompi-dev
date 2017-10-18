@@ -48,7 +48,7 @@ static void mpibarrier_print_sync_parameters(FILE* f) {
 
 void register_mpibarrier_module(reprompib_sync_module_t *sync_mod) {
   sync_mod->name = "MPI_Barrier";
-  sync_mod->sync_type = REPROMPI_SYNCTYPE_MPIBARRIER;
+  sync_mod->procsync = REPROMPI_PROCSYNC_MPIBARRIER;
   sync_mod->clocksync = REPROMPI_CLOCKSYNC_NONE;
 
   sync_mod->init_module = barrier_init_module;
