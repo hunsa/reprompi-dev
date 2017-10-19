@@ -47,6 +47,7 @@
 
 static const int OUTPUT_ROOT_PROC = 0;
 static const int HASHTABLE_SIZE=100;
+static const char OUTPUT_FORMAT_STR[] = "%30s %10ld %10ld %20.9f %20.9f %11s %15.9f\n";
 
 static int cmpfunc(const void * a, const void * b) {
   if (*(double*) a > *(double*) b) {
@@ -62,6 +63,7 @@ static void print_measurement_results_prediction(const job_t* job_p, const repro
     double* maxRuntimes_sec, const nrep_pred_params_t* pred_params_p, const pred_conditions_t* conds_p) {
 
   int j;
+  int error = 0;
   int my_rank, np;
   double mean_runtime_sec, median_runtime_sec;
   FILE* f;
@@ -73,8 +75,17 @@ static void print_measurement_results_prediction(const job_t* job_p, const repro
   if (my_rank == OUTPUT_ROOT_PROC) {
     if (opts_p->output_file != NULL) {
       f = fopen(opts_p->output_file, "a");
+      if (f == NULL) {
+        error = 1;
+      }
     }
+  }
 
+  if (error) {
+    reprompib_print_error_and_exit("Cannot open output file");
+  }
+
+  if (my_rank == OUTPUT_ROOT_PROC) {
     if (job_p->n_rep == 0) {   // no correct results
       // runtime_sec = 0;
       mean_runtime_sec = 0;
@@ -87,7 +98,7 @@ static void print_measurement_results_prediction(const job_t* job_p, const repro
     }
 
     for (j = 0; j < conds_p->n_methods; j++) {
-      fprintf(f, "%s %ld %ld %.10f %.10f %s %.10f\n", get_call_from_index(job_p->call_index), job_p->n_rep, job_p->count,
+      fprintf(f, OUTPUT_FORMAT_STR, get_call_from_index(job_p->call_index), job_p->n_rep, job_p->count,
           mean_runtime_sec, median_runtime_sec, get_prediction_methods_list()[pred_params_p->info[j].method],
           conds_p->conditions[j]);
     }
@@ -124,7 +135,7 @@ static void print_initial_settings_prediction(const reprompib_common_options_t* 
     print_sync_info_t print_sync_info, const reprompi_timing_method_t runtime_type) {
   FILE* f;
   int my_rank;
-  const char header[] = "test nrep count mean_runtime_sec median_runtime_sec pred_method pred_value";
+  int error = 0;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
@@ -135,11 +146,26 @@ static void print_initial_settings_prediction(const reprompib_common_options_t* 
   if (my_rank == OUTPUT_ROOT_PROC) {
     if (common_opts_p->output_file != NULL) {
       f = fopen(common_opts_p->output_file, "a");
-      print_initial_settings_prediction_to_file(f, pred_params_p, print_sync_info);
-      fprintf(f, "%s\n", header);
-      fclose(f);
+      if (f != NULL) {
+        print_initial_settings_prediction_to_file(f, pred_params_p, print_sync_info);
+      } else {
+        error = 1;
+      }
     } else {
-      fprintf(stdout, "%s\n", header);
+      f = stdout;
+    }
+  }
+
+  if (error) {
+    reprompib_print_error_and_exit("Cannot open output file");
+  }
+
+  if (my_rank == OUTPUT_ROOT_PROC) {
+    fprintf(f, "%30s %10s %10s %20s %20s %11s %15s\n",
+              "test", "nrep", "count", "mean_runtime_sec",
+              "median_runtime_sec", "pred_method", "pred_value");
+    if (common_opts_p->output_file != NULL) {
+      fclose(f);
     }
   }
 }
@@ -150,12 +176,13 @@ static void compute_runtimes_prediction(double* tstart_sec, double* tend_sec, lo
 
   int my_rank;
   int* sync_errorcodes = NULL;
-  int i;
+  long i;
+  double* tmp_runtimes = NULL;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
   compute_runtimes(current_nreps, tstart_sec, tend_sec, OUTPUT_ROOT_PROC,
-      sync_module, runtime_type, &maxRuntimes_sec, &sync_errorcodes);
+      sync_module, runtime_type, &tmp_runtimes, &sync_errorcodes);
 
   if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
     // remove measurements that resulted in an window error
@@ -163,18 +190,15 @@ static void compute_runtimes_prediction(double* tstart_sec, double* tend_sec, lo
 
     if (my_rank == OUTPUT_ROOT_PROC) {
       for (i = 0; i < current_nreps; i++) {
-        //printf("i=%d nrep=%d error=%d\n", i, nreps, sync_errorcodes[i]);
-
         if (sync_errorcodes[i] == 0) {
-          if (nreps < i) {
-            //printf("\t\t maxRuntimes_sec[%d]=maxRuntimes_sec[%d] \n", nreps, i );
-            maxRuntimes_sec[nreps] = maxRuntimes_sec[i];
-          }
+            maxRuntimes_sec[nreps] = tmp_runtimes[i];
           nreps++;
         }
       }
 
+      // the runtimes arrays are only allocated on the root process
       free(sync_errorcodes);
+      free(tmp_runtimes);
     }
 
     *updated_nreps = nreps;
@@ -297,19 +321,13 @@ int main(int argc, char* argv[]) {
       // set the number of correct measurements to take into account out-of-window measurement errors
       runtimes_index = (runtimes_index - nrep) + updated_batch_nreps;
 
-      stop_meas = 0;
-      set_prediction_conditions(runtimes_index, maxRuntimes_sec, pred_opts, &pred_coefs);
-      stop_meas = check_prediction_conditions(pred_opts, pred_coefs);
+      if (my_rank==OUTPUT_ROOT_PROC) {
 
-      /*if (my_rank==0) {
-       fprintf(stdout, "runt_index=%ld updated_nrep=%ld \n",
-       runtimes_index, updated_batch_nreps );
-
-       fprintf(stdout, "nrep=%ld (min=%ld, max=%ld, stride=%ld) \n",
-       nrep, jlist.prediction_params.n_rep_min, jlist.prediction_params.n_rep_max, jlist.prediction_params.n_rep_stride );
-       }
-       */
-
+        stop_meas = 0;
+        set_prediction_conditions(runtimes_index, maxRuntimes_sec, pred_opts, &pred_coefs);
+        stop_meas = check_prediction_conditions(pred_opts, pred_coefs);
+      }
+      // make sure all processes have the same decision to stop the measurements
       MPI_Bcast(&stop_meas, 1, MPI_INT, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
 
       if (stop_meas == 1) {
