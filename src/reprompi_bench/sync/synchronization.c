@@ -115,6 +115,9 @@ static void parse_sync_options(int argc, char **argv, sync_module_info_t* opts_p
     if (opts_p->sync_type == NULL) {
       opts_p->sync_type = strdup("None");
     }
+    if (opts_p->proc_sync == NULL) {
+      opts_p->proc_sync = strdup("MPI_Barrier");
+    }
 
     optind = 1; // reset optind to enable option re-parsing
     opterr = 1; // reset opterr
