@@ -122,10 +122,10 @@ void reprompib_print_prediction_help(void) {
                 "", "in this list when multiple methods are used ",
                 "", "(default: 10)");
 
-        printf("\nEXAMPLES: mpirun -np 4 ./bin/mpibenchmarkPredNreps --calls-list=MPI_Bcast --msizes-list=1024 --rep-prediction min=1,max=100,step=1\n");
-        printf("\n          mpirun -np 4 ./bin/mpibenchmarkPredNreps --calls-list=MPI_Bcast --msizes-list=8,512,1024 --rep-prediction min=1,max=100,step=1 \n");
-        printf("\n          mpirun -np 4 ./bin/mpibenchmarkPredNreps --calls-list=MPI_Bcast --msizes-list=1024 --rep-prediction min=1,max=100,step=1 --pred-method=cov_mean,rse --var-thres=0.01,0.1 --var-win=10,1\n");
-
+        printf("\nEXAMPLES: mpirun -np 4 ./bin/mpibenchPredNreps --calls-list=MPI_Bcast --msizes-list=1024 --rep-prediction min=1,max=100,step=1\n");
+        printf("\n          mpirun -np 4 ./bin/mpibenchPredNreps --calls-list=MPI_Bcast --msizes-list=8,512,1024 --rep-prediction min=1,max=100,step=1 --clock-sync=HCA --proc-sync=window --window-size=100 --runtime-type=global\n");
+        printf("\n          mpirun -np 4 ./bin/mpibenchPredNreps --calls-list=MPI_Bcast --msizes-list=8,512,1024 --rep-prediction min=1,max=100,step=1 \n");
+        printf("\n          mpirun -np 4 ./bin/mpibenchPredNreps --calls-list=MPI_Bcast --msizes-list=1024 --rep-prediction min=1,max=100,step=1 --pred-method=cov_mean,rse --var-thres=0.01,0.1 --var-win=10,1\n");
         printf("\n\n");
     }
 }

@@ -21,11 +21,11 @@
 </license>
 */
 
-#ifndef PRED_PARSE_OPTIONS_H_
-#define PRED_PARSE_OPTIONS_H_
+#ifndef REPROMPIB_PRED_PARSE_OPTIONS_H_
+#define REPROMPIB_PRED_PARSE_OPTIONS_H_
 
 #include "prediction_methods/prediction_data.h"
 
 void reprompib_parse_options(int argc, char** argv, nrep_pred_params_t* opts_p);
 
-#endif /* PRED_PARSE_OPTIONS_H_ */
+#endif /* REPROMPIB_PRED_PARSE_OPTIONS_H_ */
