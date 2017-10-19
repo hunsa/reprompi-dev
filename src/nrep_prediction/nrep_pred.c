@@ -177,6 +177,7 @@ int main(int argc, char* argv[]) {
   reprompib_sync_module_t  sync_module;
   reprompib_dictionary_t params_dict;
   reprompib_sync_params_t sync_params;
+  reprompi_timing_method_t runtime_type;
 
   nrep_pred_options_t pred_params;
   job_list_t jlist;
@@ -210,15 +211,40 @@ int main(int argc, char* argv[]) {
 
   // initialize synchronization functions according to the configured synchronization method
   reprompib_init_sync_module(argc, argv, &sync_module);
-  if (sync_module.procsync == REPROMPI_PROCSYNC_WIN) {
-    printf("ERROR: Cannot use this NREP prediction module with window-based synchronization. \n");
-    printf("Please use either the MPI_Barrier (--proc-sync=MPI_Barrier) or the dissemination barrier (--proc-sync=dissem_barrier) for process synchronization.\n");
-
+  if (sync_module.procsync == REPROMPI_PROCSYNC_WIN ) {
+    if (my_rank == OUTPUT_ROOT_PROC) {
+      printf("ERROR: Cannot use this NREP prediction module with window-based synchronization. \n");
+      printf("Please use either the MPI_Barrier (--proc-sync=MPI_Barrier) or the dissemination barrier (--proc-sync=dissem_barrier) for process synchronization.\n");
+    }
     sync_module.cleanup_module();
     /* shut down MPI */
     MPI_Finalize();
     return 0;
   }
+  if (sync_module.clocksync != REPROMPI_CLOCKSYNC_NONE ) {
+    if (my_rank == OUTPUT_ROOT_PROC) {
+      printf("ERROR: Cannot use this NREP prediction module with clock synchronization. \n");
+      printf("Please use the \"--clock-sync=None\" option.\n");
+    }
+    sync_module.cleanup_module();
+    /* shut down MPI */
+    MPI_Finalize();
+    return 0;
+  }
+
+  // parse timing options
+  reprompib_parse_timing_options(&runtime_type, argc, argv);
+  if (runtime_type == REPROMPI_RUNT_GLOBAL_TIMES ) {
+    if (my_rank == OUTPUT_ROOT_PROC) {
+      printf("ERROR: No global clocks available for this NREP prediction module. \n");
+      printf("Please change the value of the \"--runtime-type\" option.\n");
+    }
+    sync_module.cleanup_module();
+    /* shut down MPI */
+    MPI_Finalize();
+    return 0;
+  }
+
 
   max_nreps = 0;
   for (i = 0; i < pred_params.n_pred_rounds; i++) {
@@ -240,7 +266,7 @@ int main(int argc, char* argv[]) {
     job = jlist.jobs[jlist.job_indices[jindex]];
 
     if (jindex == 0) {
-      print_common_settings(&opts, sync_module.print_sync_info, &params_dict, REPROMPI_RUNT_MAX_OVER_LOCAL_RUNTIME);
+      print_common_settings(&opts, sync_module.print_sync_info, &params_dict, runtime_type);
       nrep_pred_print_cli_args_to_file(opts.output_file, &pred_params);
       nrep_pred_print_results_header(opts.output_file);
     }
