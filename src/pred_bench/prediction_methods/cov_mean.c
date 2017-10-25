@@ -34,6 +34,7 @@
 #include "cov_mean.h"
 
 static const int OUTPUT_ROOT_PROC = 0;
+static const double  EPSILON_DOUBLE = 1e-10;
 
 double compute_cov_mean(long nreps, double* runtimes_sec,
         pred_method_info_t prediction_info) {
@@ -81,9 +82,11 @@ double compute_cov_mean(long nreps, double* runtimes_sec,
 
         mean_of_means = gsl_stats_mean(mean_list, 1, nmeans);
         sd =  gsl_stats_sd(mean_list, 1, nmeans);
-        cov_mean = sd/(mean_of_means);
 
-        //printf("cov_mean=%lf, nreps = %ld, thres=%lf (mean_of_means=%.10f)\n", cov_mean, nreps, prediction_info.method_thres, mean_of_means);
+        if (fabs(mean_of_means) < EPSILON_DOUBLE) {   // cannot compute cov_mean when the mean is zero
+          return COEF_ERROR_VALUE;
+        }
+        cov_mean = sd/(mean_of_means);
 
 
         free(tmp_runtimes);
@@ -96,7 +99,7 @@ double compute_cov_mean(long nreps, double* runtimes_sec,
 
 int check_cov_mean(pred_method_info_t prediction_info, double value) {
 
-    return (value != COEF_ERROR_VALUE) && (value < prediction_info.method_thres);
+    return (value >= 0) && (value < prediction_info.method_thres);
 
 }
 

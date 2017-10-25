@@ -34,6 +34,7 @@
 #include "rse.h"
 
 static const int OUTPUT_ROOT_PROC = 0;
+static const double  EPSILON_DOUBLE = 1e-10;
 
 double compute_rse(long nreps, double* runtimes_sec,
         pred_method_info_t prediction_info) {
@@ -78,9 +79,11 @@ double compute_rse(long nreps, double* runtimes_sec,
 
         mean = gsl_stats_mean(runtimes, 1, current_nreps);
         sd =  gsl_stats_sd(runtimes, 1, current_nreps);
-        rse = sd/(sqrt(current_nreps) * mean);
 
-        //printf("rse=%lf, nreps = %ld, thres=%lf mean=%.10f\n", rse, nreps, prediction_info.method_thres, mean);
+        if (fabs(sqrt(current_nreps) * mean) < EPSILON_DOUBLE) {   // make sure we do not divide by 0
+          return COEF_ERROR_VALUE;
+        }
+        rse = sd/(sqrt(current_nreps) * mean);
 
         free(tmp_runtimes);
     }
@@ -89,8 +92,7 @@ double compute_rse(long nreps, double* runtimes_sec,
 }
 
 int check_rse(pred_method_info_t prediction_info, double value) {
-
-    return (value != COEF_ERROR_VALUE) && (value < prediction_info.method_thres);
+    return (value >=0) && (value < prediction_info.method_thres);
 
 }
 

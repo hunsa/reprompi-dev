@@ -47,7 +47,7 @@
 
 static const int OUTPUT_ROOT_PROC = 0;
 static const int HASHTABLE_SIZE=100;
-static const char OUTPUT_FORMAT_STR[] = "%30s %10ld %10ld %20.9f %20.9f %11s %15.9f\n";
+static const char OUTPUT_FORMAT_STR[] = "%30s %10ld %10ld %10ld %20.9f %20.9f %11s %15.9f\n";
 
 static int cmpfunc(const void * a, const void * b) {
   if (*(double*) a > *(double*) b) {
@@ -60,7 +60,8 @@ static int cmpfunc(const void * a, const void * b) {
 }
 
 static void print_measurement_results_prediction(const job_t* job_p, const reprompib_common_options_t* opts_p,
-    double* maxRuntimes_sec, const nrep_pred_params_t* pred_params_p, const pred_conditions_t* conds_p) {
+    double* maxRuntimes_sec, const nrep_pred_params_t* pred_params_p, const pred_conditions_t* conds_p,
+    const long total_nrep) {
 
   int j;
   int error = 0;
@@ -98,7 +99,7 @@ static void print_measurement_results_prediction(const job_t* job_p, const repro
     }
 
     for (j = 0; j < conds_p->n_methods; j++) {
-      fprintf(f, OUTPUT_FORMAT_STR, get_call_from_index(job_p->call_index), job_p->n_rep, job_p->count,
+      fprintf(f, OUTPUT_FORMAT_STR, get_call_from_index(job_p->call_index), total_nrep, job_p->n_rep, job_p->count,
           mean_runtime_sec, median_runtime_sec, get_prediction_methods_list()[pred_params_p->info[j].method],
           conds_p->conditions[j]);
     }
@@ -161,8 +162,8 @@ static void print_initial_settings_prediction(const reprompib_common_options_t* 
   }
 
   if (my_rank == OUTPUT_ROOT_PROC) {
-    fprintf(f, "%30s %10s %10s %20s %20s %11s %15s\n",
-              "test", "nrep", "count", "mean_runtime_sec",
+    fprintf(f, "%30s %10s %10s %10s %20s %20s %11s %15s\n",
+              "test", "total_nrep", "valid_nrep", "count", "mean_runtime_sec",
               "median_runtime_sec", "pred_method", "pred_value");
     if (common_opts_p->output_file != NULL) {
       fclose(f);
@@ -191,7 +192,7 @@ static void compute_runtimes_prediction(double* tstart_sec, double* tend_sec, lo
     if (my_rank == OUTPUT_ROOT_PROC) {
       for (i = 0; i < current_nreps; i++) {
         if (sync_errorcodes[i] == 0) {
-            maxRuntimes_sec[nreps] = tmp_runtimes[i];
+          maxRuntimes_sec[nreps] = tmp_runtimes[i];
           nreps++;
         }
       }
@@ -204,6 +205,15 @@ static void compute_runtimes_prediction(double* tstart_sec, double* tend_sec, lo
     *updated_nreps = nreps;
   }
   else {
+    if (my_rank == OUTPUT_ROOT_PROC) {
+      for (i = 0; i < current_nreps; i++) {
+            maxRuntimes_sec[i] = tmp_runtimes[i];
+      }
+
+      // the runtimes arrays are only allocated on the root process
+      free(tmp_runtimes);
+    }
+
     *updated_nreps = current_nreps;
   }
 
@@ -318,10 +328,9 @@ int main(int argc, char* argv[]) {
       compute_runtimes_prediction(tstart_sec, tend_sec, (current_index - nrep), nrep, &sync_module,
           runtime_type, batch_runtimes, &updated_batch_nreps);
 
-      // set the number of correct measurements to take into account out-of-window measurement errors
-      runtimes_index = (runtimes_index - nrep) + updated_batch_nreps;
-
       if (my_rank==OUTPUT_ROOT_PROC) {
+        // set the number of correct measurements to take into account out-of-window measurement errors
+        runtimes_index = (runtimes_index - nrep) + updated_batch_nreps;
 
         stop_meas = 0;
         set_prediction_conditions(runtimes_index, maxRuntimes_sec, pred_opts, &pred_coefs);
@@ -344,11 +353,10 @@ int main(int argc, char* argv[]) {
         break;
       }
     }
-
     job.n_rep = runtimes_index;
     // print_results
     print_measurement_results_prediction(&job, &common_opt, maxRuntimes_sec,
-        &pred_opts, &pred_coefs);
+        &pred_opts, &pred_coefs, current_index);
 
     free(tstart_sec);
     free(tend_sec);

@@ -34,7 +34,7 @@
 #include "parse_test_options.h"
 
 static const struct option default_long_options[] = {
-        { "repetitions", required_argument, 0, 'r' },
+        { "nrep", required_argument, 0, 'r' },
         { "help", no_argument, 0, 'h' },
         { 0, 0, 0, 0 }
 };
@@ -65,21 +65,21 @@ void print_help(char* testname) {
                 "number of exchanges (default: 10)");
         if (strstr(testname, "measure_clock_drift") != 0) {
 
-            printf("%-40s %-40s\n", "-r | --repetitions=<nrep>",
+            printf("%-40s %-40s\n", "--nrep=<nrep>",
                     "set number of ping-pong rounds between two processes to measure offset");
             printf("%-40s %-40s\n", "<steps>",
                     "set number of 1s steps to wait after sync (default: 0)");
 
             printf(
-                    "\nEXAMPLES: mpirun -np 4 %s -r 5 --window-size=100 --fitpoints=10 --exchanges=20 5\n", testname);
+                    "\nEXAMPLES: mpirun -np 4 %s --nrep=5 --window-size=100 --fitpoints=10 --exchanges=20 5\n", testname);
             printf(
-                    "\n          mpirun -np 4 %s -r 5 --window-size=100 \n", testname);
+                    "\n          mpirun -np 4 %s --nrep=5 --window-size=100 \n", testname);
         }
         else {
             printf(
-                    "\nEXAMPLES: mpirun -np 4 %s -r 5 --window-size=100 --fitpoints=10 --exchanges=20\n", testname);
+                    "\nEXAMPLES: mpirun -np 4 %s --nrep=5 --window-size=100 --fitpoints=10 --exchanges=20\n", testname);
             printf(
-                    "\n          mpirun -np 4 %s -r 5 --window-size=100 \n", testname);
+                    "\n          mpirun -np 4 %s --nrep=5 --window-size=100 \n", testname);
 
         }
 
@@ -108,7 +108,7 @@ int parse_test_options(reprompib_st_opts_t* opts_p, int argc, char **argv) {
         /* getopt_long stores the option index here. */
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "r:h", default_long_options,
+        c = getopt_long(argc, argv, "h", default_long_options,
                 &option_index);
 
         /* Detect the end of the options. */

@@ -34,6 +34,7 @@
 #include "cov_median.h"
 
 static const int OUTPUT_ROOT_PROC = 0;
+static const double  EPSILON_DOUBLE = 1e-10;
 
 double compute_cov_median(long nreps, double* runtimes_sec,
         pred_method_info_t prediction_info) {
@@ -69,24 +70,16 @@ double compute_cov_median(long nreps, double* runtimes_sec,
 
             runtimes = tmp_runtimes;
             gsl_sort(tmp_runtimes, 1, current_nreps);
-            //if (current_nreps > OUTLIER_FILTER_MIN_MEAS) {
-            //            q1 =  gsl_stats_quantile_from_sorted_data (tmp_runtimes, 1, current_nreps, 0.25);
-            //            q3 =  gsl_stats_quantile_from_sorted_data (tmp_runtimes, 1, current_nreps, 0.75);
-
-            //            filter_outliers_from_sorted(tmp_runtimes, current_nreps, q1, q3, OUTLIER_FILTER_THRES, &start_index, &end_index);
-            //            runtimes = runtimes + start_index;
-            //            current_nreps =  end_index - start_index + 1;
-            //        }
-            //median_list[i] = gsl_stats_quantile_from_sorted_data (runtimes, 1, current_nreps, 0.5);
             median_list[i] = gsl_stats_quantile_from_sorted_data (tmp_runtimes, 1, current_nreps, 0.5);
         }
 
         mean_of_medians = gsl_stats_mean(median_list, 1, nmedians);
         sd =  gsl_stats_sd(median_list, 1, nmedians);
+
+        if (fabs(mean_of_medians) < EPSILON_DOUBLE) {   // cannot compute cov_median when the median is zero
+          return COEF_ERROR_VALUE;
+        }
         cov_median = sd/(mean_of_medians);
-
-        //printf("cov_median=%lf, nreps = %ld, thres=%lf (mean_of_medians=%.10f)\n", cov_median, nreps, prediction_info.method_thres, mean_of_medians);
-
 
         free(tmp_runtimes);
         free(median_list);
@@ -98,7 +91,7 @@ double compute_cov_median(long nreps, double* runtimes_sec,
 
 int check_cov_median(pred_method_info_t prediction_info, double value) {
 
-    return (value != COEF_ERROR_VALUE) && (value < prediction_info.method_thres);
+    return (value >= 0) && (value < prediction_info.method_thres);
 
 }
 
