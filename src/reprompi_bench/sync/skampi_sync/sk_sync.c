@@ -397,7 +397,7 @@ static int* sk_get_local_sync_errorcodes(void) {
 
 
 static void sk_print_sync_parameters(FILE* f) {
-    fprintf(f, "#@sync=SKaMPI\n");
+    fprintf(f, "#@clocksync=SKaMPI\n");
     fprintf(f, "#@window_s=%.10f\n", parameters.window_size_sec);
     fprintf(f, "#@wait_time_s=%.10f\n", parameters.wait_time_sec);
 }

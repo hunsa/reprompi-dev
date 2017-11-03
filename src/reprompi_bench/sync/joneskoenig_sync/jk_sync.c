@@ -354,7 +354,7 @@ static double jk_get_timediff_to_root(double local_time) {
 
 
 static void jk_print_sync_parameters(FILE* f) {
-    fprintf(f, "#@sync=JK\n");
+    fprintf(f, "#@clocksync=JK\n");
     fprintf(f, "#@window_s=%.10f\n", parameters.window_size_sec);
     fprintf(f, "#@fitpoints=%d\n", parameters.n_fitpoints);
     fprintf(f, "#@exchanges=%d\n", parameters.n_exchanges);
