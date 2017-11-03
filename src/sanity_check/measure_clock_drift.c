@@ -220,16 +220,15 @@ int main(int argc, char* argv[]) {
     print_initial_settings(argc, argv, opts, sync_module.print_sync_info);
 
     runtime_s = get_time();
-    sync_module.sync_clocks();
-
     sync_params.nrep = NREP_MEAS;
     sync_module.init_sync(&sync_params);
+
+    sync_module.sync_clocks();
     runtime_s = get_time() - runtime_s;
 
     if (my_rank == master_rank) {
         printf ("#@sync_duration=%14.9f\n", runtime_s);
     }
-
     for (step = 0; step < n_wait_steps; step++) {
         if (my_rank == master_rank) {
 
