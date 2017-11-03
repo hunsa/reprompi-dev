@@ -34,7 +34,7 @@
 
 
 // Implemented synchronization modules
-static const int n_sync_modules = 7;
+static const int n_sync_modules = 8;
 static reprompib_sync_module_t* sync_modules;
 
 typedef struct sync_type {
@@ -51,6 +51,7 @@ static const int N_PROC_SYNC_TYPES = sizeof(proc_sync_options)/sizeof(sync_type_
 
 static const sync_type_t clock_sync_options[] = {
         { "HCA", REPROMPI_CLOCKSYNC_HCA},
+        { "HCA3", REPROMPI_CLOCKSYNC_HCA3},
         { "JK", REPROMPI_CLOCKSYNC_JK },
         { "SKaMPI", REPROMPI_CLOCKSYNC_SKAMPI },
         { "None", REPROMPI_CLOCKSYNC_NONE }
@@ -206,6 +207,8 @@ void reprompib_register_sync_modules(void) {
 
   register_hca_mpibarrier_module(&(sync_modules[5]));
   register_hca_dissembarrier_module(&(sync_modules[6]));
+
+  register_hca3_module(&(sync_modules[7]));
 }
 
 void reprompib_deregister_sync_modules(void) {

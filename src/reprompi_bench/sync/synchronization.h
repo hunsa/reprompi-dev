@@ -28,6 +28,7 @@
 
 typedef enum {
   REPROMPI_CLOCKSYNC_HCA = 0,
+  REPROMPI_CLOCKSYNC_HCA3,
   REPROMPI_CLOCKSYNC_JK,
   REPROMPI_CLOCKSYNC_SKAMPI,
   REPROMPI_CLOCKSYNC_NONE
@@ -89,5 +90,7 @@ void register_dissem_barrier_module(reprompib_sync_module_t *sync_mod);
 
 void register_hca_mpibarrier_module(reprompib_sync_module_t *sync_mod);
 void register_hca_dissembarrier_module(reprompib_sync_module_t *sync_mod);
+
+void register_hca3_module(reprompib_sync_module_t *sync_mod);
 
 #endif /* REPROMPIB_SYNCHRONIZATION_H_ */

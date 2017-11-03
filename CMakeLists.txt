@@ -135,6 +135,7 @@ ${SRC_DIR}/reprompi_bench/option_parser/option_parser_helpers.c
 SET(HCA_FILES
     "${SRC_DIR}/reprompi_bench/sync/hca_sync/hca_parse_options.c"
     "${SRC_DIR}/reprompi_bench/sync/hca_sync/hca_sync.c"
+    "${SRC_DIR}/reprompi_bench/sync/hca_sync/hca3_sync.c"
 )
 
 set(SYNC_SRC_FILES
