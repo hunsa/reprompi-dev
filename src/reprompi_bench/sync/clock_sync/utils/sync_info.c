@@ -21,28 +21,29 @@
 </license>
 */
 
-#ifndef REPROMPIB_SYNCHRONIZATION_BARRIER_SYNC_H_
-#define REPROMPIB_SYNCHRONIZATION_BARRIER_SYNC_H_
-
-#include "mpi.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <getopt.h>
 
-#include "reprompi_bench/sync/synchronization.h"
-
-void dissemination_barrier(void);
-
-double barrier_get_normalized_time(double local_time);
-int* barrier_get_errorcodes(void);
-void barrier_init_module(int argc, char** argv);
-void barrier_init_synchronization(const reprompib_sync_params_t* sync_params);
-
-void empty(void);
+#include "sync_info.h"
 
 
+const int REPROMPI_SYNC_N_FITPOINTS_DEFAULT = 20;
+const int REPROMPI_SYNC_N_EXCHANGES_DEFAULT = 10;
 
-void mpibarrier_start_synchronization(void);
-void dissem_barrier_start_synchronization(void);
+
+const struct option reprompi_sync_long_options[] = {
+        { "fitpoints", required_argument, 0, REPROMPI_ARGS_CLOCKSYNC_NFITPOINTS },
+        { "exchanges", required_argument, 0, REPROMPI_ARGS_CLOCKSYNC_NEXCHANGES },
+        { 0, 0, 0, 0 }
+};
+const char reprompi_sync_opts_str[] = "";
 
 
-#endif /* REPROMPIB_SYNCHRONIZATION_BARRIER_SYNC_H_ */
+
+
+void reprompi_init_sync_parameters(reprompib_sync_options_t* opts_p) {
+  opts_p->n_fitpoints = REPROMPI_SYNC_N_FITPOINTS_DEFAULT;
+  opts_p->n_exchanges = REPROMPI_SYNC_N_EXCHANGES_DEFAULT;
+
+}

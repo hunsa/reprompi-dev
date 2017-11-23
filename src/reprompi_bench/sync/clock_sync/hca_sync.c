@@ -26,30 +26,22 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
-#include <limits.h>
-#include "mpi.h"
+#include <getopt.h>
+#include <mpi.h>
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_fit.h>
 #include <gsl/gsl_sort.h>
 
 #include "reprompi_bench/misc.h"
 #include "reprompi_bench/sync/time_measurement.h"
-#include "reprompi_bench/sync/sync_info.h"
-#include "hca_parse_options.h"
-#include "reprompi_bench/sync/barrier_sync/barrier_sync.h"
-#include "reprompi_bench/sync/synchronization.h"
+#include "reprompi_bench/sync/clock_sync/utils/sync_info.h"
+#include "reprompi_bench/sync/clock_sync/synchronization.h"
 
 static const int HCA_WARMUP_ROUNDS = 5;
 
-
 typedef struct {
-    long n_rep; /* --repetitions */
-    double window_size_sec; /* --window-size */
-
     int n_fitpoints; /* --fitpoints */
     int n_exchanges; /* --exchanges */
-
-    double wait_time_sec; /* --wait-time */
 } reprompi_hca_params_t;
 
 //linear model
@@ -59,13 +51,7 @@ typedef struct {
 } lm_t;
 
 static lm_t lm;
-
-
-static double start_sync = 0;       /* current window start timestamp (global time) */
-static int* invalid;
-static int repetition_counter = 0;  /* current repetition index */
 static double initial_timestamp = 0;
-
 
 // options specified from the command line
 static reprompi_hca_params_t parameters;
@@ -81,7 +67,7 @@ static inline double hca_get_adjusted_time(void) {
     return get_time() - initial_timestamp;
 }
 
-static inline double hca_get_normalized_time(double local_time) {
+static double hca_get_normalized_time(double local_time) {
     //return local_time- (local_time * lm.slope + lm.intercept);
     double adjusted_time = local_time - initial_timestamp;
     return adjusted_time - (adjusted_time * lm.slope + lm.intercept);
@@ -643,83 +629,61 @@ static void hca_synchronize_clocks(void)
 }
 
 
-static void hca_init_synchronization(const reprompib_sync_params_t* init_params) {
-    int i;
-    parameters.n_rep = init_params->nrep;
-
-    // initialize array of flags for invalid-measurements;
-    invalid  = (int*)calloc(parameters.n_rep, sizeof(int));
-    for(i = 0; i < parameters.n_rep; i++)
-    {
-        invalid[i] = 0;
-    }
-    repetition_counter = 0;
+static void hca_init_synchronization(void) {
     initial_timestamp = get_time();
 }
 
 
-static void hca_finalize_synchronization(void)
-{
-    free(invalid);
+static void hca_finalize_synchronization(void) {
 }
 
 
-// initialize first window
-static void hca_init_sync_round(void) {
-  int my_rank;
-  int master_rank = 0;
 
-  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-  if( my_rank == master_rank ) {
-    // we need a normalized time to use across processes as a start window
-    // (the local time on the master rank needs to be normalized to work as a reference time)
-    start_sync = hca_get_normalized_time(get_time()) + parameters.wait_time_sec;
-  }
-  MPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
 
-}
+static void hca_parse_options(int argc, char **argv, reprompib_sync_options_t* opts_p) {
+    int c;
 
-static void hca_start_synchronization(void)
-{
-    int is_first = 1;
-    double global_time;
+    reprompi_init_sync_parameters(opts_p);
+    optind = 1;
+    optopt = 0;
+    opterr = 0; // ignore invalid options
+    while (1) {
 
-    while(1) {
-        //global_time = hca_get_normalized_time(hca_get_adjusted_time());
-        global_time = hca_get_normalized_time(get_time());
+        /* getopt_long stores the option index here. */
+        int option_index = 0;
 
-        if( global_time >= start_sync ) {
-            if( is_first == 1 ) {
-                invalid[repetition_counter] |= FLAG_START_TIME_HAS_PASSED;
-            }
+        c = getopt_long(argc, argv, reprompi_sync_opts_str, reprompi_sync_long_options,
+                &option_index);
+
+        /* Detect the end of the options. */
+        if (c == -1)
             break;
+
+        switch (c) {
+        case REPROMPI_ARGS_CLOCKSYNC_NFITPOINTS: /* number of fit points for the linear model */
+            opts_p->n_fitpoints = atoi(optarg);
+            break;
+        case REPROMPI_ARGS_CLOCKSYNC_NEXCHANGES: /* number of exchanges for the linear model */
+            opts_p->n_exchanges = atoi(optarg);
+            break;
+        case '?':
+             break;
         }
-        is_first = 0;
-    }
-}
-
-
-static void hca_stop_synchronization(void)
-{
-    double global_time;
-   // global_time = hca_get_normalized_time(hca_get_adjusted_time());
-    global_time = hca_get_normalized_time(get_time());
-
-
-    if( global_time > start_sync + parameters.window_size_sec ) {
-        invalid[repetition_counter] |= FLAG_SYNC_WIN_EXPIRED;
     }
 
-    start_sync += parameters.window_size_sec;
-    repetition_counter++;
+    // check for errors
+    if (opts_p->n_fitpoints <= 0) {
+      reprompib_print_error_and_exit("Invalid number of fitpoints (should be a positive integer)");
+    }
+    if (opts_p->n_exchanges <= 0) {
+      reprompib_print_error_and_exit("Invalid number of ping-pong exchanges (should be a positive integer)");
+    }
+
+
+    optind = 1; // reset optind to enable option re-parsing
+    opterr = 1; // reset opterr
 }
 
-
-
-static int* hca_get_local_sync_errorcodes(void)
-{
-    return invalid;
-}
 
 static void hca_init_module(int argc, char** argv) {
   reprompib_sync_options_t sync_opts;
@@ -727,8 +691,6 @@ static void hca_init_module(int argc, char** argv) {
 
   parameters.n_exchanges = sync_opts.n_exchanges;
   parameters.n_fitpoints = sync_opts.n_fitpoints;
-  parameters.wait_time_sec = sync_opts.wait_time_sec;
-  parameters.window_size_sec = sync_opts.window_size_sec;
 }
 
 
@@ -738,97 +700,36 @@ static void hca_cleanup_module(void) {
 
 static void hca_common_print(FILE* f)
 {
-    fprintf(f, "#@window_s=%.10f\n", parameters.window_size_sec);
-    fprintf(f, "#@fitpoints=%d\n", parameters.n_fitpoints);
-    fprintf(f, "#@exchanges=%d\n", parameters.n_exchanges);
-    fprintf(f, "#@wait_time_s=%.10f\n", parameters.wait_time_sec);
-#ifdef ENABLE_LOGP_SYNC
-    fprintf(f, "#@hcasynctype=logp\n");
-#else
-    fprintf(f, "#@hcasynctype=linear\n");
-#endif
-    fprintf (f, "#@clocksync=HCA\n");
+  fprintf (f, "#@clocksync=HCA\n");
+  fprintf(f, "#@fitpoints=%d\n", parameters.n_fitpoints);
+  fprintf(f, "#@exchanges=%d\n", parameters.n_exchanges);
 }
 
 static void hca_print_sync_parameters(FILE* f)
 {
   hca_common_print(f);
-  fprintf (f, "#@procsync=HCA\n");
+  fprintf(f, "#@hcasynctype=linear\n");
 }
 
-static void hca_mpibarrier_print_sync_parameters(FILE* f)
+static void hca2_print_sync_parameters(FILE* f)
 {
   hca_common_print(f);
-  fprintf (f, "#@procsync=MPI_Barrier\n");
-}
-
-static void hca_dissembarrier_print_sync_parameters(FILE* f)
-{
-  hca_common_print(f);
-  fprintf (f, "#@procsync=dissem_barrier\n");
+  fprintf(f, "#@hcasynctype=logp\n");
 }
 
 
-
-static void hca_common_clock_sync_init(reprompib_sync_module_t *sync_mod) {
+void register_hca_module(reprompib_sync_module_t *sync_mod) {
+  sync_mod->name = "HCA";
   sync_mod->clocksync = REPROMPI_CLOCKSYNC_HCA;
 
   sync_mod->init_module = hca_init_module;
   sync_mod->cleanup_module = hca_cleanup_module;
   sync_mod->sync_clocks = hca_synchronize_clocks;
 
-  sync_mod->get_errorcodes = hca_get_local_sync_errorcodes;
-  sync_mod->get_global_time = hca_get_normalized_time;
-}
-
-void register_hca_module(reprompib_sync_module_t *sync_mod) {
-  sync_mod->name = "HCA";
-  sync_mod->procsync = REPROMPI_PROCSYNC_WIN;
-
-  hca_common_clock_sync_init(sync_mod);
-
   sync_mod->init_sync = hca_init_synchronization;
   sync_mod->finalize_sync = hca_finalize_synchronization;
 
-  sync_mod->init_sync_round = hca_init_sync_round;
-  sync_mod->start_sync = hca_start_synchronization;
-  sync_mod->stop_sync = hca_stop_synchronization;
-
+  sync_mod->get_global_time = hca_get_normalized_time;
   sync_mod->print_sync_info = hca_print_sync_parameters;
 }
-
-
-void register_hca_mpibarrier_module(reprompib_sync_module_t *sync_mod) {
-  sync_mod->name = "HCA+MPI_Barrier";
-  sync_mod->procsync = REPROMPI_PROCSYNC_MPIBARRIER;
-
-  hca_common_clock_sync_init(sync_mod);
-
-  sync_mod->init_sync = barrier_init_synchronization;
-  sync_mod->finalize_sync = empty;
-
-  sync_mod->init_sync_round = empty;
-  sync_mod->start_sync = mpibarrier_start_synchronization;
-  sync_mod->stop_sync = empty;
-
-  sync_mod->print_sync_info = hca_mpibarrier_print_sync_parameters;
-}
-
-void register_hca_dissembarrier_module(reprompib_sync_module_t *sync_mod) {
-  sync_mod->name = "HCA+Dissem_Barrier";
-  sync_mod->procsync = REPROMPI_PROCSYNC_DISSEMBARRIER;
-
-  hca_common_clock_sync_init(sync_mod);
-
-
-  sync_mod->init_sync = barrier_init_synchronization;
-  sync_mod->finalize_sync = empty;
-
-  sync_mod->init_sync_round = empty;
-  sync_mod->start_sync = dissem_barrier_start_synchronization;
-  sync_mod->stop_sync = empty;
-
-  sync_mod->print_sync_info = hca_dissembarrier_print_sync_parameters;
-}
-
 

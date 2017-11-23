@@ -21,21 +21,27 @@
 </license>
 */
 
-#ifndef BENCH_INFO_OUTPUT_H_
-#define BENCH_INFO_OUTPUT_H_
+#ifndef REPROMPIB_BENCH_INFO_OUTPUT_H_
+#define REPROMPIB_BENCH_INFO_OUTPUT_H_
 
 #include <time.h>
 #include "reprompi_bench/utils/keyvalue_store.h"
 #include "reprompi_bench/option_parser/parse_common_options.h"
 #include "reprompi_bench/option_parser/parse_timing_options.h"
-#include "reprompi_bench/sync/synchronization.h"
+#include "reprompi_bench/sync/clock_sync/synchronization.h"
+#include "reprompi_bench/sync/process_sync/process_synchronization.h"
 
+typedef struct bench_print_info {
+  reprompib_sync_module_t* clock_sync;
+  reprompib_proc_sync_module_t* proc_sync;
+  reprompib_timing_method_t timing_method;
+} reprompib_bench_print_info_t;
 
 void print_command_line_args(int argc, char* argv[]);
-void print_common_settings(const reprompib_common_options_t* opts, const print_sync_info_t print_sync_info,
-    const reprompib_dictionary_t* dict, const reprompi_timing_method_t timing_method);
-void print_common_settings_to_file(FILE* f, print_sync_info_t print_sync_info,
+void print_common_settings(const reprompib_bench_print_info_t* print_info,
+    const reprompib_common_options_t* opts, const reprompib_dictionary_t* dict);
+void print_common_settings_to_file(FILE* f, const reprompib_bench_print_info_t* print_info,
     const reprompib_dictionary_t* dict);
 void print_final_info(const reprompib_common_options_t* opts, const time_t start_time, const time_t end_time);
 
-#endif /* BENCH_INFO_OUTPUT_H_ */
+#endif /* REPROMPIB_BENCH_INFO_OUTPUT_H_ */

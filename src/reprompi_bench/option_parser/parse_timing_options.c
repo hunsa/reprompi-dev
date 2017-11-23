@@ -35,7 +35,7 @@
 
 
 typedef struct runtime_type {
-    reprompi_timing_method_t type;
+    reprompib_timing_method_t type;
     char* name;
 } runtime_type_t;
 
@@ -59,7 +59,7 @@ static const char reprompi_timing_opts_str[] = "v";
 
 
 
-const char* reprompib_get_timing_method_name(reprompi_timing_method_t runtime_type) {
+const char* reprompib_get_timing_method_name(reprompib_timing_method_t runtime_type) {
    int i;
    for (i=0; i<N_RUNTIME_TYPES; i++) {
      if (runtime_types[i].type == runtime_type) {
@@ -70,7 +70,7 @@ const char* reprompib_get_timing_method_name(reprompi_timing_method_t runtime_ty
 }
 
 
-static void parse_runtime_type(char* optarg, reprompi_timing_method_t* timing_method) {
+static void parse_runtime_type(char* optarg, reprompib_timing_method_t* timing_method) {
   int i;
   int error = 1;
 
@@ -87,7 +87,7 @@ static void parse_runtime_type(char* optarg, reprompi_timing_method_t* timing_me
 }
 
 
-void reprompib_parse_timing_options(reprompi_timing_method_t* timing_method, int argc, char** argv) {
+void reprompib_parse_timing_options(reprompib_timing_method_t* timing_method, int argc, char** argv) {
     int c;
     opterr = 0;
 

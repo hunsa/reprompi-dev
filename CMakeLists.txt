@@ -132,24 +132,19 @@ ${SRC_DIR}/reprompi_bench/option_parser/option_parser_helpers.c
 )
 
 
-SET(HCA_FILES
-    "${SRC_DIR}/reprompi_bench/sync/hca_sync/hca_parse_options.c"
-    "${SRC_DIR}/reprompi_bench/sync/hca_sync/hca_sync.c"
-    "${SRC_DIR}/reprompi_bench/sync/hca_sync/hca3_sync.c"
-)
-
 set(SYNC_SRC_FILES
 ${SRC_DIR}/reprompi_bench/sync/time_measurement.c
-${SRC_DIR}/reprompi_bench/sync/synchronization.c
-${SRC_DIR}/reprompi_bench/sync/sync_info.c
-${SRC_DIR}/reprompi_bench/sync/skampi_sync/sk_parse_options.c
-${SRC_DIR}/reprompi_bench/sync/skampi_sync/sk_sync.c
-${SRC_DIR}/reprompi_bench/sync/joneskoenig_sync/jk_parse_options.c
-${SRC_DIR}/reprompi_bench/sync/joneskoenig_sync/jk_sync.c
-${SRC_DIR}/reprompi_bench/sync/barrier_sync/barrier_sync.c
-${SRC_DIR}/reprompi_bench/sync/barrier_sync/mpi_barrier_sync.c
-${SRC_DIR}/reprompi_bench/sync/barrier_sync/dissem_barrier_sync.c
-${HCA_FILES}
+${SRC_DIR}/reprompi_bench/sync/clock_sync/synchronization.c
+${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/sync_info.c
+${SRC_DIR}/reprompi_bench/sync/clock_sync/hca_sync.c
+${SRC_DIR}/reprompi_bench/sync/clock_sync/hca3_sync.c
+${SRC_DIR}/reprompi_bench/sync/clock_sync/sk_sync.c
+${SRC_DIR}/reprompi_bench/sync/clock_sync/jk_sync.c
+${SRC_DIR}/reprompi_bench/sync/clock_sync/no_sync.c
+${SRC_DIR}/reprompi_bench/sync/process_sync/barrier_sync.c
+${SRC_DIR}/reprompi_bench/sync/process_sync/window_sync.c
+${SRC_DIR}/reprompi_bench/sync/process_sync/process_synchronization.c
+${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
 )
 
 

@@ -26,10 +26,10 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <limits.h>
-#include "mpi.h"
+#include <mpi.h>
 #include "reprompi_bench/option_parser/parse_common_options.h"
-#include "reprompi_bench/sync/barrier_sync/barrier_sync.h"
 #include "buf_manager/mem_allocation.h"
+#include "reprompi_bench/misc.h"
 #include "collectives.h"
 
 const collective_ops_t collective_calls[] = {

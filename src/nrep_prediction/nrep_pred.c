@@ -34,7 +34,8 @@
 
 #include "reprompi_bench/option_parser/parse_common_options.h"
 #include "reprompi_bench/option_parser/parse_extra_key_value_options.h"
-#include "reprompi_bench/sync/synchronization.h"
+#include "reprompi_bench/sync/clock_sync/synchronization.h"
+#include "reprompi_bench/sync/process_sync/process_synchronization.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/output_management/bench_info_output.h"
 #include "reprompi_bench/output_management/runtimes_computation.h"
@@ -174,10 +175,12 @@ int main(int argc, char* argv[]) {
   int stop_meas;
   basic_collective_params_t coll_basic_info;
   time_t start_time, end_time;
-  reprompib_sync_module_t  sync_module;
   reprompib_dictionary_t params_dict;
   reprompib_sync_params_t sync_params;
-  reprompi_timing_method_t runtime_type;
+  reprompib_timing_method_t runtime_type;
+  reprompib_bench_print_info_t print_info;
+  reprompib_sync_module_t  clock_sync;
+  reprompib_proc_sync_module_t  proc_sync;
 
   nrep_pred_options_t pred_params;
   job_list_t jlist;
@@ -196,6 +199,7 @@ int main(int argc, char* argv[]) {
   start_time = time(NULL);
 
   reprompib_register_sync_modules();
+  reprompib_register_proc_sync_modules();
 
   // initialize global dictionary
   reprompib_init_dictionary(&params_dict, HASHTABLE_SIZE);
@@ -209,24 +213,27 @@ int main(int argc, char* argv[]) {
   // parse extra parameters into the global dictionary
   reprompib_parse_extra_key_value_options(&params_dict, argc, argv);
 
-  // initialize synchronization functions according to the configured synchronization method
-  reprompib_init_sync_module(argc, argv, &sync_module);
-  if (sync_module.procsync == REPROMPI_PROCSYNC_WIN ) {
+  // initialize synchronization functions according to the configured synchronization methods
+  reprompib_init_sync_module(argc, argv, &clock_sync);
+  reprompib_init_proc_sync_module(argc, argv, &clock_sync, &proc_sync);
+  if (proc_sync.procsync == REPROMPI_PROCSYNC_WIN ) {
     if (my_rank == OUTPUT_ROOT_PROC) {
       printf("ERROR: Cannot use this NREP prediction module with window-based synchronization. \n");
       printf("Please use either the MPI_Barrier (--proc-sync=MPI_Barrier) or the dissemination barrier (--proc-sync=dissem_barrier) for process synchronization.\n");
     }
-    sync_module.cleanup_module();
+    proc_sync.cleanup_module();
+    clock_sync.cleanup_module();
     /* shut down MPI */
     MPI_Finalize();
     return 0;
   }
-  if (sync_module.clocksync != REPROMPI_CLOCKSYNC_NONE ) {
+  if (clock_sync.clocksync != REPROMPI_CLOCKSYNC_NONE ) {
     if (my_rank == OUTPUT_ROOT_PROC) {
       printf("ERROR: Cannot use this NREP prediction module with clock synchronization. \n");
       printf("Please use the \"--clock-sync=None\" option.\n");
     }
-    sync_module.cleanup_module();
+    clock_sync.cleanup_module();
+    proc_sync.cleanup_module();
     /* shut down MPI */
     MPI_Finalize();
     return 0;
@@ -239,7 +246,8 @@ int main(int argc, char* argv[]) {
       printf("ERROR: No global clocks available for this NREP prediction module. \n");
       printf("Please change the value of the \"--runtime-type\" option.\n");
     }
-    sync_module.cleanup_module();
+    proc_sync.cleanup_module();
+    clock_sync.cleanup_module();
     /* shut down MPI */
     MPI_Finalize();
     return 0;
@@ -266,14 +274,19 @@ int main(int argc, char* argv[]) {
     job = jlist.jobs[jlist.job_indices[jindex]];
 
     if (jindex == 0) {
-      print_common_settings(&opts, sync_module.print_sync_info, &params_dict, runtime_type);
+      print_info.clock_sync = &clock_sync;
+      print_info.proc_sync = &proc_sync;
+      print_info.timing_method = runtime_type;
+
+      print_common_settings(&print_info, &opts, &params_dict);
       nrep_pred_print_cli_args_to_file(opts.output_file, &pred_params);
       nrep_pred_print_results_header(opts.output_file);
     }
 
     // initialize synchronization
     sync_params.nrep = max_nreps;
-    sync_module.init_sync(&sync_params);
+    proc_sync.init_sync(&sync_params);
+    clock_sync.init_sync();
 
     tstart_sec = (double*) malloc(max_nreps * sizeof(double));
     tend_sec = (double*) malloc(max_nreps * sizeof(double));
@@ -290,16 +303,17 @@ int main(int argc, char* argv[]) {
         current_nreps = max_nreps - current_index;
       }
 
+      proc_sync.init_sync_round();
       // start a new round of measurements
       for (i = 0; i < current_nreps; i++) {
-        sync_module.start_sync();
+        proc_sync.start_sync();
 
         tstart_sec[current_index] = get_time();
         collective_calls[job.call_index].collective_call(&coll_params);
         tend_sec[current_index] = get_time();
         current_index++;
 
-        sync_module.stop_sync();
+        proc_sync.stop_sync();
       }
 
       // gather the run-times obtained in this round to the root
@@ -351,8 +365,8 @@ int main(int argc, char* argv[]) {
 
     collective_calls[job.call_index].cleanup_data(&coll_params);
 
-    sync_module.finalize_sync();
-
+    clock_sync.finalize_sync();
+    proc_sync.finalize_sync();
     free(tstart_sec);
     free(tend_sec);
     free(maxRuntimes_sec);
@@ -364,8 +378,11 @@ int main(int argc, char* argv[]) {
   cleanup_job_list(jlist);
   reprompib_free_common_parameters(&opts);
   reprompib_cleanup_dictionary(&params_dict);
-  sync_module.cleanup_module();
+  proc_sync.cleanup_module();
+  clock_sync.cleanup_module();
+
   reprompib_deregister_sync_modules();
+  reprompib_deregister_proc_sync_modules();
   /* shut down MPI */
   MPI_Finalize();
 

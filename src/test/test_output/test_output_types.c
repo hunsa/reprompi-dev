@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
   int my_rank, procs;
   reprompib_options_t opts;
   reprompib_sync_module_t sync_module;
-  reprompi_timing_method_t runtime_type;
+  reprompib_timing_method_t runtime_type;
   FILE* f = stdout;
   job_t job;
   int summarize;

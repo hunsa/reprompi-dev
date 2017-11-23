@@ -27,7 +27,7 @@
 #include <time.h>
 #include "mpi.h"
 
-#include "reprompi_bench/sync/synchronization.h"
+#include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/option_parser/parse_common_options.h"
 #include "reprompi_bench/option_parser/parse_timing_options.h"
@@ -68,30 +68,39 @@ void print_command_line_args(int argc, char* argv[]) {
 }
 
 
-void print_common_settings_to_file(FILE* f, const print_sync_info_t print_sync_info, const reprompib_dictionary_t* dict) {
+void print_common_settings_to_file(FILE* f, const reprompib_bench_print_info_t* print_info,
+    const reprompib_dictionary_t* dict) {
     int my_rank, np;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
+    if (print_info == NULL) {
+       fprintf(stderr, "ERROR: incorrectly formatted parameters for output printing");
+       return;
+    }
 
     if (my_rank == OUTPUT_ROOT_PROC) {
-        reprompib_print_dictionary(dict, f);
+      reprompib_print_dictionary(dict, f);
 
-        fprintf(f, "#@reproMPIcommitSHA1=%s\n", git_commit);
-        fprintf(f, "#@nprocs=%d\n", np);
-        print_time_parameters(f);
-        print_sync_info(f);
-
+      fprintf(f, "#@reproMPIcommitSHA1=%s\n", git_commit);
+      fprintf(f, "#@nprocs=%d\n", np);
+      print_time_parameters(f);
+      print_info->clock_sync->print_sync_info(f);
+      print_info->proc_sync->print_sync_info(f);
     }
 }
 
-static void print_benchmark_common_settings_to_file(FILE* f, const reprompib_common_options_t* opts,
-    const print_sync_info_t print_sync_info, const reprompib_dictionary_t* dict,
-    const reprompi_timing_method_t timing_method) {
+static void print_benchmark_common_settings_to_file(FILE* f, const reprompib_bench_print_info_t* print_info,
+    const reprompib_common_options_t* opts, const reprompib_dictionary_t* dict) {
     int my_rank, len;
     char type_name[MPI_MAX_OBJECT_NAME];
     MPI_Aint lb, extent;
     int datatypesize;
+
+    if (print_info == NULL) {
+       fprintf(stderr, "ERROR: incorrectly formatted parameters for output printing");
+       return;
+    }
 
     MPI_Type_get_name(opts->datatype, type_name, &len);
     MPI_Type_get_extent(opts->datatype, &lb, &extent);
@@ -124,23 +133,28 @@ static void print_benchmark_common_settings_to_file(FILE* f, const reprompib_com
         if (opts->pingpong_ranks[0] >=0 && opts->pingpong_ranks[1] >=0) {
           fprintf(f, "#@pingpong_ranks=%d,%d\n", opts->pingpong_ranks[0], opts->pingpong_ranks[1]);
         }
-        print_common_settings_to_file(f, print_sync_info, dict);
-        fprintf(f, "#@runtime_type=%s\n", reprompib_get_timing_method_name(timing_method));
+        print_common_settings_to_file(f, print_info, dict);
+        fprintf(f, "#@runtime_type=%s\n", reprompib_get_timing_method_name(print_info->timing_method));
     }
 }
 
 
-void print_common_settings(const reprompib_common_options_t* opts, const print_sync_info_t print_sync_info,
-                           const reprompib_dictionary_t* dict, const reprompi_timing_method_t timing_method) {
+void print_common_settings(const reprompib_bench_print_info_t* print_info,
+    const reprompib_common_options_t* opts, const reprompib_dictionary_t* dict) {
     FILE* f = stdout;
     int my_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    print_benchmark_common_settings_to_file(stdout, opts, print_sync_info, dict, timing_method);
+    if (print_info == NULL) {
+       fprintf(stderr, "ERROR: incorrectly formatted parameters for output printing");
+       return;
+    }
+
+    print_benchmark_common_settings_to_file(stdout, print_info, opts, dict);
     if (my_rank == OUTPUT_ROOT_PROC) {
         if (opts->output_file != NULL) {
             f = fopen(opts->output_file, "a");
-            print_benchmark_common_settings_to_file(f, opts, print_sync_info, dict, timing_method);
+            print_benchmark_common_settings_to_file(f, print_info, opts, dict);
             fflush(f);
             fclose(f);
         }

@@ -24,7 +24,7 @@
 #ifndef RUNTIMES_COMPUTATION_H_
 #define RUNTIMES_COMPUTATION_H_
 
-#include "reprompi_bench/sync/synchronization.h"
+#include "reprompi_bench/output_management/bench_info_output.h"
 #include "reprompi_bench/option_parser/parse_timing_options.h"
 
 void compute_runtimes_local_clocks(const double* tstart_sec, const double* tend_sec,
@@ -38,7 +38,7 @@ void collect_errorcodes(long current_start_index, long current_nreps, int root_p
 
 
 void compute_runtimes(int nrep, double* tstart_sec, double* tend_sec, int root_proc,
-    const reprompib_sync_module_t*  sync_module, reprompi_timing_method_t runtime_type,
+    const reprompib_bench_print_info_t* print_info,
     double** maxRuntimes_sec_p, int** sync_errorcodes_p);
 
 #endif /* RUNTIMES_COMPUTATION_H_ */

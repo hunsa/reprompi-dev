@@ -21,10 +21,27 @@
 </license>
 */
 
+#ifndef REPROMPI_SYNC_PARSE_OPTIONS_H_
+#define REPROMPI_SYNC_PARSE_OPTIONS_H_
 
-#ifndef LM_PARSE_OPTIONS_H_
-#define LM_PARSE_OPTIONS_H_
+#include <getopt.h>
 
-void jk_parse_options(int argc, char **argv, reprompib_sync_options_t* opts_p);
 
-#endif /* LM_PARSE_OPTIONS_H_ */
+typedef struct {
+    int n_fitpoints; /* --fitpoints */
+    int n_exchanges; /* --exchanges */
+} reprompib_sync_options_t;
+
+
+typedef enum reprompi_win_sync_getopt_ids {
+  REPROMPI_ARGS_CLOCKSYNC_NFITPOINTS = 700,
+  REPROMPI_ARGS_CLOCKSYNC_NEXCHANGES
+} reprompi_win_sync_getopt_ids_t;
+
+extern const struct option reprompi_sync_long_options[];
+extern const char reprompi_sync_opts_str[];
+
+
+void reprompi_init_sync_parameters(reprompib_sync_options_t* opts_p);
+
+#endif /* REPROMPI_SYNC_PARSE_OPTIONS_H_ */

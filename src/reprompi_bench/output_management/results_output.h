@@ -27,17 +27,16 @@
 #include "benchmark_job.h"
 #include "reprompi_bench/option_parser/parse_options.h"
 #include "reprompi_bench/option_parser/parse_timing_options.h"
-#include "reprompi_bench/sync/synchronization.h"
+#include "reprompi_bench/sync/clock_sync/synchronization.h"
+#include "reprompi_bench/output_management/bench_info_output.h"
 
-void print_results_header(const reprompib_options_t* opts, const reprompib_sync_module_t*  sync_module,
-    const char* output_file_path, int verbose);
+void print_results_header(const reprompib_bench_print_info_t* print_info,
+    const reprompib_options_t* opts_p, const char* output_file_path, int verbose);
 
 void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
-    const reprompib_sync_module_t*  sync_module, const reprompib_options_t* opts_p,
-    const reprompi_timing_method_t runtime_type);
+    const reprompib_bench_print_info_t* print_info, const reprompib_options_t* opts_p);
 
 void print_summary(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
-    const reprompib_sync_module_t*  sync_module,
-    const reprompib_options_t* opts_p, const reprompi_timing_method_t runtime_type);
+    const reprompib_bench_print_info_t* print_info, const reprompib_options_t* opts_p);
 
 #endif /* RESULTS_OUTPUT_H_ */

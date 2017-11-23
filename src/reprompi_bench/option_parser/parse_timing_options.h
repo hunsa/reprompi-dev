@@ -29,12 +29,12 @@ typedef enum reprompi_timing_method {
   REPROMPI_RUNT_MAX_OVER_LOCAL_RUNTIME = 0,
   REPROMPI_RUNT_GLOBAL_TIMES
   //REPROMPI_RUNT_MAX_OVER_LOCAL_AVG
-} reprompi_timing_method_t;
+} reprompib_timing_method_t;
 
 
-void reprompib_parse_timing_options(reprompi_timing_method_t* runtime_type, int argc, char** argv);
+void reprompib_parse_timing_options(reprompib_timing_method_t* runtime_type, int argc, char** argv);
 
-const char* reprompib_get_timing_method_name(reprompi_timing_method_t t);
+const char* reprompib_get_timing_method_name(reprompib_timing_method_t t);
 
 
 #endif /* REPROMPIB_PARSE_TIMING_OPTIONS_H_ */

@@ -29,7 +29,7 @@
 #include "mpi.h"
 
 #include "benchmark_job.h"
-#include "reprompi_bench/sync/synchronization.h"
+#include "reprompi_bench/sync/process_sync/process_synchronization.h"
 #include "collective_ops/collectives.h"
 #include "reprompi_bench/misc.h"
 #include "runtimes_computation.h"
@@ -49,8 +49,8 @@ static const output_msize_t OUTPUT_MSIZE_TYPE = OUTPUT_MSIZE_BYTES;
 static const output_msize_t OUTPUT_MSIZE_TYPE = OUTPUT_COUNT;
 #endif
 
-void print_results_header(const reprompib_options_t* opts, const reprompib_sync_module_t*  sync_module,
-    const char* output_file_path, int verbose) {
+void print_results_header(const reprompib_bench_print_info_t* print_info,
+    const reprompib_options_t* opts, const char* output_file_path, int verbose) {
   int my_rank;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -92,7 +92,7 @@ void print_results_header(const reprompib_options_t* opts, const reprompib_sync_
       }
 
 //#ifdef ENABLE_WINDOWSYNC
-      if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+      if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {
         fprintf(f, "%50s %10s %12s %10s ", "test", "nrep", msize_str, "errorcode");
       }
       else {
@@ -103,7 +103,7 @@ void print_results_header(const reprompib_options_t* opts, const reprompib_sync_
 
       if (verbose == 1) {
 //#ifdef ENABLE_WINDOWSYNC
-        if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+        if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {
           fprintf(f, "%14s %14s %14s %14s \n", "loc_tstart_sec", "loc_tend_sec", "gl_tstart_sec", "gl_tend_sec");
         }
         else {
@@ -126,8 +126,7 @@ void print_results_header(const reprompib_options_t* opts, const reprompib_sync_
 }
 
 
-void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
-    const reprompib_sync_module_t*  sync_module, reprompi_timing_method_t runtime_type) {
+void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec, const reprompib_bench_print_info_t* print_info) {
   double* maxRuntimes_sec = NULL;
   int i;
   int my_rank;
@@ -143,7 +142,7 @@ void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
   }
 
   // maxRuntimes_sec and sync_errorcodes are only defined for the root process
-  compute_runtimes(job.n_rep, tstart_sec, tend_sec, OUTPUT_ROOT_PROC, sync_module, runtime_type,
+  compute_runtimes(job.n_rep, tstart_sec, tend_sec, OUTPUT_ROOT_PROC, print_info,
       &maxRuntimes_sec, &sync_errorcodes);
 
   if (my_rank == OUTPUT_ROOT_PROC) {
@@ -151,7 +150,7 @@ void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
     for (i = 0; i < job.n_rep; i++) {
 
       //#if defined(ENABLE_WINDOWSYNC) && !defined(ENABLE_BARRIERSYNC)    // measurements with window-based synchronization
-      if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+      if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {
         fprintf(f, "%50s %10d %12ld %10d %14.10f\n", get_call_from_index(job.call_index), i,
             msize_value, sync_errorcodes[i],
             maxRuntimes_sec[i]);
@@ -164,7 +163,7 @@ void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
       //#endif
     }
 
-    if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+    if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {
       free(sync_errorcodes);
     }
     free(maxRuntimes_sec);
@@ -174,8 +173,7 @@ void print_runtimes(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
 
 
 void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
-    const reprompib_sync_module_t*  sync_module, const reprompib_options_t* opts_p,
-    const reprompi_timing_method_t runtime_type) {
+    const reprompib_bench_print_info_t* print_info, const reprompib_options_t* opts_p) {
 
   int i, proc_id;
   double* local_start_sec = NULL;
@@ -201,7 +199,7 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
   }
 
   if (opts_p->verbose == 0) {
-    print_runtimes(f, job, tstart_sec, tend_sec, sync_module, runtime_type);
+    print_runtimes(f, job, tstart_sec, tend_sec, print_info);
   } else {
 
     // we gather data from processes in chunks of OUTPUT_NITERATIONS_CHUNK elements
@@ -219,8 +217,8 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
       }
 
       //#ifdef ENABLE_WINDOWSYNC
-      if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
-        int* local_errorcodes = sync_module->get_errorcodes();
+      if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {
+        int* local_errorcodes = print_info->proc_sync->get_errorcodes();
 
         if (my_rank == OUTPUT_ROOT_PROC)
         {
@@ -253,15 +251,15 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
           MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
 
       // gather global times in case global clocks are used
-      if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+      if (print_info->clock_sync->clocksync != REPROMPI_CLOCKSYNC_NONE) {
         if (my_rank == OUTPUT_ROOT_PROC) {
           global_start_sec = (double*) calloc(chunk_nrep * np, sizeof(double));
           global_end_sec = (double*) calloc(chunk_nrep * np, sizeof(double));
         }
 
         for (i = 0; i < chunk_nrep; i++) {
-          tstart_sec[i] = sync_module->get_global_time(tstart_sec[i]);
-          tend_sec[i] = sync_module->get_global_time(tend_sec[i]);
+          tstart_sec[i] = print_info->clock_sync->get_global_time(tstart_sec[i]);
+          tend_sec[i] = print_info->clock_sync->get_global_time(tend_sec[i]);
         }
         MPI_Gather(tstart_sec, chunk_nrep, MPI_DOUBLE, global_start_sec,
             chunk_nrep, MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
@@ -276,7 +274,7 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
           for (i = 0; i < chunk_nrep; i++) {
             current_rep_id = chunk_id * OUTPUT_NITERATIONS_CHUNK + i;
             //#ifdef ENABLE_WINDOWSYNC
-            if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+            if (print_info->clock_sync->clocksync != REPROMPI_CLOCKSYNC_NONE) {
               fprintf(f, "%7d %50s %10d %12ld %10d %14.10f %14.10f %14.10f %14.10f\n", proc_id,
                   get_call_from_index(job.call_index), current_rep_id, msize_value,
                   errorcodes[proc_id * chunk_nrep + i],
@@ -301,7 +299,7 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
         free(global_start_sec);
         free(global_end_sec);
         //#ifdef ENABLE_WINDOWSYNC
-        if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+        if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {
           free(errorcodes);
         }
         //#endif
@@ -315,9 +313,8 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
 
 
 void print_summary(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
-    const reprompib_sync_module_t*  sync_module,
-    const reprompib_options_t* opts_p,
-    const reprompi_timing_method_t runtime_type) {
+    const reprompib_bench_print_info_t* print_info,
+    const reprompib_options_t* opts_p) {
 
   double* maxRuntimes_sec = NULL;
   int my_rank;
@@ -335,7 +332,7 @@ void print_summary(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
   }
 
   // maxRuntimes_sec and sync_errorcodes are only defined for the root process
-  compute_runtimes(job.n_rep, tstart_sec, tend_sec, OUTPUT_ROOT_PROC, sync_module, runtime_type,
+  compute_runtimes(job.n_rep, tstart_sec, tend_sec, OUTPUT_ROOT_PROC, print_info,
       &maxRuntimes_sec, &sync_errorcodes);
 
   if (my_rank == OUTPUT_ROOT_PROC) {
@@ -343,7 +340,7 @@ void print_summary(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
 
     // remove measurements with out-of-window errors
     //#ifdef ENABLE_WINDOWSYNC
-    if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+    if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {
       for (i = 0; i < job.n_rep; i++) {
         if (sync_errorcodes[i] == 0) {
           if (nreps < i) {
@@ -393,7 +390,7 @@ void print_summary(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
     fprintf(f, "\n");
 
     //#ifdef ENABLE_WINDOWSYNC
-    if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+    if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {
       free(sync_errorcodes);
     }
     //#endif

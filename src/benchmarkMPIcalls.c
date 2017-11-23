@@ -24,11 +24,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <getopt.h>
 #include <time.h>
 #include "mpi.h"
 
 #include "reprompi_bench/misc.h"
-#include "reprompi_bench/sync/synchronization.h"
+#include "reprompi_bench/sync/clock_sync/synchronization.h"
+#include "reprompi_bench/sync/process_sync/process_synchronization.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "benchmark_job.h"
 #include "reprompi_bench/option_parser/option_parser_helpers.h"
@@ -46,14 +48,13 @@ static const int OUTPUT_ROOT_PROC = 0;
 static const int HASHTABLE_SIZE=100;
 
 static void print_initial_settings(const reprompib_options_t* opts, const reprompib_common_options_t* common_opts,
-    print_sync_info_t print_sync_info, const reprompib_dictionary_t* dict,
-    const reprompi_timing_method_t timing_method) {
+    const reprompib_dictionary_t* dict, const reprompib_bench_print_info_t* print_info) {
     int my_rank, np;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
-    print_common_settings(common_opts, print_sync_info, dict, timing_method);
+    print_common_settings(print_info, common_opts, dict);
 
     if (my_rank == OUTPUT_ROOT_PROC) {
         FILE* f;
@@ -73,9 +74,8 @@ static void print_initial_settings(const reprompib_options_t* opts, const reprom
 
 
 static void reprompib_print_bench_output(job_t job, double* tstart_sec, double* tend_sec,
-        const reprompib_sync_module_t*  sync_module,
         const reprompib_options_t* opts, const reprompib_common_options_t* common_opts,
-        const reprompi_timing_method_t runtime_type) {
+        const reprompib_bench_print_info_t* print_info) {
     FILE* f = stdout;
     int my_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -87,17 +87,14 @@ static void reprompib_print_bench_output(job_t job, double* tstart_sec, double* 
     }
 
     if (opts->print_summary_methods >0)  {
-        print_summary(stdout, job, tstart_sec, tend_sec, sync_module,
-                opts, runtime_type);
+        print_summary(stdout, job, tstart_sec, tend_sec, print_info, opts);
         if (common_opts->output_file != NULL) {
-            print_measurement_results(f, job, tstart_sec, tend_sec,
-                sync_module, opts, runtime_type);
+            print_measurement_results(f, job, tstart_sec, tend_sec, print_info, opts);
         }
 
     }
     else {
-        print_measurement_results(f, job, tstart_sec, tend_sec,
-            sync_module, opts, runtime_type);
+        print_measurement_results(f, job, tstart_sec, tend_sec, print_info, opts);
     }
 
     if (my_rank == OUTPUT_ROOT_PROC) {
@@ -157,10 +154,12 @@ int main(int argc, char* argv[]) {
     basic_collective_params_t coll_basic_info;
     time_t start_time, end_time;
     reprompib_dictionary_t params_dict;
+    reprompib_bench_print_info_t print_info;
 
-    reprompib_sync_module_t sync_module;
+    reprompib_sync_module_t clock_sync;
+    reprompib_proc_sync_module_t proc_sync;
     reprompib_sync_params_t sync_params;
-    reprompi_timing_method_t runtime_type;
+    reprompib_timing_method_t runtime_type;
 
     /* start up MPI
      *
@@ -170,6 +169,7 @@ int main(int argc, char* argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &procs);
 
     reprompib_register_sync_modules();
+    reprompib_register_proc_sync_modules();
 
     // initialize time measurement functions
     init_timer();
@@ -196,7 +196,8 @@ int main(int argc, char* argv[]) {
     reprompib_parse_options(&opts, argc, argv);
 
     // initialize synchronization module
-    reprompib_init_sync_module(argc, argv, &sync_module);
+    reprompib_init_sync_module(argc, argv, &clock_sync);
+    reprompib_init_proc_sync_module(argc, argv, &clock_sync, &proc_sync);
 
     if (common_opts.input_file == NULL && opts.n_rep <=0) { // make sure nrep is specified when there is no input file
       reprompib_print_error_and_exit("The number of repetitions is not defined (specify the \"--nrep\" command-line argument or provide an input file)\n");
@@ -213,35 +214,41 @@ int main(int argc, char* argv[]) {
         tstart_sec = (double*) malloc(job.n_rep * sizeof(double));
         tend_sec = (double*) malloc(job.n_rep * sizeof(double));
 
-        if (jindex == 0) {
-            print_initial_settings(&opts, &common_opts, sync_module.print_sync_info, &params_dict, runtime_type);
-            print_results_header(&opts, &sync_module, common_opts.output_file, opts.verbose);
-        }
-
         collective_calls[job.call_index].initialize_data(coll_basic_info, job.count, &coll_params);
 
         // initialize synchronization
         sync_params.nrep = job.n_rep;
-        sync_module.init_sync(&sync_params);
+        proc_sync.init_sync(&sync_params);
+        clock_sync.init_sync();
 
-        sync_module.sync_clocks();
-        sync_module.init_sync_round();         // broadcast first window
+
+        print_info.clock_sync = &clock_sync;
+        print_info.proc_sync = &proc_sync;
+        print_info.timing_method = runtime_type;
+        if (jindex == 0) {
+            print_initial_settings(&opts, &common_opts, &params_dict, &print_info);
+            print_results_header(&print_info, &opts, common_opts.output_file, opts.verbose);
+        }
+
+        clock_sync.sync_clocks();
+        proc_sync.init_sync_round();         // broadcast first window
 
         // execute MPI call nrep times
         for (i = 0; i < job.n_rep; i++) {
-            sync_module.start_sync();
+          proc_sync.start_sync();
 
-            tstart_sec[i] = get_time();
-            collective_calls[job.call_index].collective_call(&coll_params);
-            tend_sec[i] = get_time();
+          tstart_sec[i] = get_time();
+          collective_calls[job.call_index].collective_call(&coll_params);
+          tend_sec[i] = get_time();
 
-            sync_module.stop_sync();
+          proc_sync.stop_sync();
         }
 
         //print summarized data
-        reprompib_print_bench_output(job, tstart_sec, tend_sec, &sync_module, &opts, &common_opts, runtime_type);
+        reprompib_print_bench_output(job, tstart_sec, tend_sec, &opts, &common_opts, &print_info);
 
-        sync_module.finalize_sync();
+        clock_sync.finalize_sync();
+        proc_sync.finalize_sync();
 
         free(tstart_sec);
         free(tend_sec);
@@ -257,9 +264,11 @@ int main(int argc, char* argv[]) {
     reprompib_free_common_parameters(&common_opts);
     reprompib_free_parameters(&opts);
     reprompib_cleanup_dictionary(&params_dict);
-    sync_module.cleanup_module();
+    clock_sync.cleanup_module();
+    proc_sync.cleanup_module();
 
     reprompib_deregister_sync_modules();
+    reprompib_deregister_proc_sync_modules();
     /* shut down MPI */
     MPI_Finalize();
 

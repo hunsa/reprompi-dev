@@ -21,40 +21,52 @@
 </license>
 */
 
-#include "mpi.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "mpi.h"
 
-#include "reprompi_bench/sync/barrier_sync/barrier_sync.h"
+#include "reprompi_bench/sync/clock_sync/synchronization.h"
 
-inline double barrier_get_normalized_time(double local_time) {
+
+static void empty(void) {
+};
+
+static void empty_init_module(int argc, char** argv) {
+}
+
+static double get_normalized_time(double local_time) {
   int my_rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
   if (my_rank == 0) {
-    fprintf(stderr, "WARNING: Global time is not defined for barrier-based synchronization.\n");
+    fprintf(stderr, "WARNING: Global time is not defined.\n");
   }
 
   return local_time;
 }
 
-int* barrier_get_errorcodes(void) {
-  int my_rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-  if (my_rank == 0) {
-    fprintf(stderr, "WARNING: Measurement errorcodes are not defined for barrier-based synchronization.\n");
-  }
-
-  return NULL;
+static void print_sync_parameters(FILE* f) {
+    fprintf(f, "#@clocksync=None\n");
 }
 
 
-void barrier_init_module(int argc, char** argv) {
-};
 
-void empty(void) {
-};
+void register_no_clock_sync_module(reprompib_sync_module_t *sync_mod) {
+  sync_mod->name = "None";
+  sync_mod->clocksync = REPROMPI_CLOCKSYNC_NONE;
 
-void barrier_init_synchronization(const reprompib_sync_params_t* sync_params) {
-};
+  sync_mod->init_module = empty_init_module;
+  sync_mod->cleanup_module = empty;
+
+  sync_mod->init_sync = empty;
+  sync_mod->finalize_sync = empty;
+
+  sync_mod->sync_clocks = empty;
+
+  sync_mod->get_global_time = get_normalized_time;
+  sync_mod->print_sync_info = print_sync_parameters;
+}
+
+

@@ -26,7 +26,7 @@
 #include "mpi.h"
 
 #include "runtimes_computation.h"
-#include "reprompi_bench/sync/synchronization.h"
+#include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/misc.h"
 
 
@@ -116,7 +116,7 @@ void collect_errorcodes(long current_start_index, long current_nreps, int root_p
 
 
 void compute_runtimes(int nrep, double* tstart_sec, double* tend_sec, int root_proc,
-    const reprompib_sync_module_t*  sync_module, reprompi_timing_method_t runtime_type,
+    const reprompib_bench_print_info_t* print_info,
     double** maxRuntimes_sec_p, int** sync_errorcodes_p) {
 
   double* maxRuntimes_sec;
@@ -132,7 +132,7 @@ void compute_runtimes(int nrep, double* tstart_sec, double* tend_sec, int root_p
   if (my_rank == root_proc) {
     maxRuntimes_sec = (double*) calloc(nrep, sizeof(double));
 
-    if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+    if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {
       sync_errorcodes = (int*) calloc(nrep, sizeof(int));
       for (i = 0; i < nrep; i++) {
         sync_errorcodes[i] = 0;
@@ -142,13 +142,13 @@ void compute_runtimes(int nrep, double* tstart_sec, double* tend_sec, int root_p
 
   current_start_index = 0;
 
-  if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
-    collect_errorcodes(current_start_index, nrep, root_proc, sync_module->get_errorcodes, sync_errorcodes);
+  if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {
+    collect_errorcodes(current_start_index, nrep, root_proc, print_info->proc_sync->get_errorcodes, sync_errorcodes);
 
-    switch (runtime_type) {
+    switch (print_info->timing_method) {
       case(REPROMPI_RUNT_GLOBAL_TIMES):
           compute_runtimes_global_clocks(tstart_sec, tend_sec, current_start_index, nrep, root_proc,
-              sync_module->get_global_time, maxRuntimes_sec);
+              print_info->clock_sync->get_global_time, maxRuntimes_sec);
           break;
       case(REPROMPI_RUNT_MAX_OVER_LOCAL_RUNTIME):
           compute_runtimes_local_clocks(tstart_sec, tend_sec, current_start_index, nrep, root_proc,
@@ -159,15 +159,15 @@ void compute_runtimes(int nrep, double* tstart_sec, double* tend_sec, int root_p
     }
   }
   else {  // barrier-based process synchronization
-    switch (runtime_type) {
+    switch (print_info->timing_method) {
       case(REPROMPI_RUNT_MAX_OVER_LOCAL_RUNTIME):
         compute_runtimes_local_clocks(tstart_sec, tend_sec, current_start_index, nrep, root_proc,
                 maxRuntimes_sec);
         break;
       case(REPROMPI_RUNT_GLOBAL_TIMES):
-          if (sync_module->clocksync != REPROMPI_CLOCKSYNC_NONE) {  // global times are available
+          if (print_info->clock_sync->clocksync != REPROMPI_CLOCKSYNC_NONE) {  // global times are available
             compute_runtimes_global_clocks(tstart_sec, tend_sec, current_start_index, nrep, root_proc,
-              sync_module->get_global_time, maxRuntimes_sec);
+                print_info->clock_sync->get_global_time, maxRuntimes_sec);
           }
           else {
             reprompib_print_error_and_exit("Unsupported run-time computation method without a global clock (it should be specified using the \"--runtime-type\" option).");
