@@ -143,12 +143,14 @@ static void read_input_file(char* file_name, bench_results_t* bench_res) {
 int main(int argc, char* argv[]) {
   int my_rank, procs;
   reprompib_options_t opts;
-  reprompib_sync_module_t sync_module;
+  reprompib_sync_module_t clock_sync;
+  reprompib_proc_sync_module_t proc_sync;
   reprompib_timing_method_t runtime_type;
   FILE* f = stdout;
   job_t job;
   int summarize;
   char* input_file;
+  reprompib_bench_print_info_t print_info;
 
   /* start up MPI
    *
@@ -189,20 +191,23 @@ int main(int argc, char* argv[]) {
   runtime_type = atoi(argv[2]);
 
   // init sync module
-  sync_module.name = "test";
-  sync_module.procsync = atoi(argv[1]);;
+  clock_sync.name = "test";
 
-  sync_module.get_global_time = mock_get_global_time;
-  sync_module.get_errorcodes = mock_get_errorcodes;
+  clock_sync.get_global_time = mock_get_global_time;
+  proc_sync.get_errorcodes = mock_get_errorcodes;
+  proc_sync.procsync = atoi(argv[1]);;
 
+  print_info.clock_sync = &clock_sync;
+  print_info.proc_sync = &proc_sync;
+  print_info.timing_method = runtime_type;
   if (summarize == 0) {
     print_measurement_results(f, job, bench_results.local_start_time, bench_results.local_end_time,
-        &sync_module, &opts, runtime_type);
+        &print_info, &opts);
   }
   else {
     opts.print_summary_methods = 0xFF;
     print_summary(stdout, job, bench_results.local_start_time, bench_results.local_end_time,
-        &sync_module, &opts, runtime_type);
+        &print_info, &opts);
   }
 
   free(bench_results.local_start_time);

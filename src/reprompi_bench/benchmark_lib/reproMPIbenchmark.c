@@ -27,7 +27,8 @@
 #include <time.h>
 #include "mpi.h"
 
-#include "reprompi_bench/sync/synchronization.h"
+#include "reprompi_bench/sync/clock_sync/synchronization.h"
+#include "reprompi_bench/sync/process_sync/process_synchronization.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/option_parser/parse_options.h"
 #include "reprompi_bench/option_parser/parse_extra_key_value_options.h"
@@ -82,11 +83,14 @@ void reprompib_print_bench_output(const reprompib_job_t* job_p,
 }
 
 void reprompib_initialize_benchmark(int argc, char* argv[],
-    reprompib_options_t *opts_p, reprompib_sync_module_t* sync_module) {
+    reprompib_options_t *opts_p, reprompib_sync_module_t* clock_sync) {
   int my_rank;
   reprompib_sync_params_t sync_params;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+  reprompib_register_sync_modules();
+  reprompib_register_proc_sync_modules();
 
   // initialize time measurement functions
   init_timer();
@@ -104,11 +108,12 @@ void reprompib_initialize_benchmark(int argc, char* argv[],
   reprompib_parse_options(opts_p, argc, argv);
 
   // initialize synchronization module
-  reprompib_init_sync_module(argc, argv, sync_module);
+  reprompib_init_sync_module(argc, argv, clock_sync);
+  reprompib_init_proc_sync_module(argc, argv, clock_sync, proc_sync);
 
   // initialize synchronization
   sync_params.nrep = opts_p->n_rep;
-  sync_module->init_sync(&sync_params);
+  proc_sync->init_sync(&sync_params);
 }
 
 void reprompib_initialize_job(const long nrep,

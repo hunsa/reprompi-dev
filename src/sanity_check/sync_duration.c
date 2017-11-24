@@ -29,7 +29,7 @@
 #include <getopt.h>
 #include "mpi.h"
 
-#include "reprompi_bench/sync/synchronization.h"
+#include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "parse_test_options.h"
 
@@ -63,12 +63,10 @@ int main(int argc, char* argv[]) {
     int master_rank;
     double runtime_s;
     reprompib_st_opts_t opts;
-    reprompib_sync_module_t sync_module;
-    reprompib_sync_params_t sync_params;
+    reprompib_sync_module_t clock_sync;
     FILE* f;
 
     double *all_runtimes = NULL;
-    int dummy_nrep = 1;
 
     /* start up MPI */
     MPI_Init(&argc, &argv);
@@ -77,7 +75,7 @@ int main(int argc, char* argv[]) {
     parse_test_options(&opts, argc, argv);
 
     reprompib_register_sync_modules();
-    reprompib_init_sync_module(argc, argv, &sync_module);
+    reprompib_init_sync_module(argc, argv, &clock_sync);
 
     init_timer();
 
@@ -88,16 +86,15 @@ int main(int argc, char* argv[]) {
         all_runtimes = (double*) calloc(nprocs, sizeof(double));
     }
 
-    print_initial_settings(argc, argv, sync_module.print_sync_info);
-    sync_params.nrep = dummy_nrep;
+    print_initial_settings(argc, argv, clock_sync.print_sync_info);
 
     runtime_s = get_time();
     init_timer();
-    sync_module.sync_clocks();
-    sync_module.init_sync(&sync_params);
+    clock_sync.init_sync();
+    clock_sync.sync_clocks();
     runtime_s = get_time() - runtime_s;
 
-    sync_module.finalize_sync();
+    clock_sync.finalize_sync();
     MPI_Gather(&runtime_s, 1, MPI_DOUBLE, all_runtimes, 1, MPI_DOUBLE, 0,
             MPI_COMM_WORLD);
 
@@ -111,7 +108,7 @@ int main(int argc, char* argv[]) {
         free(all_runtimes);
     }
 
-    sync_module.cleanup_module();
+    clock_sync.cleanup_module();
     reprompib_deregister_sync_modules();
     MPI_Finalize();
     return 0;

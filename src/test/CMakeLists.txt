@@ -1,10 +1,7 @@
 
 
 add_executable(testbench
-#parse_options.c
-#option_parser_helpers.c
 testbench.c
-${SRC_DIR}/reprompi_bench/sync/benchmark_barrier_sync/bbarrier_sync.c
 ${COLL_OPS_SRC_FILES}
 )
 TARGET_LINK_LIBRARIES(testbench ${COMMON_LIBRARIES} )
@@ -26,5 +23,4 @@ endif()
 SET_TARGET_PROPERTIES(testbench PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
 
 
-
-
+ADD_SUBDIRECTORY(${SRC_DIR}/test/test_output)

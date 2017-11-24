@@ -314,7 +314,7 @@ int main(int argc, char* argv[]) {
     collective_calls[job.call_index].initialize_data(coll_basic_info, job.count, &coll_params);
 
     clock_sync.sync_clocks();      // compute clock drift models relative to the root node
-    proc_sync.init_sync_round();  // broadcast first window
+    proc_sync.init_sync_round();
 
     while (1) {
 

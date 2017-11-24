@@ -25,6 +25,7 @@
 #define REPROMPI_MISC_H__
 #include <stdint.h>
 #include <math.h>
+#include <mpi.h>
 
 double repro_min(double a, double b);
 double repro_max(double a, double b);
