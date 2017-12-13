@@ -78,7 +78,6 @@ static void hca_cleanup_module(void) {
 
 static void hca_common_print(FILE* f)
 {
-  fprintf (f, "#@clocksync=HCA\n");
   fprintf(f, "#@fitpoints=%d\n", parameters.n_fitpoints);
   fprintf(f, "#@exchanges=%d\n", parameters.n_exchanges);
 }
@@ -86,13 +85,20 @@ static void hca_common_print(FILE* f)
 static void hca_print_sync_parameters(FILE* f)
 {
   hca_common_print(f);
+  fprintf (f, "#@clocksync=HCA\n");
   fprintf(f, "#@hcasynctype=linear\n");
 }
 
 static void hca2_print_sync_parameters(FILE* f)
 {
   hca_common_print(f);
+  fprintf (f, "#@clocksync=HCA2\n");
   fprintf(f, "#@hcasynctype=logp\n");
+}
+
+static void hca3_print_sync_parameters(FILE* f)
+{
+  fprintf (f, "#@clocksync=HCA3\n");
 }
 
 static void hca2_init_module(int argc, char** argv) {
@@ -162,7 +168,7 @@ void register_hca3_module(reprompib_sync_module_t *sync_mod) {
   sync_mod->finalize_sync = default_finalize_synchronization;
 
   sync_mod->get_global_time = get_normalized_time;
-  sync_mod->print_sync_info = hca_print_sync_parameters;
+  sync_mod->print_sync_info = hca3_print_sync_parameters;
 }
 
 

@@ -95,13 +95,18 @@ inline Clock* HierarchicalClockSync<SyncIN, SyncIS, SyncIntra>::synchronize_all_
   delete intrasocket_clocksync;
 
   if (comm_internode != MPI_COMM_NULL) {
-    MPI_Comm_free(&comm_internode);
     //printf("[rank %d] has an internode clock\n", my_rank);
+    MPI_Comm_free(&comm_internode);
+    delete global_clock2;
+    delete global_clock3;
+
     return global_clock1;
   }
   if (comm_intersocket != MPI_COMM_NULL) {
-    MPI_Comm_free(&comm_intersocket);
     //printf("[rank %d] has an intersocket clock\n", my_rank);
+    MPI_Comm_free(&comm_intersocket);
+    delete global_clock3;
+
     return global_clock2;
   }
 
