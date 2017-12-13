@@ -39,8 +39,8 @@ add_executable(sync_duration
 )
 
 
-TARGET_LINK_LIBRARIES(measure_clock_drift ${COMMON_LIBRARIES} )
-TARGET_LINK_LIBRARIES(sync_duration ${COMMON_LIBRARIES} )
+TARGET_LINK_LIBRARIES(measure_clock_drift ${COMMON_LIBRARIES} synclib)
+TARGET_LINK_LIBRARIES(sync_duration ${COMMON_LIBRARIES} synclib)
 
 TARGET_LINK_LIBRARIES(compare_clocks ${COMMON_LIBRARIES} )
 TARGET_LINK_LIBRARIES(measure_rtt ${COMMON_LIBRARIES} )

@@ -32,16 +32,19 @@
 #include "reprompi_bench/misc.h"
 #include "reprompi_bench/sync/common/sync_module_helpers.h"
 #include "synchronization.h"
-
+#include "clock_sync_lib.h"
 
 // Implemented synchronization modules
 static reprompib_sync_module_t* sync_modules;
 
 static const sync_type_t clock_sync_options[] = {
         { "HCA", REPROMPI_CLOCKSYNC_HCA},
+        { "HCA2", REPROMPI_CLOCKSYNC_HCA2},
         { "HCA3", REPROMPI_CLOCKSYNC_HCA3},
         { "JK", REPROMPI_CLOCKSYNC_JK },
         { "SKaMPI", REPROMPI_CLOCKSYNC_SKAMPI },
+        { "Topo1", REPROMPI_CLOCKSYNC_TOPO1 },
+        { "Topo2", REPROMPI_CLOCKSYNC_TOPO2 },
         { "None", REPROMPI_CLOCKSYNC_NONE }
 };
 static const int N_CLOCK_SYNC_TYPES = sizeof(clock_sync_options)/sizeof(sync_type_t);
@@ -91,6 +94,7 @@ void reprompib_init_sync_module(int argc, char** argv, reprompib_sync_module_t* 
   cleanup_sync_options(&sync_module_info);
 }
 
+
 void reprompib_register_sync_modules(void) {
   sync_modules = calloc(N_CLOCK_SYNC_TYPES, sizeof(reprompib_sync_module_t));
 
@@ -99,7 +103,10 @@ void reprompib_register_sync_modules(void) {
   register_skampi_module(&(sync_modules[2]));
   register_jk_module(&(sync_modules[3]));
 
-  register_hca3_module(&(sync_modules[4]));
+  register_hca2_module(&(sync_modules[4]));
+  register_hca3_module(&(sync_modules[5]));
+  register_topo_aware_sync1_module(&(sync_modules[6]));
+  register_topo_aware_sync2_module(&(sync_modules[7]));
 }
 
 void reprompib_deregister_sync_modules(void) {

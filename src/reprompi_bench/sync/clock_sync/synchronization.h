@@ -26,9 +26,12 @@
 
 typedef enum {
   REPROMPI_CLOCKSYNC_HCA = 0,
+  REPROMPI_CLOCKSYNC_HCA2,
   REPROMPI_CLOCKSYNC_HCA3,
   REPROMPI_CLOCKSYNC_JK,
   REPROMPI_CLOCKSYNC_SKAMPI,
+  REPROMPI_CLOCKSYNC_TOPO1,
+  REPROMPI_CLOCKSYNC_TOPO2,
   REPROMPI_CLOCKSYNC_NONE
 } reprompi_clocksync_t;
 
@@ -62,9 +65,5 @@ void reprompib_init_sync_module(int argc, char** argv, reprompib_sync_module_t* 
 void reprompib_cleanup_sync_module(reprompib_sync_module_t* sync_mod);
 
 void register_no_clock_sync_module(reprompib_sync_module_t *sync_mod);
-void register_hca_module(reprompib_sync_module_t *sync_mod);
-void register_jk_module(reprompib_sync_module_t *sync_mod);
-void register_skampi_module(reprompib_sync_module_t *sync_mod);
-void register_hca3_module(reprompib_sync_module_t *sync_mod);
 
 #endif /* REPROMPIB_SYNCHRONIZATION_H_ */

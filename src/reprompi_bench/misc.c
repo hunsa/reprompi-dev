@@ -104,4 +104,3 @@ void reprompib_print_error_and_exit(const char* error_str) {
   exit(1);
 }
 
-

@@ -58,6 +58,21 @@ endif(ENABLE_PGMPI)
 ####################################
 
 
+####################################
+############ HWLOC support ########
+####################################
+set(HWLOC_LIBRARY_DEFAULT_PATH "" CACHE STRING  "Specify the path of the HWLOC library")
+
+find_package(Hwloc REQUIRED)
+if (HWLOC_INCLUDE_DIR)
+message (STATUS "HWLOC INCLUDES: ${HWLOC_INCLUDE_DIR}")
+else(HWLOC_INCLUDE_DIR)
+message (FATAL_ERROR "The HWLOC library not found.")
+endif(HWLOC_INCLUDE_DIR)
+####################################
+
+
+
 SET(MY_COMPILE_FLAGS "")
 
 ######################################
@@ -136,10 +151,10 @@ set(SYNC_SRC_FILES
 ${SRC_DIR}/reprompi_bench/sync/time_measurement.c
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/synchronization.c
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/sync_info.c
-${SRC_DIR}/reprompi_bench/sync/clock_sync/hca_sync.c
-${SRC_DIR}/reprompi_bench/sync/clock_sync/hca3_sync.c
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sk_sync.c
-${SRC_DIR}/reprompi_bench/sync/clock_sync/jk_sync.c
+#${SRC_DIR}/reprompi_bench/sync/clock_sync/hca_sync.c
+#${SRC_DIR}/reprompi_bench/sync/clock_sync/hca3_sync.c
+#${SRC_DIR}/reprompi_bench/sync/clock_sync/sk_sync.c
+#${SRC_DIR}/reprompi_bench/sync/clock_sync/jk_sync.c
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/no_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/barrier_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/window_sync.c
@@ -191,11 +206,14 @@ ${SRC_DIR}/reprompi_bench/option_parser/parse_options.c
 ${COLL_OPS_SRC_FILES}
 )
 
+#find_library (synclib NAMES synclib)
+
+ADD_SUBDIRECTORY(${SRC_DIR}/reprompi_bench/sync/clock_sync)
 
 add_executable(mpibenchmark
 ${REPROMPIBENCH_FILES}
 )
-TARGET_LINK_LIBRARIES(mpibenchmark ${COMMON_LIBRARIES} )
+TARGET_LINK_LIBRARIES(mpibenchmark ${COMMON_LIBRARIES} synclib)
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
 
 

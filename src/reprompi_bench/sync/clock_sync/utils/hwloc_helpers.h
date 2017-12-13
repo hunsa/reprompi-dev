@@ -1,0 +1,8 @@
+#ifndef REPROMPIB_HWLOC_HELPER_FUNCS_H_
+#define REPROMPIB_HWLOC_HELPER_FUNCS_H_
+
+
+int get_socket_id(void);
+
+
+#endif /* REPROMPIB_HWLOC_HELPER_FUNCS_H_ */
