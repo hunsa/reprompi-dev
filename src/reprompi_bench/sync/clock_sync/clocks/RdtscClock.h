@@ -2,6 +2,7 @@
 #ifndef REPROMPIB_RDTSC_CLOCK_CLASS_H_
 #define REPROMPIB_RDTSC_CLOCK_CLASS_H_
 
+#include "reprompi_bench/sync/rdtsc.h"
 #include "Clock.h"
 
 class RdtscClock : public Clock {
@@ -9,16 +10,12 @@ class RdtscClock : public Clock {
 private:
   double freq_hz;
 
-  __inline__ unsigned long long rdtsc(void)
-  {
-      unsigned hi, lo;
-      __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
-      return ( (unsigned long long)lo)|( ((unsigned long long)hi)<<32 );
-  }
-
 public:
   RdtscClock() {
     freq_hz = 2300e6;
+#ifdef FREQUENCY_MHZ   // set frequency to a fixed value
+    freq_hz=FREQUENCY_MHZ*1.0e6;
+#endif
   };
   ~RdtscClock() {};
 

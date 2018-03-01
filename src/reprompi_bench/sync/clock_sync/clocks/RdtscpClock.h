@@ -2,6 +2,7 @@
 #ifndef REPROMPIB_RDTSCP_CLOCK_CLASS_H_
 #define REPROMPIB_RDTSCP_CLOCK_CLASS_H_
 
+#include "reprompi_bench/sync/rdtsc.h"
 #include "Clock.h"
 
 class RdtscpClock : public Clock {
@@ -9,21 +10,12 @@ class RdtscpClock : public Clock {
 private:
   double freq_hz;
 
-  __inline__ unsigned long long rdtscp(void) {
-      unsigned long long tsc;
-      __asm__ __volatile__("rdtscp; "         // serializing read of tsc
-              "shl $32,%%rdx; "// shift higher 32 bits stored in rdx up
-              "or %%rdx,%%rax"// and or onto rax
-              : "=a"(tsc)// output to tsc variable
-              :
-              : "%rcx", "%rdx");// rcx and rdx are clobbered
-      return tsc;
-  }
-
-
 public:
   RdtscpClock() {
     freq_hz = 2300e6;
+#ifdef FREQUENCY_MHZ   // set frequency to a fixed value
+    freq_hz=FREQUENCY_MHZ*1.0e6;
+#endif
   };
   ~RdtscpClock() {};
 
