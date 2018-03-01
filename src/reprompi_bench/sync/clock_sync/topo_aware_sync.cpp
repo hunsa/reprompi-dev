@@ -92,8 +92,7 @@ static void topo2_print_sync_parameters(FILE* f)
 
 static void topo1_init_module(int argc, char** argv) {
   global_clock = NULL;
-  local_clock = new RdtscpClock();
-
+  local_clock = initialize_local_clock();
 
   clock_sync = new HierarchicalClockSync<HCA3ClockSync<PingpongClockOffsetAlg>,
       HCA3ClockSync<PingpongClockOffsetAlg>,
@@ -103,7 +102,7 @@ static void topo1_init_module(int argc, char** argv) {
 
 static void topo2_init_module(int argc, char** argv) {
   global_clock = NULL;
-  local_clock = new RdtscpClock();
+  local_clock = initialize_local_clock();
 
 
   clock_sync = new HierarchicalClockSync<HCA3ClockSync<PingpongClockOffsetAlg>,

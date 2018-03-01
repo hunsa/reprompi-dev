@@ -106,7 +106,7 @@ static void hca2_init_module(int argc, char** argv) {
   //hca_parse_options(argc, argv, &sync_opts);
 
   global_clock = NULL;
-  local_clock = new RdtscpClock();
+  local_clock = initialize_local_clock();
   clock_sync = new HCA2ClockSync<PingpongClockOffsetAlg>(MPI_COMM_WORLD, local_clock);
 
   //clock_sync = new HCAClockSync<SKaMPIClockOffsetAlg>(MPI_COMM_WORLD, local_clock);
@@ -119,7 +119,7 @@ static void hca2_init_module(int argc, char** argv) {
 static void hca3_init_module(int argc, char** argv) {
 
   global_clock = NULL;
-  local_clock = new RdtscpClock();
+  local_clock = initialize_local_clock();
   clock_sync = new HCA3ClockSync<PingpongClockOffsetAlg>(MPI_COMM_WORLD, local_clock);
 
 }
