@@ -33,12 +33,12 @@ option(ENABLE_RDTSCP "Use RDTSCP for time measurements [default: MPI_Wtime()]" o
 option(ENABLE_DOUBLE_BARRIER "Call barrier twice for synchronization [default: disabled]" off)
 set(FREQUENCY_MHZ 2300 CACHE STRING "CPU Frequency (needed for RDTSCP-based time measurements)")
 
-option(COMPILE_PRED_BENCHMARK "Enable the NREP prediction benchmarks [default: enabled]" on)
+option(COMPILE_PRED_BENCHMARK "Enable the NREP prediction benchmarks [default: enabled]" off)
 option(COMPILE_BENCH_LIBRARY "Compile ReproMPI library [default: disabled]" off)
 option(COMPILE_BENCH_TESTS "Enable benchmark testing [default: disabled]" off)
 
-option(COMPILE_SANITY_CHECK_TESTS "Enable sanity check tests" off)
-option(COMPILE_SANITY_CHECK_CLOCK "Enable clock sanity checks" on)
+option(COMPILE_SANITY_CHECK_TESTS "Enable sanity check tests" on)
+option(COMPILE_SANITY_CHECK_CLOCK "Enable clock sanity checks" off)
 set(OPTION_BUFFER_ALIGNMENT "" CACHE STRING "Alignment to use for buffer allocation [default: no alignment(allocation with calloc)]")
 option(OPTION_PRINT_MSIZES_BYTES "Print message sizes in the output instead of MPI call counts [default: counts]" off)
 
