@@ -3,6 +3,7 @@
 #define REPROMPIB_HIERARCHICALCLOCKSYNC_CLASS_H_
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
 #include <mpi.h>
 #include "reprompi_bench/sync/clock_sync/clocks/Clock.h"
 #include "reprompi_bench/sync/clock_sync/clocks/GlobalClockLM.h"
@@ -62,6 +63,13 @@ inline Clock* HierarchicalClockSync<SyncIN, SyncIS, SyncIntra>::synchronize_all_
 
   // within the node-level communicator, create intra-socket communicators
   socket_id = get_socket_id();
+  if (socket_id < 0) {
+    // could not get socket information - assign socket 0 to all processes
+    if (my_rank == 0) {
+      std::cerr << "WARNING: Could not get socket information - assuming all processes run on the same socket\n" << std::endl;
+    }
+    socket_id = 0;
+  }
   create_intrasocket_communicator(comm_intranode, socket_id, &comm_intrasocket);
 
   // within the node-level communicator, create an inter-socket communicator for each
@@ -73,6 +81,8 @@ inline Clock* HierarchicalClockSync<SyncIN, SyncIS, SyncIntra>::synchronize_all_
     internode_clocksync = new SyncIN(comm_internode, this->local_clock);
 
     global_clock1 = internode_clocksync->synchronize_all_clocks();
+
+    delete internode_clocksync;
   } else {
     global_clock1 = this->local_clock;
   }
@@ -81,6 +91,8 @@ inline Clock* HierarchicalClockSync<SyncIN, SyncIS, SyncIntra>::synchronize_all_
   if (comm_intersocket != MPI_COMM_NULL) {
       intersocket_clocksync = new SyncIS(comm_intersocket, global_clock1);
       global_clock2 = intersocket_clocksync->synchronize_all_clocks();
+
+      delete intersocket_clocksync;
   } else {
       global_clock2 = global_clock1;
   }
@@ -90,22 +102,18 @@ inline Clock* HierarchicalClockSync<SyncIN, SyncIS, SyncIntra>::synchronize_all_
   intrasocket_clocksync = new SyncIntra(comm_intrasocket, global_clock2);
   global_clock3 = intrasocket_clocksync->synchronize_all_clocks();
 
-  delete internode_clocksync;
-  delete intersocket_clocksync;
   delete intrasocket_clocksync;
 
   if (comm_internode != MPI_COMM_NULL) {
     //printf("[rank %d] has an internode clock\n", my_rank);
     MPI_Comm_free(&comm_internode);
-    delete global_clock2;
-    delete global_clock3;
 
     return global_clock1;
   }
+
   if (comm_intersocket != MPI_COMM_NULL) {
     //printf("[rank %d] has an intersocket clock\n", my_rank);
     MPI_Comm_free(&comm_intersocket);
-    delete global_clock3;
 
     return global_clock2;
   }
