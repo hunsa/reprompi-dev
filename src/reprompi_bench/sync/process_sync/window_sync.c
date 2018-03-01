@@ -32,6 +32,7 @@
 #include "reprompi_bench/misc.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
+#include "reprompi_bench/sync/clock_sync/synchronization.h"
 
 typedef struct {
     long n_rep; /* --repetitions */

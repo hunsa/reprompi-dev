@@ -35,7 +35,7 @@ typedef struct {
 
 
 void print_results_header(const reprompib_lib_output_info_t* output_info_p, const reprompib_job_t* job_p,
-    const reprompib_sync_module_t* sync_module);
+    const reprompib_proc_sync_module_t* sync_module);
 
 void print_measurement_results(FILE* f,
     const reprompib_lib_output_info_t* output_info_p,

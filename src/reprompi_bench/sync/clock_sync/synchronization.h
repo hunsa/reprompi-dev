@@ -40,7 +40,7 @@ typedef double (*sync_normtime_t)(double local_time);
 typedef void (*print_sync_info_t)(FILE* f);
 
 
-typedef struct reprompib_sync_module{
+typedef struct reprompib_sync_module {
     void (*init_module)(int argc, char** argv);
     void (*cleanup_module)(void);
 

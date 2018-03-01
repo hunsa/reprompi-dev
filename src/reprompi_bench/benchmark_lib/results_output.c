@@ -33,11 +33,12 @@
 #include "reprompi_bench/output_management/runtimes_computation.h"
 #include "reproMPIbenchmark.h"
 #include "results_output.h"
+#include "reprompi_bench/sync/process_sync/process_synchronization.h"
 
 static const int OUTPUT_ROOT_PROC = 0;
 
 void print_results_header(const reprompib_lib_output_info_t* output_info_p,
-    const reprompib_job_t* job_p, const reprompib_sync_module_t* sync_module) {
+    const reprompib_job_t* job_p, const reprompib_proc_sync_module_t* sync_module) {
     FILE* f = stdout;
     int my_rank;
 

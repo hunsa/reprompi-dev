@@ -38,7 +38,7 @@
 static reprompib_sync_module_t* sync_modules;
 
 static const sync_type_t clock_sync_options[] = {
-        { "HCA", REPROMPI_CLOCKSYNC_HCA},
+        //{ "HCA", REPROMPI_CLOCKSYNC_HCA},
         { "HCA2", REPROMPI_CLOCKSYNC_HCA2},
         { "HCA3", REPROMPI_CLOCKSYNC_HCA3},
         { "JK", REPROMPI_CLOCKSYNC_JK },
@@ -85,7 +85,9 @@ void reprompib_init_sync_module(int argc, char** argv, reprompib_sync_module_t* 
   index = get_sync_module_index(sync_module_info.name);
 
   if (index < 0) {
-    reprompib_print_error_and_exit("No synchronization module defined for the selected \"--clock-sync\" parameter.");
+    char err_msg[160];
+    sprintf(err_msg, "Unknown synchronization module \"--clock-sync=%s\"", sync_module_info.name);
+    reprompib_print_error_and_exit(err_msg);
   }
 
   *sync_mod = sync_modules[index];
@@ -99,7 +101,7 @@ void reprompib_register_sync_modules(void) {
   sync_modules = calloc(N_CLOCK_SYNC_TYPES, sizeof(reprompib_sync_module_t));
 
   register_no_clock_sync_module(&(sync_modules[0]));
-  register_hca_module(&(sync_modules[1]));
+  //register_hca_module(&(sync_modules[1]));
   register_skampi_module(&(sync_modules[2]));
   register_jk_module(&(sync_modules[3]));
 

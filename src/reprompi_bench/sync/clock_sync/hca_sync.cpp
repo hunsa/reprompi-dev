@@ -125,20 +125,20 @@ static void hca3_init_module(int argc, char** argv) {
 }
 
 
-extern "C"
-void register_hca_module(reprompib_sync_module_t *sync_mod) {
-  sync_mod->name = (char*)std::string("HCA2").c_str();
-  sync_mod->clocksync = REPROMPI_CLOCKSYNC_HCA2;
-  sync_mod->init_module = hca2_init_module;
-  sync_mod->cleanup_module = hca_cleanup_module;
-  sync_mod->sync_clocks = synchronize_clocks;
-
-  sync_mod->init_sync = default_init_synchronization;
-  sync_mod->finalize_sync = default_finalize_synchronization;
-
-  sync_mod->get_global_time = get_normalized_time;
-  sync_mod->print_sync_info = hca2_print_sync_parameters;
-}
+//extern "C"
+//void register_hca_module(reprompib_sync_module_t *sync_mod) {
+//  sync_mod->name = (char*)std::string("HCA").c_str();
+//  sync_mod->clocksync = REPROMPI_CLOCKSYNC_HCA;
+//  sync_mod->init_module = hca2_init_module;
+//  sync_mod->cleanup_module = hca_cleanup_module;
+//  sync_mod->sync_clocks = synchronize_clocks;
+//
+//  sync_mod->init_sync = default_init_synchronization;
+//  sync_mod->finalize_sync = default_finalize_synchronization;
+//
+//  sync_mod->get_global_time = get_normalized_time;
+//  sync_mod->print_sync_info = hca2_print_sync_parameters;
+//}
 
 extern "C"
 void register_hca2_module(reprompib_sync_module_t *sync_mod) {
