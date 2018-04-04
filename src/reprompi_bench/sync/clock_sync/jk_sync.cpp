@@ -30,21 +30,23 @@
 #include <string>
 #include <cstdlib>
 #include <mpi.h>
+
 #include "reprompi_bench/sync/clock_sync/clocks/Clock.h"
 #include "reprompi_bench/sync/clock_sync/clocks/RdtscpClock.h"
 #include "reprompi_bench/sync/clock_sync/clocks/GlobalClockOffset.h"
 #include "reprompi_bench/sync/clock_sync/clock_offset_algs/PingpongClockOffsetAlg.h"
 #include "reprompi_bench/sync/clock_sync/clock_offset_algs/SKaMPIClockOffsetAlg.h"
 #include "reprompi_bench/sync/clock_sync/clock_sync_common.h"
+#include "reprompi_bench/sync/clock_sync/clock_sync_lib.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/ClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.h"
 #include "reprompi_bench/misc.h"
 
 
 
-static ClockSyncInterface* clock_sync;
+static ClockSync* clock_sync;
 static Clock* local_clock;
-static Clock* global_clock;
+static GlobalClock* global_clock;
 
 
 static void jk_print_sync_parameters(FILE* f) {
@@ -52,7 +54,7 @@ static void jk_print_sync_parameters(FILE* f) {
 }
 
 static void synchronize_clocks(void) {
-  global_clock = clock_sync->synchronize_all_clocks();
+  global_clock = clock_sync->synchronize_all_clocks(MPI_COMM_WORLD, *(local_clock));
 }
 
 static double get_normalized_time(double local_time) {
@@ -61,9 +63,9 @@ static double get_normalized_time(double local_time) {
 
 
 void jk_init_module(int argc, char** argv) {
-    global_clock = NULL;
-    local_clock = initialize_local_clock();
-    clock_sync = new JKClockSync<PingpongClockOffsetAlg>(MPI_COMM_WORLD, local_clock);
+  global_clock = NULL;
+  local_clock = initialize_local_clock();
+  clock_sync = new JKClockSync(new PingpongClockOffsetAlg(), 1000, 100);
 }
 
 

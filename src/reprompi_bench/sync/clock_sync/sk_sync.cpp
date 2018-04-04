@@ -37,6 +37,7 @@
 #include "reprompi_bench/sync/clock_sync/clock_offset_algs/PingpongClockOffsetAlg.h"
 #include "reprompi_bench/sync/clock_sync/clock_offset_algs/SKaMPIClockOffsetAlg.h"
 #include "reprompi_bench/sync/clock_sync/clock_sync_common.h"
+#include "reprompi_bench/sync/clock_sync/clock_sync_lib.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/ClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/SKaMPIClockSync.h"
 #include "reprompi_bench/misc.h"
@@ -47,9 +48,9 @@ typedef struct {
 } reprompi_sk_options_t;
 
 
-static ClockSyncInterface* clock_sync;
+static ClockSync* clock_sync;
 static Clock* local_clock;
-static Clock* global_clock;
+static GlobalClock* global_clock;
 
 
 static void sk_print_sync_parameters(FILE* f) {
@@ -57,20 +58,18 @@ static void sk_print_sync_parameters(FILE* f) {
 }
 
 static void synchronize_clocks(void) {
-  global_clock = clock_sync->synchronize_all_clocks();
+  global_clock = clock_sync->synchronize_all_clocks(MPI_COMM_WORLD, *(local_clock));
 }
 
 static double get_normalized_time(double local_time) {
   return default_get_normalized_time(local_time, global_clock);
 }
 
-
 void sk_init_module(int argc, char** argv) {
-    global_clock = NULL;
-    local_clock = initialize_local_clock();
-    clock_sync = new SKaMPIClockSync<SKaMPIClockOffsetAlg>(MPI_COMM_WORLD, local_clock);
+  global_clock = NULL;
+  local_clock = initialize_local_clock();
+  clock_sync = new SKaMPIClockSync(new SKaMPIClockOffsetAlg());
 }
-
 
 void sk_cleanup_module(void) {
   delete local_clock;
@@ -81,9 +80,8 @@ void sk_cleanup_module(void) {
   }
 }
 
-extern "C"
-void register_skampi_module(reprompib_sync_module_t *sync_mod) {
-  sync_mod->name = (char*)std::string("SKaMPI").c_str();
+extern "C" void register_skampi_module(reprompib_sync_module_t *sync_mod) {
+  sync_mod->name = (char*) std::string("SKaMPI").c_str();
   sync_mod->clocksync = REPROMPI_CLOCKSYNC_SKAMPI;
 
   sync_mod->init_module = sk_init_module;
@@ -97,9 +95,4 @@ void register_skampi_module(reprompib_sync_module_t *sync_mod) {
   sync_mod->get_global_time = get_normalized_time;
   sync_mod->print_sync_info = sk_print_sync_parameters;
 }
-
-
-
-
-
 

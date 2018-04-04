@@ -7,14 +7,13 @@
 class PingpongClockOffsetAlg : public ClockOffsetAlg {
 
 private:
-  int nexchanges;
   double rtt;
 
 public:
-  PingpongClockOffsetAlg(int rank1 = 0, int rank2 = 0, MPI_Comm comm = MPI_COMM_NULL, int nexchanges = 0);
+  PingpongClockOffsetAlg();
   ~PingpongClockOffsetAlg();
 
-  ClockOffset* measure_offset(int ref_rank, Clock& clock);
+  ClockOffset* measure_offset(MPI_Comm comm, int ref_rank, int client_rank, int nexchanges, Clock& clock);
 
 };
 

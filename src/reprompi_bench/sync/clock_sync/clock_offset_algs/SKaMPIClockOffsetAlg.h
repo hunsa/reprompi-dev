@@ -19,10 +19,10 @@ private:
   int Number_ping_pongs;
 
 public:
-  SKaMPIClockOffsetAlg(int ref_rank = 0, int client_rank = 0, MPI_Comm comm = MPI_COMM_NULL, int nexchanges = 0);
+  SKaMPIClockOffsetAlg();
   ~SKaMPIClockOffsetAlg();
 
-  ClockOffset* measure_offset(int ref_rank, Clock& clock);
+  ClockOffset* measure_offset(MPI_Comm comm, int ref_rank, int client_rank, int nexchanges, Clock& clock);
 };
 
 

@@ -27,6 +27,7 @@
 #include <mpi.h>
 
 #include "reprompi_bench/sync/clock_sync/clock_sync_common.h"
+#include "reprompi_bench/sync/clock_sync/clock_sync_lib.h"
 #include "reprompi_bench/sync/clock_sync/clocks/GlobalClock.h"
 #include "reprompi_bench/sync/clock_sync/clock_offset_algs/PingpongClockOffsetAlg.h"
 #include "reprompi_bench/sync/clock_sync/clocks/RdtscpClock.h"
@@ -50,13 +51,13 @@ typedef struct {
 static reprompi_hca_params_t parameters;
 
 
-static ClockSyncInterface* clock_sync;
+static ClockSync* clock_sync;
 static Clock* local_clock;
-static Clock* global_clock;
+static GlobalClock* global_clock;
 
 
 static void synchronize_clocks(void) {
-  global_clock = clock_sync->synchronize_all_clocks();
+  global_clock = clock_sync->synchronize_all_clocks(MPI_COMM_WORLD, *(local_clock));
   //printf("clock: %20.9f   %20.9f\n", dynamic_cast<GlobalClockLM<RdtscpClock>*>(global_clock)->get_slope(),
   //    dynamic_cast<GlobalClockLM<RdtscpClock>*>(global_clock)->get_intercept());
 }
@@ -107,7 +108,7 @@ static void hca2_init_module(int argc, char** argv) {
 
   global_clock = NULL;
   local_clock = initialize_local_clock();
-  clock_sync = new HCA2ClockSync<PingpongClockOffsetAlg>(MPI_COMM_WORLD, local_clock);
+  clock_sync = new HCA2ClockSync(new PingpongClockOffsetAlg(), 1000, 100);
 
   //clock_sync = new HCAClockSync<SKaMPIClockOffsetAlg>(MPI_COMM_WORLD, local_clock);
   //parameters.n_exchanges = sync_opts.n_exchanges;
@@ -120,7 +121,7 @@ static void hca3_init_module(int argc, char** argv) {
 
   global_clock = NULL;
   local_clock = initialize_local_clock();
-  clock_sync = new HCA3ClockSync<PingpongClockOffsetAlg>(MPI_COMM_WORLD, local_clock);
+  clock_sync = new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100);
 
 }
 

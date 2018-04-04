@@ -69,4 +69,21 @@ void create_interlevel_communicator(MPI_Comm old_comm, MPI_Comm local_comm,
   }
 }
 
+void print_comm_debug_info(char *tag, MPI_Comm comm1, MPI_Comm comm2) {
+  int rank1 = -1, rank2 = -1;
+  int size1 = -1, size2 = -1;
+
+  if( comm1 != MPI_COMM_NULL) {
+    MPI_Comm_rank(comm1, &rank1);
+    MPI_Comm_size(comm1, &size1);
+  }
+
+  if( comm2 != MPI_COMM_NULL) {
+    MPI_Comm_rank(comm2, &rank2);
+    MPI_Comm_size(comm2, &size2);
+  }
+
+  printf("%s: comm1: rank=%d (%d), comm2: rank=%d (%d)\n", tag, rank1, size1, rank2, size2);
+
+}
 

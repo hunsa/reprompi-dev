@@ -8,16 +8,11 @@
 
 class ClockOffsetAlg {
 
-protected:
-	int rank1;   // the clock offset is computed relative to the reference rank in comm
-	int rank2;
-  MPI_Comm comm;
-
 public:
-  ClockOffsetAlg(int rank1 = 0, int rank2 = 0, MPI_Comm comm = MPI_COMM_NULL);
+  ClockOffsetAlg();
 
-  virtual ClockOffset* measure_offset(int ref_rank, Clock& c) = 0;
-  virtual ~ClockOffsetAlg();
+  virtual ClockOffset* measure_offset(MPI_Comm comm, int ref_rank, int other_rank, int nexchanges, Clock& clock) = 0;
+  virtual ~ClockOffsetAlg() = 0;
 
 };
 

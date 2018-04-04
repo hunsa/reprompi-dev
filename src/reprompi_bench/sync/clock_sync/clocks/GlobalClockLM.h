@@ -5,7 +5,7 @@
 #include "Clock.h"
 #include "GlobalClock.h"
 
-class GlobalClockLM : public GlobalClock{
+class GlobalClockLM : public GlobalClock {
 
 private:
   double slope;
@@ -14,11 +14,12 @@ private:
   double apply_clock_model(double timestamp);
 
 public:
-  GlobalClockLM(Clock* c, double s, double i);
+  GlobalClockLM(Clock& c, double s, double i);
   ~GlobalClockLM();
 
   double get_slope();
   double get_intercept();
+  void print_clock_info();
 };
 
 

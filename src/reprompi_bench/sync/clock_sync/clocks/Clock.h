@@ -7,16 +7,21 @@
 class Clock {
 
 public:
-  Clock() {};
+  Clock() {
+  }
 
-  virtual double get_time() {return 0;};
-  virtual ~Clock() {};
+  virtual double get_time() {
+    return 0;
+  }
+  virtual ~Clock() {
+  }
 
 protected:
   void operator=(Clock const&);
+
   Clock(Clock &c) {
 
-  };
+  }
 
 
 };

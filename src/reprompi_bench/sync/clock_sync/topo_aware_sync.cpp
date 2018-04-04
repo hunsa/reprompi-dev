@@ -32,7 +32,7 @@
 #include "reprompi_bench/sync/clock_sync/clock_offset_algs/PingpongClockOffsetAlg.h"
 #include "reprompi_bench/sync/clock_sync/clock_offset_algs/SKaMPIClockOffsetAlg.h"
 #include "reprompi_bench/sync/clock_sync/clock_sync_common.h"
-#include "reprompi_bench/sync/clock_sync/sync_methods/ClockSync.h"
+#include "reprompi_bench/sync/clock_sync/clock_sync_lib.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HierarchicalClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/SKaMPIClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.h"
@@ -41,13 +41,13 @@
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCA3ClockSync.h"
 #include "reprompi_bench/misc.h"
 
-static ClockSyncInterface* clock_sync;
+static ClockSync* clock_sync;
 static Clock* local_clock;
-static Clock* global_clock;
+static GlobalClock* global_clock;
 
 
 static void topo_synchronize_clocks(void) {
-  global_clock = clock_sync->synchronize_all_clocks();
+  global_clock = clock_sync->synchronize_all_clocks(MPI_COMM_WORLD, *(local_clock));
 
   /*
   GlobalClockLM* lmclock = NULL;
@@ -94,9 +94,10 @@ static void topo1_init_module(int argc, char** argv) {
   global_clock = NULL;
   local_clock = initialize_local_clock();
 
-  clock_sync = new HierarchicalClockSync<HCA3ClockSync<PingpongClockOffsetAlg>,
-      HCA3ClockSync<PingpongClockOffsetAlg>,
-      HCA3ClockSync<PingpongClockOffsetAlg> >(MPI_COMM_WORLD, local_clock);
+  clock_sync = new HierarchicalClockSync(
+    new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
+    new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
+    new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100));
 }
 
 
@@ -104,10 +105,10 @@ static void topo2_init_module(int argc, char** argv) {
   global_clock = NULL;
   local_clock = initialize_local_clock();
 
-
-  clock_sync = new HierarchicalClockSync<HCA3ClockSync<PingpongClockOffsetAlg>,
-      JKClockSync<PingpongClockOffsetAlg>,
-      JKClockSync<PingpongClockOffsetAlg> >(MPI_COMM_WORLD, local_clock);
+  clock_sync = new HierarchicalClockSync(
+      new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
+      new JKClockSync(new PingpongClockOffsetAlg(), 1000, 100),
+      new JKClockSync(new PingpongClockOffsetAlg(), 1000, 100));
 }
 
 
