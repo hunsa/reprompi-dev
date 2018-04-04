@@ -9,6 +9,10 @@
 
 #include "reprompi_bench/sync/clock_sync/utils/sync_utils.h"
 
+//#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
+#define ZF_LOG_LEVEL ZF_LOG_WARN
+#include "log/zf_log.h"
+
 PingpongClockOffsetAlg::PingpongClockOffsetAlg() {
   this->rtt = -1.0;
 }
@@ -27,7 +31,7 @@ ClockOffset* PingpongClockOffsetAlg::measure_offset(MPI_Comm comm, int ref_rank,
   MPI_Comm_rank(comm, &my_rank);
   MPI_Comm_size(comm, &nprocs);
 
-  printf("%d: measure_offset start (%d - %d)\n", my_rank, ref_rank, client_rank);
+  ZF_LOGV("%d: measure_offset start (%d - %d)", my_rank, ref_rank, client_rank);
 
 
   // TODO rrt measurement could be stored

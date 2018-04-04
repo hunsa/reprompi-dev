@@ -11,6 +11,10 @@
 
 #include "HCA3ClockSync.h"
 
+//#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
+#define ZF_LOG_LEVEL ZF_LOG_WARN
+#include "log/zf_log.h"
+
 
 HCA3ClockSync::HCA3ClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints, int n_exchanges) {
 
@@ -35,12 +39,12 @@ LinModel HCA3ClockSync::learn_model(MPI_Comm comm, const int root_rank, const in
 
   MPI_Comm_rank(comm, &my_rank);
 
-  printf("%d: learn model %d<->%d\n", my_rank, root_rank, other_rank);
+  ZF_LOGV("%d: learn model %d<->%d", my_rank, root_rank, other_rank);
 
   if (my_rank == root_rank) {
     for (j = 0; j < n_fitpoints; j++) {
       ClockOffset* offset = NULL;
-      offset = offset_alg->measure_offset(comm, root_rank, my_rank, this->n_exchanges, current_clock);
+      offset = offset_alg->measure_offset(comm, root_rank, other_rank, this->n_exchanges, current_clock);
       delete offset;
     }
   } else if (my_rank == other_rank) {
@@ -67,7 +71,7 @@ LinModel HCA3ClockSync::learn_model(MPI_Comm comm, const int root_rank, const in
 
   }
 
-  printf("%d: learn model %d<->%d DONE\n", my_rank, root_rank, other_rank);
+  ZF_LOGV("%d: learn model %d<->%d DONE", my_rank, root_rank, other_rank);
 
   return lm;
 }
@@ -99,7 +103,7 @@ GlobalClock* HCA3ClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
   nrounds_step1 = floor(log2((double) nprocs));
   max_power_two = (int) pow(2.0, (double) nrounds_step1);
 
-  printf("%d (%d): nrounds_step1:%d max_power_two:%d\n", my_rank, nprocs, nrounds_step1, max_power_two);
+  ZF_LOGV("%d (%d): nrounds_step1:%d max_power_two:%d", my_rank, nprocs, nrounds_step1, max_power_two);
 
   //MPI_Type_create_struct(2, blocklen, disp, dtype, &mpi_lm_t);
   //MPI_Type_commit(&mpi_lm_t);
@@ -109,21 +113,21 @@ GlobalClock* HCA3ClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
      running_power = (int) pow(2.0, (double) i);
      next_power = (int) pow(2.0, (double)(i-1));
 
-     printf("%d: running_power:%d next_power:%d\n", my_rank, running_power, next_power);
+     ZF_LOGV("%d: running_power:%d next_power:%d", my_rank, running_power, next_power);
 
      if (my_rank >= max_power_two) {
        // nothing to do here
      } else {
        if (my_rank % running_power == 0) { // parent
          other_rank = my_rank + next_power;
-         printf ("[rank=%d] parent=%d child=%d \n", my_rank, my_rank, other_rank);
+         ZF_LOGV("[rank=%d] parent=%d child=%d", my_rank, my_rank, other_rank);
 
          // compute model through linear regression
          lm = learn_model(comm, my_rank, other_rank, *(my_clock));
 
        } else if (my_rank % running_power == next_power) { // child
          other_rank = my_rank - next_power;
-         printf ("[rank=%d] parent=%d child=%d \n", my_rank, other_rank, my_rank);
+         ZF_LOGV("[rank=%d] parent=%d child=%d", my_rank, other_rank, my_rank);
 
          // compute model through linear regression
          lm = learn_model(comm, other_rank, my_rank, *(my_clock));

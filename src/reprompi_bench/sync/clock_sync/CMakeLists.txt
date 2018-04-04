@@ -25,6 +25,8 @@ ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HierarchicalClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/SKaMPIClockSync.cpp
 
+${SRC_DIR}/log/zf_log.c
+
 #${SRC_DIR}/reprompi_bench/sync/time_measurement.c
 #${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/sync_info.c
 #${SRC_DIR}/reprompi_bench/misc.c

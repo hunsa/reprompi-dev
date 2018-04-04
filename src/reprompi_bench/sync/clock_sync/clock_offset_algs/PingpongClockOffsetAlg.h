@@ -4,10 +4,16 @@
 
 #include "ClockOffsetAlg.h"
 
+#include<map>
+#include<tuple>
+
+//typedef std::tuple<int,int> tuple_t2;
+
 class PingpongClockOffsetAlg : public ClockOffsetAlg {
 
 private:
   double rtt;
+  //std::map<tuple_t2, double> rtt_map;
 
 public:
   PingpongClockOffsetAlg();
