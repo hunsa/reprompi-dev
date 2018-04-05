@@ -47,7 +47,7 @@ GlobalClock* JKClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
        for (j = 0; j < this->n_fitpoints; j++) {
            for (p = 0; p < np; p++) {
                if (p != root_rank) {
-                 printf("jk:root=%d m offset with %d\n", my_rank, p);
+                 ZF_LOGV("jk:root=%d m offset with %d", my_rank, p);
                  ClockOffset* offset = offset_alg->measure_offset(comm, root_rank, p, this->n_exchanges, c);
                  delete offset;
                  ZF_LOGV("jk:root=%d m offset with %d DONE", my_rank, p);
