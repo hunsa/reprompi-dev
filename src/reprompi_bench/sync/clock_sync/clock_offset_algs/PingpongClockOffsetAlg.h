@@ -5,7 +5,8 @@
 #include "ClockOffsetAlg.h"
 
 #include<map>
-#include<tuple>
+
+//#include<tuple>
 
 //typedef std::tuple<int,int> tuple_t2;
 
