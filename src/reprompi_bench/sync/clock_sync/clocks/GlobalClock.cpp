@@ -31,5 +31,5 @@ double GlobalClock::convert_to_global_time(double local_timestamp) {
 }
 
 void GlobalClock::print_clock_info() {
-  printf("global clock\n");
+  std::cout << "global clock" << std::endl;
 }

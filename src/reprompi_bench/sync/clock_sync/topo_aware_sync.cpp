@@ -37,8 +37,8 @@
 #include "reprompi_bench/sync/clock_sync/sync_methods/SKaMPIClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCA2ClockSync.h"
-
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCA3ClockSync.h"
+#include "reprompi_bench/sync/clock_sync/sync_methods/ClockPropagationSync.h"
 #include "reprompi_bench/misc.h"
 
 static ClockSync* clock_sync;
@@ -97,7 +97,8 @@ static void topo1_init_module(int argc, char** argv) {
   clock_sync = new HierarchicalClockSync(
     new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
     new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
-    new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100));
+    new ClockPropagationSync());
+    //new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100));
 }
 
 

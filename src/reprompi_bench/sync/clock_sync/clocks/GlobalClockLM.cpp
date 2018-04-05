@@ -4,6 +4,10 @@
 #include "GlobalClockLM.h"
 
 
+//#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
+#define ZF_LOG_LEVEL ZF_LOG_WARN
+#include "log/zf_log.h"
+
 
 GlobalClockLM::GlobalClockLM(Clock &c, double s, double i):
   slope(s), intercept(i), GlobalClock(c) {
@@ -27,5 +31,31 @@ double GlobalClockLM::get_intercept() {
 }
 
 void GlobalClockLM::print_clock_info() {
-  printf("global clock LM: slope=%g offset=%g\n", this->slope, this->intercept);
+  std::cout << "global clock LM: slope=" << this->slope << " offset=" << this->intercept << std::endl;
+}
+
+GlobalClock* GlobalClockLM::copyClock(Clock &c, MPI_Comm comm, int src_rank, int dst_rank)  {
+  int my_rank;
+  GlobalClock *retClock;
+
+  MPI_Comm_rank(comm, &my_rank);
+
+  ZF_LOGV("%d: copy clock", my_rank);
+
+
+  if( my_rank == src_rank ) {
+    double msg[] = { this->slope, this->intercept };
+    ZF_LOGV("%d: send to %d", my_rank, dst_rank);
+    MPI_Send(msg, 2, MPI_DOUBLE, dst_rank, 0, comm);
+  } else if( my_rank == dst_rank ){
+    double msg[2];
+    MPI_Status status;
+    ZF_LOGV("%d: recv from %d", my_rank, src_rank);
+    MPI_Recv(msg, 2, MPI_DOUBLE, src_rank, 0, comm, &status);
+    retClock = new GlobalClockLM(c, msg[0], msg[1]);
+  } else {
+    retClock = NULL;
+  }
+
+  return retClock;
 }

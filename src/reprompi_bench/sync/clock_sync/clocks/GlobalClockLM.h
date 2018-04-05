@@ -20,6 +20,7 @@ public:
   double get_slope();
   double get_intercept();
   void print_clock_info();
+  GlobalClock* copyClock(Clock &c, MPI_Comm comm, int src_rank, int dst_rank);
 };
 
 
