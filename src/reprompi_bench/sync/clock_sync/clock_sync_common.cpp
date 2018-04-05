@@ -35,7 +35,7 @@ double default_get_normalized_time(double local_time, GlobalClock* global_clock)
   } else {
     std::cerr <<"ERROR: No global time defined for this clock sync. method\n" << std::endl;
   }
-  return 0;
+  return normtime;
 }
 
 Clock* initialize_local_clock(void) {

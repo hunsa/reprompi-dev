@@ -80,7 +80,7 @@ GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock&
   } else {
     // dummy clock
     ZF_LOGV("%d: sync1 dummy", my_rank);
-    global_clock1 = new GlobalClockLM(c, 1.0, 0.0);
+    global_clock1 = new GlobalClockLM(c, 0.0, 0.0);
   }
 
 #if ZF_LOG_LEVEL == ZF_LOG_VERBOSE

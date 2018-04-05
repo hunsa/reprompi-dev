@@ -98,7 +98,7 @@ ClockOffset* SKaMPIClockOffsetAlg::measure_offset(MPI_Comm comm, int ref_rank, i
       }
 
       i++;
-      if (i == Number_ping_pongs) {
+      if (i >= Number_ping_pongs) {
         MPI_Send(&invalid_time, 1, MPI_DOUBLE, client_rank, pp_tag, comm);
         break;
       }

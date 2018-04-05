@@ -33,7 +33,7 @@ LinModel HCA2ClockSync::learn_model(MPI_Comm comm, Clock &c, const int root_rank
   if (my_rank == root_rank) {
     for (j = 0; j < n_fitpoints; j++) {
       ClockOffset* offset = NULL;
-      offset = offset_alg->measure_offset(comm, root_rank, my_rank, this->n_exchanges, c);
+      offset = offset_alg->measure_offset(comm, root_rank, other_rank, this->n_exchanges, c);
       delete offset;
     }
   } else if (my_rank == other_rank) {

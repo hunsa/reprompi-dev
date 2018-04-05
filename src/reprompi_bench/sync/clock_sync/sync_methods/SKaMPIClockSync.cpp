@@ -38,6 +38,9 @@ GlobalClock* SKaMPIClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
   double* tmp_tds;
   ClockOffset* offset = NULL;
 
+  // TODO make this a parameter
+  int nexchanges = 100;
+
   MPI_Comm_rank(comm, &my_rank);
   MPI_Comm_size(comm, &np);
 
@@ -51,10 +54,10 @@ GlobalClock* SKaMPIClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
 
     MPI_Barrier(comm);
     if (my_rank == 0){
-      offset = offset_alg->measure_offset(comm, 0, my_rank, 0, c);
+      offset = offset_alg->measure_offset(comm, 0, i, nexchanges, c);
       tds[i] = offset->get_offset();
     } else if (my_rank == i) {
-      offset = offset_alg->measure_offset(comm, 0, my_rank, 0, c);
+      offset = offset_alg->measure_offset(comm, 0, my_rank, nexchanges, c);
       tds[0] = offset->get_offset();
     }
   }
