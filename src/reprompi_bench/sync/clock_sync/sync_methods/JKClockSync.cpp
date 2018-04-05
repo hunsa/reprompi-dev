@@ -5,10 +5,17 @@
  *      Author: sascha
  */
 
+#include <iostream>
+
 #include <mpi.h>
 #include <gsl/gsl_fit.h>
 
 #include "JKClockSync.h"
+
+//#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
+#define ZF_LOG_LEVEL ZF_LOG_WARN
+#include "log/zf_log.h"
+
 
 JKClockSync::JKClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints, int n_exchanges) {
   this->offset_alg = offsetAlg;
@@ -36,18 +43,18 @@ GlobalClock* JKClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
    if (my_rank == root_rank) {
        double tlocal, tremote;
 
-       printf("jk:root m offset with %d procs\n", np);
+       ZF_LOGV("jk:root m offset with %d procs", np);
        for (j = 0; j < this->n_fitpoints; j++) {
            for (p = 0; p < np; p++) {
                if (p != root_rank) {
                  printf("jk:root=%d m offset with %d\n", my_rank, p);
                  ClockOffset* offset = offset_alg->measure_offset(comm, root_rank, p, this->n_exchanges, c);
                  delete offset;
-                 printf("jk:root=%d m offset with %d DONE\n", my_rank, p);
+                 ZF_LOGV("jk:root=%d m offset with %d DONE", my_rank, p);
                }
            }
        }
-       printf("jk:root m offset DONE---\n");
+       ZF_LOGV("jk:root m offset DONE---");
    } else {
      double *xfit, *yfit;
      double cov00, cov01, cov11, sumsq;
@@ -58,12 +65,12 @@ GlobalClock* JKClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
 
 
      for (j = 0; j < this->n_fitpoints; j++) {
-       printf("jk:%d m offset with root=%d\n", my_rank, root_rank);
+       ZF_LOGV("jk:%d m offset with root=%d", my_rank, root_rank);
        ClockOffset* offset = offset_alg->measure_offset(comm, root_rank, my_rank, this->n_exchanges, c);
        xfit[j] = offset->get_timestamp();
        yfit[j] = offset->get_offset();
        delete offset;
-       printf("jk:%d m offset with root=%d DONE\n", my_rank, root_rank);
+       ZF_LOGV("jk:%d m offset with root=%d DONE", my_rank, root_rank);
      }
 
 
