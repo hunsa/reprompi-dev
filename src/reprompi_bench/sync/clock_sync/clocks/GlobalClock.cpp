@@ -1,4 +1,6 @@
 
+#include <iostream>
+
 #include "Clock.h"
 #include "GlobalClock.h"
 
