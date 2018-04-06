@@ -43,16 +43,16 @@ GlobalClock* GlobalClockLM::copyClock(Clock &c, MPI_Comm comm, int src_rank, int
 
   ZF_LOGV("%d: copy clock", my_rank);
 
-
   if( my_rank == src_rank ) {
     double msg[] = { this->slope, this->intercept };
-    ZF_LOGV("%d: send to %d", my_rank, dst_rank);
+    ZF_LOGV("%d: send to %d (%g,%g)", my_rank, dst_rank, this->slope, this->intercept);
     MPI_Send(msg, 2, MPI_DOUBLE, dst_rank, 0, comm);
   } else if( my_rank == dst_rank ){
     double msg[2];
     MPI_Status status;
     ZF_LOGV("%d: recv from %d", my_rank, src_rank);
     MPI_Recv(msg, 2, MPI_DOUBLE, src_rank, 0, comm, &status);
+    ZF_LOGV("%d: recvd  %g,%g", my_rank, msg[0], msg[1]);
     retClock = new GlobalClockLM(c, msg[0], msg[1]);
   } else {
     retClock = NULL;
