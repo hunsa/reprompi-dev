@@ -206,6 +206,25 @@ ${SRC_DIR}/reprompi_bench/option_parser/parse_options.c
 ${COLL_OPS_SRC_FILES}
 )
 
+set(REPROMPIBENCH2_FILES
+${SRC_DIR}/benchmarkMPIcalls2.c
+${SRC_DIR}/benchmark_job.c
+${SRC_DIR}/reprompi_bench/misc.c
+${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
+# synchronization methods
+${SYNC_SRC_FILES}
+# output
+${COMMON_OUTPUT_MAN_SRC_FILES}
+${SRC_DIR}/reprompi_bench/output_management/results_output.c
+# command-line options
+${COMMON_OPTION_PARSER_SRC_FILES}
+${SRC_DIR}/reprompi_bench/option_parser/parse_timing_options.c
+${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
+${SRC_DIR}/reprompi_bench/option_parser/parse_options.c
+# collective functions
+${COLL_OPS_SRC_FILES}
+)
+
 #find_library (synclib NAMES synclib)
 
 ADD_SUBDIRECTORY(${SRC_DIR}/reprompi_bench/sync/clock_sync)
@@ -215,6 +234,12 @@ ${REPROMPIBENCH_FILES}
 )
 TARGET_LINK_LIBRARIES(mpibenchmark ${COMMON_LIBRARIES} synclib)
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
+
+add_executable(mpibenchmark2
+${REPROMPIBENCH2_FILES}
+)
+TARGET_LINK_LIBRARIES(mpibenchmark2 ${COMMON_LIBRARIES} synclib)
+SET_TARGET_PROPERTIES(mpibenchmark2 PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
 
 
 if (ENABLE_PGMPI)
