@@ -19,6 +19,10 @@ double GlobalClockOffset::apply_clock_model(double timestamp) {
     return timestamp - offset;
 }
 
+bool GlobalClockOffset::is_base_clock() {
+  return false;
+}
+
 void GlobalClockOffset::print_clock_info() {
   std::cout << "global clock OFFSET: offset=" << this->offset << std::endl;
 }

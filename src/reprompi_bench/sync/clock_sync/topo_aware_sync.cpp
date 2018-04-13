@@ -96,10 +96,10 @@ static void topo1_init_module(int argc, char** argv) {
 
   clock_sync = new HierarchicalClockSync(
     //new HCA3ClockSync(new SKaMPIClockOffsetAlg(), 300, 100),
+    new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
     //new ClockPropagationSync(),
-    //new HCA3ClockSync(new SKaMPIClockOffsetAlg(), 300, 100),
-    new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
-    new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
+    new HCA3ClockSync(new SKaMPIClockOffsetAlg(), 300, 100),
+    //new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
     new ClockPropagationSync());
     //new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100));
 }

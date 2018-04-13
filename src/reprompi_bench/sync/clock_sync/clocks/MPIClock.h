@@ -15,6 +15,10 @@ public:
     return MPI_Wtime();
   };
 
+  bool is_base_clock() {
+    return true;
+  }
+
 };
 
 

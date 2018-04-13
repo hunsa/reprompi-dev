@@ -31,6 +31,10 @@ double GlobalClockLM::get_intercept() {
   return this->intercept;
 }
 
+bool GlobalClockLM::is_base_clock() {
+  return false;
+}
+
 void GlobalClockLM::print_clock_info() {
   std::cout << "global clock LM: slope=" << this->slope << " offset=" << this->intercept << std::endl;
 }

@@ -27,6 +27,11 @@ public:
   double get_freq(void) {
     return freq_hz;
   };
+
+  bool is_base_clock() {
+    return true;
+  }
+
 };
 
 

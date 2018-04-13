@@ -16,6 +16,11 @@ public:
   virtual ~Clock() {
   }
 
+  /* is this one a base clock?
+   * others are just derived (composed, decorator pattern)
+   */
+  virtual bool is_base_clock() = 0;
+
 protected:
   void operator=(Clock const&);
 
