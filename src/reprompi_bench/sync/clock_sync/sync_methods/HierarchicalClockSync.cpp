@@ -91,11 +91,11 @@ GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock&
   if (comm_intersocket != MPI_COMM_NULL) {
     ZF_LOGV("%d: sync2 real", my_rank);
     global_clock2 = syncSocket->synchronize_all_clocks(comm_intersocket, *(global_clock1));
-    GlobalClockLM *gc1 = dynamic_cast<GlobalClockLM*>(global_clock1);
-    GlobalClockLM *gc2 = dynamic_cast<GlobalClockLM*>(global_clock2);
-    global_clock2 = new GlobalClockLM(c,
-        gc1->get_slope() + gc2->get_slope() - gc1->get_slope() *gc2->get_slope(),
-        gc1->get_intercept() + gc2->get_intercept() - gc1->get_slope() * gc2->get_intercept());
+//    GlobalClockLM *gc1 = dynamic_cast<GlobalClockLM*>(global_clock1);
+//    GlobalClockLM *gc2 = dynamic_cast<GlobalClockLM*>(global_clock2);
+//    global_clock2 = new GlobalClockLM(c,
+//        gc1->get_slope() - gc2->get_slope() - gc1->get_slope() *gc2->get_slope(),
+//        gc1->get_intercept() + gc2->get_intercept() + gc1->get_slope() * gc2->get_intercept());
 
   } else {
     ZF_LOGV("%d: sync2 dummy", my_rank);

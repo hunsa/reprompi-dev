@@ -37,7 +37,27 @@ ClockOffset* PingpongClockOffsetAlg::measure_offset(MPI_Comm comm, int ref_rank,
   // TODO rrt measurement could be stored
  // if (rtt < 0) { // first time the method is called - we need to measure the RTT
  //   printf("%d: rtt %d %d start\n", my_rank, ref_rank, client_rank);
-    compute_rtt(ref_rank, client_rank, comm, 10, nexchanges, clock, &rtt);
+
+  {
+    int rank1;
+    int rank2;
+    if( ref_rank < client_rank ) {
+      rank1 = ref_rank;
+      rank2 = client_rank;
+    } else {
+      rank1 = client_rank;
+      rank2 = ref_rank;
+    }
+    std::string key_str = std::to_string(rank1) + "," + std::to_string(rank2);
+    if( (this->rankpair2rtt).find(key_str) != (this->rankpair2rtt).end()) {
+      compute_rtt(ref_rank, client_rank, comm, 10, nexchanges, clock, &rtt);
+      this->rankpair2rtt[key_str] = rtt;
+    } else {
+      rtt = this->rankpair2rtt[key_str];
+    }
+  }
+
+
  //   printf("%d: rtt %d %d %20.9f\n", my_rank, ref_rank, client_rank, rtt);
  // }
 
