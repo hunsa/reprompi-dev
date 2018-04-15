@@ -22,7 +22,6 @@ public:
 
   LinModel learn_model(MPI_Comm comm, const int root_rank, const int other_rank, Clock& current_clock);
   GlobalClock* synchronize_all_clocks(MPI_Comm comm, Clock& c);
-
 };
 
 #endif /*  REPROMPIB_HCA3CLOCKSYNC_CLASS_H_  */

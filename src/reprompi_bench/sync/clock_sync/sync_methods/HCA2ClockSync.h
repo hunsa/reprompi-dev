@@ -31,7 +31,6 @@ public:
   ~HCA2ClockSync();
 
   GlobalClock* synchronize_all_clocks(MPI_Comm comm, Clock& c);
-
 };
 
 #endif /*  REPROMPIB_HCACLOCKSYNC_CLASS_H_  */

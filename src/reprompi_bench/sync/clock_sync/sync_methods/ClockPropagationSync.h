@@ -22,7 +22,7 @@ public:
   ~ClockPropagationSync();
 
   GlobalClock* synchronize_all_clocks(MPI_Comm comm, Clock& c);
-
+  GlobalClock* get_dummy_global_clock(Clock &c);
 };
 
 #endif

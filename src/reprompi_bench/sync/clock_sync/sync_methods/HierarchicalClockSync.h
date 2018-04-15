@@ -21,7 +21,6 @@ public:
   ~HierarchicalClockSync();
 
   GlobalClock* synchronize_all_clocks(MPI_Comm comm, Clock& c);
-
 };
 
 #endif /*  REPROMPIB_HIERARCHICALCLOCKSYNC_CLASS_H_  */

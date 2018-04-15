@@ -19,7 +19,6 @@ public:
   ~JKClockSync();
 
   GlobalClock* synchronize_all_clocks(MPI_Comm comm, Clock& c);
-
 };
 
 #endif /*  REPROMPIB_JKCLOCKSYNC_CLASS_H_  */

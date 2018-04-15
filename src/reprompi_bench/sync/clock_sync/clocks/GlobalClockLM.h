@@ -22,6 +22,9 @@ public:
   void print_clock_info();
   GlobalClock* copyClock(Clock &c, MPI_Comm comm, int src_rank, int dst_rank);
   bool is_base_clock();
+  int get_flattened_clock_size_in_bytes();
+  void flatten_clock(char *buf, char *offset, char *end_pointer);
+  int get_nested_level();
 };
 
 

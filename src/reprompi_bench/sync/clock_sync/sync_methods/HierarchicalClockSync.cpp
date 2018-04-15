@@ -15,8 +15,8 @@
 #include "reprompi_bench/sync/clock_sync/clocks/GlobalClockLM.h"
 #include "reprompi_bench/sync/clock_sync/clocks/GlobalClockOffset.h"
 
-//#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
-#define ZF_LOG_LEVEL ZF_LOG_WARN
+#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
+//#define ZF_LOG_LEVEL ZF_LOG_WARN
 #include "log/zf_log.h"
 
 HierarchicalClockSync::HierarchicalClockSync(ClockSync *syncInterNode, ClockSync *syncSocket, ClockSync *syncOnSocket) {
@@ -40,6 +40,7 @@ GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock&
   MPI_Comm comm_intersocket, comm_intrasocket;
   int my_rank, np;
   int socket_id;
+  int subcomm_size;
 
   MPI_Comm_rank(comm, &my_rank);
   MPI_Comm_size(comm, &np);
@@ -74,9 +75,16 @@ GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock&
   print_comm_debug_info("intersocket", comm, comm_intersocket);
 
   // Step 1: synchronization between nodes
-  if (comm_internode != MPI_COMM_NULL) {
-    ZF_LOGV("%d: sync1 real", my_rank);
-    global_clock1 = syncInterNode->synchronize_all_clocks(comm_internode, c);
+  if (comm_internode != MPI_COMM_NULL && subcomm_size > 1) {
+    MPI_Comm_size(comm_internode, &subcomm_size);
+    ZF_LOGV("%d: subcomm size:%d", my_rank, subcomm_size);
+    if( subcomm_size > 1 ) {
+      ZF_LOGV("%d: sync1 real", my_rank);
+      global_clock1 = syncInterNode->synchronize_all_clocks(comm_internode, c);
+    } else {
+      ZF_LOGV("%d: sync1 dummy", my_rank);
+      global_clock1 = new GlobalClockLM(c, 0.0, 0.0);
+    }
   } else {
     // dummy clock
     ZF_LOGV("%d: sync1 dummy", my_rank);
@@ -89,14 +97,20 @@ GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock&
 
   // Step 2: synchronization between sockets
   if (comm_intersocket != MPI_COMM_NULL) {
-    ZF_LOGV("%d: sync2 real", my_rank);
-    global_clock2 = syncSocket->synchronize_all_clocks(comm_intersocket, *(global_clock1));
+    MPI_Comm_size(comm_intersocket, &subcomm_size);
+    ZF_LOGV("%d: subcomm size:%d", my_rank, subcomm_size);
+    if( subcomm_size > 1 ) {
+      ZF_LOGV("%d: sync2 real", my_rank);
+      global_clock2 = syncSocket->synchronize_all_clocks(comm_intersocket, *(global_clock1));
 //    GlobalClockLM *gc1 = dynamic_cast<GlobalClockLM*>(global_clock1);
 //    GlobalClockLM *gc2 = dynamic_cast<GlobalClockLM*>(global_clock2);
 //    global_clock2 = new GlobalClockLM(c,
 //        gc1->get_slope() - gc2->get_slope() - gc1->get_slope() *gc2->get_slope(),
 //        gc1->get_intercept() + gc2->get_intercept() + gc1->get_slope() * gc2->get_intercept());
-
+    } else {
+      ZF_LOGV("%d: sync2 dummy", my_rank);
+      global_clock2 = global_clock1;
+    }
   } else {
     ZF_LOGV("%d: sync2 dummy", my_rank);
     global_clock2 = global_clock1;
@@ -112,7 +126,9 @@ GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock&
   // all processes have an intra-socket comm
   global_clock3 = syncOnSocket->synchronize_all_clocks(comm_intrasocket, *(global_clock2));
 
-  ZF_LOGV("sync 3 done");
+  ZF_LOGV("%d: sync 3 done", my_rank);
+
+  ZF_LOGV("%d: test clock3, %g", my_rank, global_clock3->get_local_time());
 
   if (comm_internode != MPI_COMM_NULL) {
     //printf("[rank %d] has an internode clock\n", my_rank);
@@ -127,7 +143,6 @@ GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock&
 
     return global_clock2;
   }
-
 
   MPI_Comm_free(&comm_intrasocket);
   //printf("[rank %d] has an intrasocket clock\n", my_rank);

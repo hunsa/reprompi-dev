@@ -16,13 +16,13 @@ public:
   virtual ~Clock() {
   }
 
-  /* is this one a base clock?
+  /* is this one a base clock? base clock being something like RDTSC, MPI_Wtime()
    * others are just derived (composed, decorator pattern)
    */
   virtual bool is_base_clock() = 0;
 
 protected:
-  void operator=(Clock const&);
+//  void operator=(Clock const&);
 
   Clock(Clock &c) {
 
