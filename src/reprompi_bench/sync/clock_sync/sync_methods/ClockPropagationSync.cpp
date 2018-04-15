@@ -5,8 +5,9 @@
  *      Author: sascha
  */
 
-#include <math.h>
-#include <gsl/gsl_fit.h>
+#include <iostream>
+//#include <math.h>
+//#include <gsl/gsl_fit.h>
 
 #include "ClockPropagationSync.h"
 #include "../clocks/GlobalClockLM.h"

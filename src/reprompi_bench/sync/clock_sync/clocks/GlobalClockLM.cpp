@@ -77,7 +77,7 @@ void GlobalClockLM::flatten_clock(char *buf, char *offset, char* end_pointer) {
 
   double *data_place = reinterpret_cast<double*>(end_pointer+sizeof(int));
   data_place[0] = this->slope;
-  data_place[1] = this->slope;
+  data_place[1] = this->intercept;
 
   if( ! local_clock.is_base_clock()) {
     // recursevily call flatten_clock
