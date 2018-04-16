@@ -124,7 +124,17 @@ GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock&
 
   // Step 3: synchronization within the socket
   // all processes have an intra-socket comm
-  global_clock3 = syncOnSocket->synchronize_all_clocks(comm_intrasocket, *(global_clock2));
+  /*
+   * same here
+   * if communicator has only one process, then do nothing
+   */
+  MPI_Comm_size(comm_intrasocket, &subcomm_size);
+  ZF_LOGV("%d: subcomm size:%d", my_rank, subcomm_size);
+  if( subcomm_size > 1 ) {
+    global_clock3 = syncOnSocket->synchronize_all_clocks(comm_intrasocket, *(global_clock2));
+  } else {
+    global_clock3 = global_clock2;
+  }
 
   ZF_LOGV("%d: sync 3 done", my_rank);
 

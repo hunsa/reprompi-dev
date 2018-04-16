@@ -12,6 +12,7 @@
 #include "ClockPropagationSync.h"
 #include "../clocks/GlobalClockLM.h"
 #include "../clocks/GlobalClockOffset.h"
+#include "../clock_sync_common.h"
 
 #define ZF_LOG_LEVEL ZF_LOG_VERBOSE
 //#define ZF_LOG_LEVEL ZF_LOG_WARN
@@ -82,7 +83,7 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
     ZF_LOGV("%d: nb_types: %d", my_rank, nb_types);
 
     int current_offset = sizeof(int);
-    last_clock = &c;
+    last_clock = initialize_local_clock();
     for(int i=0; i<nb_types; i++) {
       //int type_id = reinterpret_cast<int*>(buf+current_offset)[0];
       int type_id = reinterpret_cast<int*>(buf+current_offset)[0];
@@ -112,7 +113,7 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
 
         ZF_LOGV("%d: recv glockoff (%g)", my_rank, clock_offset);
 
-        retClock = new GlobalClockOffset((Clock&)last_clock, clock_offset);
+        retClock = new GlobalClockOffset((Clock&)(*last_clock), clock_offset);
         last_clock = retClock;
 
         current_offset += sizeof(double);
