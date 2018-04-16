@@ -18,7 +18,6 @@ public:
   ~GlobalClock();
 
   virtual void print_clock_info();
-  virtual GlobalClock* copyClock(Clock &c, MPI_Comm comm, int src_rank, int dst_rank) = 0;
   /**
    * this return total nb, including nested clocks
    */

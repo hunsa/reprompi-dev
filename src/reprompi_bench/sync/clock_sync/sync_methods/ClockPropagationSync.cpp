@@ -14,8 +14,8 @@
 #include "../clocks/GlobalClockOffset.h"
 #include "../clock_sync_common.h"
 
-#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
-//#define ZF_LOG_LEVEL ZF_LOG_WARN
+//#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
+#define ZF_LOG_LEVEL ZF_LOG_WARN
 #include "log/zf_log.h"
 
 
@@ -37,6 +37,11 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
   GlobalClock *globalClock = dynamic_cast<GlobalClock*>(&c);
   if (globalClock == NULL) {
     return NULL;
+  }
+
+  if(nprocs == 1) {
+    // only one process, nothing to be done
+    return globalClock;
   }
 
   ZF_LOGV("%d: sync clocks propagation", my_rank);

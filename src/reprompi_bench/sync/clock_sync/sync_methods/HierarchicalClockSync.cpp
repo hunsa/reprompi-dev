@@ -15,8 +15,8 @@
 #include "reprompi_bench/sync/clock_sync/clocks/GlobalClockLM.h"
 #include "reprompi_bench/sync/clock_sync/clocks/GlobalClockOffset.h"
 
-#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
-//#define ZF_LOG_LEVEL ZF_LOG_WARN
+//#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
+#define ZF_LOG_LEVEL ZF_LOG_WARN
 #include "log/zf_log.h"
 
 HierarchicalClockSync::HierarchicalClockSync(ClockSync *syncInterNode, ClockSync *syncSocket, ClockSync *syncOnSocket) {
