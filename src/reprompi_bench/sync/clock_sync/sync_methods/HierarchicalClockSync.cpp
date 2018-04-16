@@ -23,24 +23,23 @@ HierarchicalClockSync::HierarchicalClockSync(ClockSync *syncInterNode, ClockSync
   this->syncInterNode = syncInterNode;
   this->syncSocket    = syncSocket;
   this->syncOnSocket  = syncOnSocket;
+
+  this->comm_internode = MPI_COMM_NULL;
+  this->comm_intranode = MPI_COMM_NULL;
+  this->comm_intersocket = MPI_COMM_NULL;
+  this->comm_intrasocket = MPI_COMM_NULL;
+
+  this->comm_initialized = false;
 }
 
 HierarchicalClockSync::~HierarchicalClockSync() {
 
 }
 
-
-GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
-
-  GlobalClock* global_clock1 = NULL;
-  GlobalClock* global_clock2 = NULL;
-  GlobalClock* global_clock3 = NULL;
-
-  MPI_Comm comm_internode, comm_intranode;
-  MPI_Comm comm_intersocket, comm_intrasocket;
-  int my_rank, np;
+void HierarchicalClockSync::initialized_communicators(MPI_Comm comm) {
   int socket_id;
-  int subcomm_size;
+  int my_rank, np;
+
 
   MPI_Comm_rank(comm, &my_rank);
   MPI_Comm_size(comm, &np);
@@ -73,6 +72,24 @@ GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock&
   create_interlevel_communicator(comm_intranode, comm_intrasocket, 0, &comm_intersocket);
 
   print_comm_debug_info("intersocket", comm, comm_intersocket);
+
+}
+
+
+GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
+
+  GlobalClock* global_clock1 = NULL;
+  GlobalClock* global_clock2 = NULL;
+  GlobalClock* global_clock3 = NULL;
+
+  int my_rank, np;
+  //int socket_id;
+  int subcomm_size;
+
+  if( this->comm_initialized == false ) {
+    this->initialized_communicators(comm);
+    this->comm_initialized = true;
+  }
 
   // Step 1: synchronization between nodes
   if (comm_internode != MPI_COMM_NULL && subcomm_size > 1) {

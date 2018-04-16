@@ -16,6 +16,15 @@ private:
   ClockSync *syncSocket;
   ClockSync *syncOnSocket;
 
+  MPI_Comm comm_internode;
+  MPI_Comm comm_intranode;
+  MPI_Comm comm_intersocket;
+  MPI_Comm comm_intrasocket;
+
+  bool comm_initialized;
+
+  void initialized_communicators(MPI_Comm comm);
+
 public:
   HierarchicalClockSync(ClockSync *syncInterNode, ClockSync *syncSocket, ClockSync *syncOnSocket); //, SyncConfiguration& conf);
   ~HierarchicalClockSync();
