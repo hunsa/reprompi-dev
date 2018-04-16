@@ -66,11 +66,25 @@ GlobalClock* GlobalClockLM::copyClock(Clock &c, MPI_Comm comm, int src_rank, int
 }
 
 int GlobalClockLM::get_flattened_clock_size_in_bytes() {
+  int ret_nbytes = 0;
+
+  ret_nbytes += this->get_flattened_this_clock_size_in_bytes();
+
+  if( ! local_clock.is_base_clock()) {
+    GlobalClock& innerGlobalClock = reinterpret_cast<GlobalClock&>(local_clock);
+    ret_nbytes += innerGlobalClock.get_flattened_this_clock_size_in_bytes();
+  }
+
+  return ret_nbytes;
+}
+
+int GlobalClockLM::get_flattened_this_clock_size_in_bytes()  {
   return 1*sizeof(int)+2*sizeof(double);
 }
 
+
 void GlobalClockLM::flatten_clock(char *buf, char *offset, char* end_pointer) {
-  end_pointer -= this->get_flattened_clock_size_in_bytes();
+  end_pointer -= this->get_flattened_this_clock_size_in_bytes();
 
   int *data_int= reinterpret_cast<int*>(end_pointer);
   data_int[0] = 0;

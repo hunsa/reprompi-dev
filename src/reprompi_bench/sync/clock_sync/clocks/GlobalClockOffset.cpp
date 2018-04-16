@@ -50,7 +50,21 @@ GlobalClock* GlobalClockOffset::copyClock(Clock &c, MPI_Comm comm, int src_rank,
   return retClock;
 }
 
+
 int GlobalClockOffset::get_flattened_clock_size_in_bytes() {
+  int ret_nbytes = 0;
+
+  ret_nbytes += this->get_flattened_this_clock_size_in_bytes();
+
+  if( ! local_clock.is_base_clock()) {
+    GlobalClock& innerGlobalClock = reinterpret_cast<GlobalClock&>(local_clock);
+    ret_nbytes += innerGlobalClock.get_flattened_this_clock_size_in_bytes();
+  }
+
+  return ret_nbytes;
+}
+
+int GlobalClockOffset::get_flattened_this_clock_size_in_bytes() {
   return sizeof(double);
 }
 
