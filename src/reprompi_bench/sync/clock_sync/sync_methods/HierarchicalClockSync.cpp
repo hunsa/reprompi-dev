@@ -86,6 +86,9 @@ GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock&
   //int socket_id;
   int subcomm_size;
 
+  MPI_Comm_rank(comm, &my_rank);
+  MPI_Comm_size(comm, &np);
+
   if( this->comm_initialized == false ) {
     this->initialized_communicators(comm);
     this->comm_initialized = true;

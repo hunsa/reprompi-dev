@@ -21,9 +21,10 @@
 </license>
 */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <string.h>
+//#include <stdlib.h>
+#include <cstdio>
 #include <mpi.h>
 
 //#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
@@ -72,7 +73,7 @@ void create_interlevel_communicator(MPI_Comm old_comm, MPI_Comm local_comm,
   }
 }
 
-void print_comm_debug_info(char *tag, MPI_Comm comm1, MPI_Comm comm2) {
+void print_comm_debug_info(const char *tag, MPI_Comm comm1, MPI_Comm comm2) {
   int rank1 = -1, rank2 = -1;
   int size1 = -1, size2 = -1;
 
