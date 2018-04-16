@@ -25,6 +25,7 @@
 //#include <string.h>
 //#include <stdlib.h>
 #include <cstdio>
+#include <cstdlib>
 #include <mpi.h>
 
 //#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
