@@ -95,7 +95,7 @@ GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock&
   }
 
   // Step 1: synchronization between nodes
-  if (comm_internode != MPI_COMM_NULL && subcomm_size > 1) {
+  if (comm_internode != MPI_COMM_NULL) {
     MPI_Comm_size(comm_internode, &subcomm_size);
     ZF_LOGV("%d: subcomm size:%d", my_rank, subcomm_size);
     if( subcomm_size > 1 ) {
