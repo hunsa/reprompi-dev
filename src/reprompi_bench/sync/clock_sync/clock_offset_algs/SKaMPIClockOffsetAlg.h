@@ -2,6 +2,7 @@
 #ifndef REPROMPIB_SKAMPI_CLOCKOFFSETALG_CLASS_H_
 #define REPROMPIB_SKAMPI_CLOCKOFFSETALG_CLASS_H_
 
+#include <map>
 #include <mpi.h>
 #include "ClockOffsetAlg.h"
 

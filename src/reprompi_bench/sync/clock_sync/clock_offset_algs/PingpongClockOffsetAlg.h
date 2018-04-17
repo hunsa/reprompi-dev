@@ -4,7 +4,7 @@
 
 #include "ClockOffsetAlg.h"
 
-#include<map>
+#include <map>
 
 class PingpongClockOffsetAlg : public ClockOffsetAlg {
 
