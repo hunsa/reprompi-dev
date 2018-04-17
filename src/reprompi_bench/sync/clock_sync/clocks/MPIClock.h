@@ -8,16 +8,11 @@
 class MPIClock : public Clock {
 
 public:
-  MPIClock() {};
-  ~MPIClock() {};
+  MPIClock();
+  ~MPIClock();
 
-  double get_time(void) {
-    return MPI_Wtime();
-  };
-
-  bool is_base_clock() {
-    return true;
-  }
+  double get_time(void);
+  bool is_base_clock();
 
 };
 

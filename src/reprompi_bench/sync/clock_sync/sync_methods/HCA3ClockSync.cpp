@@ -16,13 +16,13 @@
 #include "log/zf_log.h"
 
 
-HCA3ClockSync::HCA3ClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints, int n_exchanges) {
+HCA3ClockSync::HCA3ClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints) {
 
 //  MPI_Comm_rank(comm, &my_rank);
 //  MPI_Comm_size(comm, &nprocs);
   this->offset_alg = offsetAlg;
   this->n_fitpoints = n_fitpoints;
-  this->n_exchanges = n_exchanges;
+//  this->n_exchanges = n_exchanges;
 }
 
 HCA3ClockSync::~HCA3ClockSync() {
@@ -39,12 +39,12 @@ LinModel HCA3ClockSync::learn_model(MPI_Comm comm, const int root_rank, const in
 
   MPI_Comm_rank(comm, &my_rank);
 
-  ZF_LOGV("%d: learn model %d<->%d", my_rank, root_rank, other_rank);
+  ZF_LOGV("%d: learn model %d<->%d with %d fitpoints", my_rank, root_rank, other_rank, n_fitpoints);
 
   if (my_rank == root_rank) {
     for (j = 0; j < n_fitpoints; j++) {
       ClockOffset* offset = NULL;
-      offset = offset_alg->measure_offset(comm, root_rank, other_rank, this->n_exchanges, current_clock);
+      offset = offset_alg->measure_offset(comm, root_rank, other_rank, current_clock);
       delete offset;
     }
   } else if (my_rank == other_rank) {
@@ -58,7 +58,7 @@ LinModel HCA3ClockSync::learn_model(MPI_Comm comm, const int root_rank, const in
     for (j = 0; j < n_fitpoints; j++) {
       ClockOffset* offset = NULL;
 
-      offset = offset_alg->measure_offset(comm, root_rank, my_rank, this->n_exchanges, current_clock);
+      offset = offset_alg->measure_offset(comm, root_rank, my_rank, current_clock);
       xfit[j] = offset->get_timestamp();
       yfit[j] = offset->get_offset();
 

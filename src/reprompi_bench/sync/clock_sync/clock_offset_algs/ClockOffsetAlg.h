@@ -11,7 +11,7 @@ class ClockOffsetAlg {
 public:
   ClockOffsetAlg();
 
-  virtual ClockOffset* measure_offset(MPI_Comm comm, int ref_rank, int other_rank, int nexchanges, Clock& clock) = 0;
+  virtual ClockOffset* measure_offset(MPI_Comm comm, int ref_rank, int other_rank, Clock& clock) = 0;
   virtual ~ClockOffsetAlg() = 0;
 
 };

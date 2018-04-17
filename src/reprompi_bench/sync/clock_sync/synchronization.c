@@ -31,11 +31,16 @@
 
 #include "reprompi_bench/misc.h"
 #include "reprompi_bench/sync/common/sync_module_helpers.h"
+#include "reprompi_bench/option_parser/parse_extra_key_value_options.h"
+#include "reprompi_bench/utils/keyvalue_store.h"
+
 #include "synchronization.h"
 #include "clock_sync_lib.h"
 
 // Implemented synchronization modules
 static reprompib_sync_module_t* sync_modules;
+
+static const int HASHTABLE_SIZE=100;
 
 static const sync_type_t clock_sync_options[] = {
         //{ "HCA", REPROMPI_CLOCKSYNC_HCA},
@@ -44,7 +49,7 @@ static const sync_type_t clock_sync_options[] = {
         { "JK", REPROMPI_CLOCKSYNC_JK },
         { "SKaMPI", REPROMPI_CLOCKSYNC_SKAMPI },
         { "Topo1", REPROMPI_CLOCKSYNC_TOPO1 },
-        { "Topo2", REPROMPI_CLOCKSYNC_TOPO2 },
+//        { "Topo2", REPROMPI_CLOCKSYNC_TOPO2 },
         { "None", REPROMPI_CLOCKSYNC_NONE }
 };
 static const int N_CLOCK_SYNC_TYPES = sizeof(clock_sync_options)/sizeof(sync_type_t);
@@ -77,6 +82,14 @@ static int get_sync_module_index(const char* name) {
 void reprompib_init_sync_module(int argc, char** argv, reprompib_sync_module_t* sync_mod) {
   sync_module_info_t sync_module_info;
   int index;
+  reprompib_dictionary_t* params_dict;
+
+  params_dict = get_global_param_store();
+
+  //initialize dictionary
+  reprompib_init_dictionary(params_dict, HASHTABLE_SIZE);
+  // parse extra parameters into the global dictionary
+  reprompib_parse_extra_key_value_options(params_dict, argc, argv);
 
   parse_sync_options(argc, argv, CLOCK_SYNC_ARG, &sync_module_info);
   if (sync_module_info.name == NULL) {
@@ -108,7 +121,7 @@ void reprompib_register_sync_modules(void) {
   register_hca2_module(&(sync_modules[3]));
   register_hca3_module(&(sync_modules[4]));
   register_topo_aware_sync1_module(&(sync_modules[5]));
-  register_topo_aware_sync2_module(&(sync_modules[6]));
+//  register_topo_aware_sync2_module(&(sync_modules[6]));
 }
 
 void reprompib_deregister_sync_modules(void) {

@@ -13,15 +13,16 @@
 #define ZF_LOG_LEVEL ZF_LOG_WARN
 #include "log/zf_log.h"
 
-PingpongClockOffsetAlg::PingpongClockOffsetAlg() {
-  this->rtt = -1.0;
+PingpongClockOffsetAlg::PingpongClockOffsetAlg(int nexchanges_rtt, int nexchanges) {
+  this->rtt            = -1.0;
+  this->nexchanges_rtt = nexchanges_rtt;
+  this->nexchanges     = nexchanges;
 }
 
 PingpongClockOffsetAlg::~PingpongClockOffsetAlg() {
 }
 
-ClockOffset* PingpongClockOffsetAlg::measure_offset(MPI_Comm comm, int ref_rank, int client_rank, int nexchanges,
-    Clock& clock) {
+ClockOffset* PingpongClockOffsetAlg::measure_offset(MPI_Comm comm, int ref_rank, int client_rank, Clock& clock) {
   // JK pingpongs
   int my_rank, nprocs; //, client_rank;
   int i;
@@ -32,11 +33,6 @@ ClockOffset* PingpongClockOffsetAlg::measure_offset(MPI_Comm comm, int ref_rank,
   MPI_Comm_size(comm, &nprocs);
 
   ZF_LOGV("%d: measure_offset start (%d - %d)", my_rank, ref_rank, client_rank);
-
-
-  // TODO rrt measurement could be stored
- // if (rtt < 0) { // first time the method is called - we need to measure the RTT
- //   printf("%d: rtt %d %d start\n", my_rank, ref_rank, client_rank);
 
   {
     int rank1;
@@ -50,7 +46,7 @@ ClockOffset* PingpongClockOffsetAlg::measure_offset(MPI_Comm comm, int ref_rank,
     }
     std::string key_str = std::to_string(rank1) + "," + std::to_string(rank2);
     if( (this->rankpair2rtt).find(key_str) != (this->rankpair2rtt).end()) {
-      compute_rtt(ref_rank, client_rank, comm, 10, nexchanges, clock, &rtt);
+      compute_rtt(ref_rank, client_rank, comm, 10, this->nexchanges_rtt, clock, &rtt);
       this->rankpair2rtt[key_str] = rtt;
     } else {
       rtt = this->rankpair2rtt[key_str];

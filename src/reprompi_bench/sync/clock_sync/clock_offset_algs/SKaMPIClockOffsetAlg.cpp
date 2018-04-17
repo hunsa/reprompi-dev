@@ -5,16 +5,15 @@
 #include <mpi.h>
 #include "SKaMPIClockOffsetAlg.h"
 
-SKaMPIClockOffsetAlg::SKaMPIClockOffsetAlg() {
-  this->Minimum_ping_pongs = 10;
-  this->Number_ping_pongs  = 100;
-  this->ping_pong_min_time = -1.0;
+SKaMPIClockOffsetAlg::SKaMPIClockOffsetAlg(int min_n_ping_pong, int n_ping_pongs) {
+  this->Minimum_ping_pongs = min_n_ping_pong;
+  this->Number_ping_pongs  = n_ping_pongs;
 }
 
-SKaMPIClockOffsetAlg::~SKaMPIClockOffsetAlg()
-{}
+SKaMPIClockOffsetAlg::~SKaMPIClockOffsetAlg() {
+}
 
-ClockOffset* SKaMPIClockOffsetAlg::measure_offset(MPI_Comm comm, int ref_rank, int client_rank, int nexchanges, Clock& clock) {
+ClockOffset* SKaMPIClockOffsetAlg::measure_offset(MPI_Comm comm, int ref_rank, int client_rank, Clock& clock) {
   // SKaMPI pingpongs
   int i, other_global_id;
   double s_now, s_last, t_last, t_now;
@@ -26,6 +25,14 @@ ClockOffset* SKaMPIClockOffsetAlg::measure_offset(MPI_Comm comm, int ref_rank, i
   int my_rank;
   ClockOffset* offset;
 
+  double ping_pong_min_time; /* ping_pong_min_time is the minimum time of one ping_pong
+   between the root node and the , negative value means
+   time not yet determined;
+   needed to avoid measuring again all the 100 RTTs when re-synchronizing
+   (in this case only a few ping-pongs are performed if the RTT stays
+   within 110% for the ping_pong_min_time)
+   */
+
   MPI_Comm_rank(comm, &my_rank);
 
   // check whether I am participating here
@@ -34,21 +41,28 @@ ClockOffset* SKaMPIClockOffsetAlg::measure_offset(MPI_Comm comm, int ref_rank, i
     return NULL;
   }
 
-  // TODO: values need to be adjusted
-  this->Minimum_ping_pongs = nexchanges;
-  this->Number_ping_pongs  = nexchanges;
+  // check whether we have ping_pong_min_time in our hash
+  // if so, take it and use it (can stop after min_n_ping_pong rounds)
+  // if not, we set ping_pong_min_time to -1.0 (then we need to do n_ping_pongs rounds)
+  int rank1;
+  int rank2;
+  if( ref_rank < client_rank ) {
+    rank1 = ref_rank;
+    rank2 = client_rank;
+  } else {
+    rank1 = client_rank;
+    rank2 = ref_rank;
+  }
+
+  const std::string key_str = std::to_string(rank1) + "," + std::to_string(rank2);
+
+  if( (this->rankpair2minpingpong).find(key_str) != (this->rankpair2minpingpong).end()) {
+    ping_pong_min_time = -1.0;
+  } else {
+    ping_pong_min_time = this->rankpair2minpingpong[key_str];
+  }
 
 
-
-//  if (ref_rank == this->rank1) {
-//    p1 = this->rank1;
-//    p2 = this->rank2;
-//  } else if (ref_rank == this->rank2) {
-//    p1 = this->rank2;
-//    p2 = this->rank1;
-//  } else {
-//    return NULL;
-//  }
 
   /* I had to unroll the main loop because I didn't find a portable way
    to define the initial td_min and td_max with INFINITY and NINFINITY */
@@ -132,6 +146,9 @@ ClockOffset* SKaMPIClockOffsetAlg::measure_offset(MPI_Comm comm, int ref_rank, i
   } else {
     ping_pong_min_time = std::min(ping_pong_min_time, td_max - td_min);
   }
+
+  // update pingpong hash
+  this->rankpair2minpingpong[key_str] = ping_pong_min_time;
 
   if (my_rank == ref_rank) {
     offset = new ClockOffset(clock.get_time(), (td_min + td_max) / 2.0);

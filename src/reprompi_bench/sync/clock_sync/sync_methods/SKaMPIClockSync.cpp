@@ -54,10 +54,10 @@ GlobalClock* SKaMPIClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
 
     MPI_Barrier(comm);
     if (my_rank == 0){
-      offset = offset_alg->measure_offset(comm, 0, i, nexchanges, c);
+      offset = offset_alg->measure_offset(comm, 0, i, c);
       tds[i] = offset->get_offset();
     } else if (my_rank == i) {
-      offset = offset_alg->measure_offset(comm, 0, my_rank, nexchanges, c);
+      offset = offset_alg->measure_offset(comm, 0, my_rank, c);
       tds[0] = offset->get_offset();
     }
   }

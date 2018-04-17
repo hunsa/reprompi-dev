@@ -37,7 +37,6 @@
 #include "reprompi_bench/option_parser/parse_options.h"
 #include "reprompi_bench/option_parser/parse_common_options.h"
 #include "reprompi_bench/option_parser/parse_timing_options.h"
-#include "reprompi_bench/option_parser/parse_extra_key_value_options.h"
 #include "reprompi_bench/output_management/bench_info_output.h"
 #include "reprompi_bench/output_management/runtimes_computation.h"
 #include "reprompi_bench/output_management/results_output.h"
@@ -45,7 +44,6 @@
 #include "reprompi_bench/utils/keyvalue_store.h"
 
 static const int OUTPUT_ROOT_PROC = 0;
-static const int HASHTABLE_SIZE=100;
 
 static void print_initial_settings(const reprompib_options_t* opts, const reprompib_common_options_t* common_opts,
     const reprompib_dictionary_t* dict, const reprompib_bench_print_info_t* print_info) {
@@ -153,7 +151,6 @@ int main(int argc, char* argv[]) {
     collective_params_t coll_params;
     basic_collective_params_t coll_basic_info;
     time_t start_time, end_time;
-    reprompib_dictionary_t params_dict;
     reprompib_bench_print_info_t print_info;
 
     reprompib_sync_module_t clock_sync;
@@ -175,8 +172,6 @@ int main(int argc, char* argv[]) {
     init_timer();
     start_time = time(NULL);
 
-    //initialize dictionary
-    reprompib_init_dictionary(&params_dict, HASHTABLE_SIZE);
 
     // parse arguments and set-up benchmarking jobs
     print_command_line_args(argc, argv);
@@ -185,9 +180,6 @@ int main(int argc, char* argv[]) {
 
     // parse common arguments (e.g., msizes list, MPI calls to benchmark, input file)
     reprompib_parse_common_options(&common_opts, argc, argv);
-
-    // parse extra parameters into the global dictionary
-    reprompib_parse_extra_key_value_options(&params_dict, argc, argv);
 
     // parse timing options
     reprompib_parse_timing_options(&runtime_type, argc, argv);
@@ -226,7 +218,7 @@ int main(int argc, char* argv[]) {
         print_info.proc_sync = &proc_sync;
         print_info.timing_method = runtime_type;
         if (jindex == 0) {
-            print_initial_settings(&opts, &common_opts, &params_dict, &print_info);
+            //print_initial_settings(&opts, &common_opts, &params_dict, &print_info);
             print_results_header(&print_info, &opts, common_opts.output_file, opts.verbose);
         }
 
@@ -263,7 +255,7 @@ int main(int argc, char* argv[]) {
     cleanup_job_list(jlist);
     reprompib_free_common_parameters(&common_opts);
     reprompib_free_parameters(&opts);
-    reprompib_cleanup_dictionary(&params_dict);
+//    reprompib_cleanup_dictionary(&params_dict);
     clock_sync.cleanup_module();
     proc_sync.cleanup_module();
 

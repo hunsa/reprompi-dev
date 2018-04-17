@@ -11,11 +11,11 @@ class JKClockSync: public ClockSync {
 
 private:
   int n_fitpoints; /* --fitpoints */
-  int n_exchanges; /* --exchanges */
+//  int n_exchanges; /* --exchanges */
   ClockOffsetAlg* offset_alg;
 
 public:
-  JKClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints, int n_exchanges);
+  JKClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints);
   ~JKClockSync();
 
   GlobalClock* synchronize_all_clocks(MPI_Comm comm, Clock& c);

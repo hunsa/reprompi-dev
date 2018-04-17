@@ -10,11 +10,10 @@
 
 #include "HCA2ClockSync.h"
 
-HCA2ClockSync::HCA2ClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints, int n_exchanges) {
-
+HCA2ClockSync::HCA2ClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints) {
   this->offset_alg = offsetAlg;
   this->n_fitpoints = n_fitpoints;
-  this->n_exchanges = n_exchanges;
+//  this->n_exchanges = n_exchanges;
 }
 
 HCA2ClockSync::~HCA2ClockSync() {
@@ -33,7 +32,7 @@ LinModel HCA2ClockSync::learn_model(MPI_Comm comm, Clock &c, const int root_rank
   if (my_rank == root_rank) {
     for (j = 0; j < n_fitpoints; j++) {
       ClockOffset* offset = NULL;
-      offset = offset_alg->measure_offset(comm, root_rank, other_rank, this->n_exchanges, c);
+      offset = offset_alg->measure_offset(comm, root_rank, other_rank, c);
       delete offset;
     }
   } else if (my_rank == other_rank) {
@@ -47,7 +46,7 @@ LinModel HCA2ClockSync::learn_model(MPI_Comm comm, Clock &c, const int root_rank
     for (j = 0; j < n_fitpoints; j++) {
       ClockOffset* offset = NULL;
 
-      offset = offset_alg->measure_offset(comm, root_rank, my_rank, this->n_exchanges, c);
+      offset = offset_alg->measure_offset(comm, root_rank, my_rank, c);
 
       xfit[j] = offset->get_timestamp();
       yfit[j] = offset->get_offset();

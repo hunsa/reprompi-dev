@@ -12,12 +12,12 @@ class HCA3ClockSync: public ClockSync {
 
 private:
   int n_fitpoints; /* --fitpoints */
-  int n_exchanges; /* --exchanges */
   ClockOffsetAlg* offset_alg;
+//  int n_exchanges; /* --exchanges */
 //  lm_t lm;
 
 public:
-  HCA3ClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints, int n_exchanges);
+  HCA3ClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints);
   ~HCA3ClockSync();
 
   LinModel learn_model(MPI_Comm comm, const int root_rank, const int other_rank, Clock& current_clock);

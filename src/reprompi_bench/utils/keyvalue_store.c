@@ -72,6 +72,14 @@ static int ht_hash(const reprompib_dictionary_t *hashtable, const char* key) {
   unsigned long hash = 0;
   int i = 0;
 
+  if( hashtable == NULL ) {
+    return -1;
+  }
+
+  if( hashtable->size < 1 ) {
+    return -1;
+  }
+
   for (i = 0; i < strlen(key); i++) {
     hash += key[i];
     hash += (hash << 10);
@@ -114,6 +122,11 @@ int reprompib_add_element_to_dict(reprompib_dictionary_t* hashtable, const char*
   }
 
   bin = ht_hash(hashtable, key);
+
+  if( bin < 0 ) {
+    return 1;
+  }
+
   next = hashtable->table[bin];
 
   while (next != NULL && strcmp(next->key, key) != 0) {
@@ -163,6 +176,10 @@ int reprompib_get_value_from_dict(const reprompib_dictionary_t* hashtable, const
 
   bin = ht_hash(hashtable, key);
 
+  if( bin < 0 ) {
+    return 1;
+  }
+
   /* Step through the bin, looking for our value. */
   pair = hashtable->table[bin];
   while (pair != NULL && strcmp(key, pair->key) != 0) {
@@ -176,6 +193,7 @@ int reprompib_get_value_from_dict(const reprompib_dictionary_t* hashtable, const
     *value = strdup(pair->value);
     ret = 0;
   }
+
   return ret;
 }
 
@@ -190,6 +208,11 @@ int reprompib_remove_element_from_dict(reprompib_dictionary_t* hashtable, const 
   }
 
   bin = ht_hash(hashtable, key);
+
+  if( bin < 0 ) {
+    return 1;
+  }
+
   pair = hashtable->table[bin];
   last = pair;
 

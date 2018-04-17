@@ -13,7 +13,7 @@ class HCA2ClockSync: public ClockSync {     // Hierarchical synchronization in l
 
 private:
   int n_fitpoints; /* --fitpoints */
-  int n_exchanges; /* --exchanges */
+//  int n_exchanges; /* --exchanges */
   ClockOffsetAlg *offset_alg;
 
   LinModel learn_model(MPI_Comm comm, Clock &c, const int root_rank, const int other_rank);
@@ -27,7 +27,7 @@ protected:
   virtual void compute_and_set_intercept(LinModel* lm, int client, int p_ref);
 
 public:
-  HCA2ClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints, int n_exchanges);
+  HCA2ClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints);
   ~HCA2ClockSync();
 
   GlobalClock* synchronize_all_clocks(MPI_Comm comm, Clock& c);

@@ -68,7 +68,7 @@ static double get_normalized_time(double local_time) {
 void sk_init_module(int argc, char** argv) {
   global_clock = NULL;
   local_clock = initialize_local_clock();
-  clock_sync = new SKaMPIClockSync(new SKaMPIClockOffsetAlg());
+  clock_sync = new SKaMPIClockSync(new SKaMPIClockOffsetAlg(10,100));
 }
 
 void sk_cleanup_module(void) {

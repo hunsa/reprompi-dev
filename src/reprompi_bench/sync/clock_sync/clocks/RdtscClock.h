@@ -11,26 +11,12 @@ private:
   double freq_hz;
 
 public:
-  RdtscClock() {
-    freq_hz = 2300e6;
-#ifdef FREQUENCY_MHZ   // set frequency to a fixed value
-    freq_hz=FREQUENCY_MHZ*1.0e6;
-#endif
-  };
-  ~RdtscClock() {};
+  RdtscClock();
+  ~RdtscClock();
 
-
-  double get_time(void) {
-    return rdtsc()/freq_hz;
-  };
-
-  double get_freq(void) {
-    return freq_hz;
-  };
-
-  bool is_base_clock() {
-    return true;
-  }
+  double get_time(void);
+  double get_freq(void);
+  bool is_base_clock();
 
 };
 

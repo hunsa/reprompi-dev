@@ -17,10 +17,10 @@
 #include "log/zf_log.h"
 
 
-JKClockSync::JKClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints, int n_exchanges) {
+JKClockSync::JKClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints) {
   this->offset_alg = offsetAlg;
   this->n_fitpoints = n_fitpoints;
-  this->n_exchanges = n_exchanges;
+//  this->n_exchanges = n_exchanges;
 }
 
 JKClockSync::~JKClockSync() {
@@ -48,7 +48,7 @@ GlobalClock* JKClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
            for (p = 0; p < np; p++) {
                if (p != root_rank) {
                  ZF_LOGV("jk:root=%d m offset with %d", my_rank, p);
-                 ClockOffset* offset = offset_alg->measure_offset(comm, root_rank, p, this->n_exchanges, c);
+                 ClockOffset* offset = offset_alg->measure_offset(comm, root_rank, p, c);
                  delete offset;
                  ZF_LOGV("jk:root=%d m offset with %d DONE", my_rank, p);
                }
@@ -66,7 +66,7 @@ GlobalClock* JKClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
 
      for (j = 0; j < this->n_fitpoints; j++) {
        ZF_LOGV("jk:%d m offset with root=%d", my_rank, root_rank);
-       ClockOffset* offset = offset_alg->measure_offset(comm, root_rank, my_rank, this->n_exchanges, c);
+       ClockOffset* offset = offset_alg->measure_offset(comm, root_rank, my_rank, c);
        xfit[j] = offset->get_timestamp();
        yfit[j] = offset->get_offset();
        delete offset;

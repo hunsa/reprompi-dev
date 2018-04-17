@@ -62,7 +62,6 @@ static void parse_keyvalue_list(char* args, reprompib_dictionary_t* dict) {
     s = save_str;
     kv_s = kv_str;
 
-
     /* Parse the list of message sizes */
     if (args != NULL) {
 

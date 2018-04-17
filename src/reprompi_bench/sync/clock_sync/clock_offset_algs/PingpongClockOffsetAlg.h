@@ -10,14 +10,15 @@ class PingpongClockOffsetAlg : public ClockOffsetAlg {
 
 private:
   double rtt;
-  //std::map<tuple_t2, double> rtt_map;
+  int nexchanges_rtt;  // number of exchanges for RTT estimation
+  int nexchanges;      // number of ping-ping to be done for clock offset estimation
   std::map<std::string, double> rankpair2rtt;
 
 public:
-  PingpongClockOffsetAlg();
+  PingpongClockOffsetAlg(int nexchanges_rtt, int nexchanges);
   ~PingpongClockOffsetAlg();
 
-  ClockOffset* measure_offset(MPI_Comm comm, int ref_rank, int client_rank, int nexchanges, Clock& clock);
+  ClockOffset* measure_offset(MPI_Comm comm, int ref_rank, int client_rank, Clock& clock);
 
 };
 

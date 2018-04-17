@@ -65,7 +65,7 @@ static double get_normalized_time(double local_time) {
 void jk_init_module(int argc, char** argv) {
   global_clock = NULL;
   local_clock = initialize_local_clock();
-  clock_sync = new JKClockSync(new PingpongClockOffsetAlg(), 1000, 100);
+  clock_sync = new JKClockSync(new PingpongClockOffsetAlg(100,100), 1000);
 }
 
 

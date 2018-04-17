@@ -17,6 +17,8 @@ measure_clock_drift.c
 parse_test_options.c
 ${SRC_DIR}/reprompi_bench/option_parser/option_parser_helpers.c
 ${SRC_DIR}/reprompi_bench/misc.c
+${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
+${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
 ${SYNC_SRC_FILES}
 )
 
@@ -31,6 +33,8 @@ sync_duration.c
 parse_test_options.c
 ${SRC_DIR}/reprompi_bench/option_parser/option_parser_helpers.c
 ${SRC_DIR}/reprompi_bench/misc.c
+${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
+${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
 ${SYNC_SRC_FILES}
 )
 
