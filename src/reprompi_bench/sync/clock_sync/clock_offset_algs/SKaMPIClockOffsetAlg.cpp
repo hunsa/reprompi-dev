@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <algorithm>
+#include <string>
 
 #include <mpi.h>
 #include "SKaMPIClockOffsetAlg.h"

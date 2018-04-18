@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_sort.h>
 
