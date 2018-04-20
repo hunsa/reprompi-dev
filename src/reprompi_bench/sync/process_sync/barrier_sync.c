@@ -50,6 +50,11 @@ static void barrier_init_synchronization(const reprompib_sync_params_t* init_par
 static void empty(void) {
 };
 
+static int stop_sync(void) {
+  return REPROMPI_CORRECT_MEASUREMENT;
+};
+
+
 static inline void mpibarrier_start_synchronization(void) {
     MPI_Barrier(MPI_COMM_WORLD);
 }
@@ -80,7 +85,7 @@ void register_mpibarrier_module(reprompib_proc_sync_module_t *sync_mod) {
   register_common_barrier_functions(sync_mod);
 
   sync_mod->start_sync = mpibarrier_start_synchronization;
-  sync_mod->stop_sync = empty;
+  sync_mod->stop_sync = stop_sync;
 
   sync_mod->print_sync_info = mpibarrier_print_sync_parameters;
 }
@@ -93,7 +98,7 @@ void register_dissem_barrier_module(reprompib_proc_sync_module_t *sync_mod) {
   register_common_barrier_functions(sync_mod);
 
   sync_mod->start_sync = dissemination_barrier;
-  sync_mod->stop_sync = empty;
+  sync_mod->stop_sync = stop_sync;
 
   sync_mod->print_sync_info = dissem_barrier_print_sync_parameters;
 }

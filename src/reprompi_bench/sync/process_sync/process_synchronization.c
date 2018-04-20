@@ -39,7 +39,8 @@ static reprompib_proc_sync_module_t* sync_modules;
 static const sync_type_t proc_sync_options[] = {
         { "window", REPROMPI_PROCSYNC_WIN},
         { "MPI_Barrier", REPROMPI_PROCSYNC_MPIBARRIER },
-        { "dissem_barrier", REPROMPI_PROCSYNC_DISSEMBARRIER }
+        { "dissem_barrier", REPROMPI_PROCSYNC_DISSEMBARRIER },
+        { "round", REPROMPI_PROCSYNC_ROUNDSYNC }
 };
 static const int N_PROC_SYNC_TYPES = sizeof(proc_sync_options)/sizeof(sync_type_t);
 static const char PROC_SYNC_ARG[] = "proc-sync";
@@ -96,6 +97,7 @@ void reprompib_register_proc_sync_modules(void) {
   register_mpibarrier_module(&(sync_modules[0]));
   register_dissem_barrier_module(&(sync_modules[1]));
   register_window_module(&(sync_modules[2]));
+  register_roundsync_module(&(sync_modules[3]));
 }
 
 void reprompib_deregister_proc_sync_modules(void) {
