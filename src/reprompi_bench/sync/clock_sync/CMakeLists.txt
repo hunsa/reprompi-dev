@@ -19,7 +19,6 @@ ${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/sync_utils.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/hca_sync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sk_sync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/jk_sync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/topo_aware_sync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_sync_common.cpp
 ${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
 #${SRC_DIR}/reprompi_bench/sync/clock_sync/synchronization.c
@@ -27,10 +26,16 @@ ${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
 
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCA2ClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCA3ClockSync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HierarchicalClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/SKaMPIClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/ClockPropagationSync.cpp
+
+${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/TwoLevelClockSync.cpp
+${SRC_DIR}/reprompi_bench/sync/clock_sync/topo_aware_2l_sync.cpp
+
+
+${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HierarchicalClockSync.cpp
+${SRC_DIR}/reprompi_bench/sync/clock_sync/topo_aware_sync.cpp
 
 #${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
 #${SRC_DIR}/reprompi_bench/option_parser/parse_options.c

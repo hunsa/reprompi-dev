@@ -49,7 +49,7 @@ static const sync_type_t clock_sync_options[] = {
         { "JK", REPROMPI_CLOCKSYNC_JK },
         { "SKaMPI", REPROMPI_CLOCKSYNC_SKAMPI },
         { "Topo1", REPROMPI_CLOCKSYNC_TOPO1 },
-//        { "Topo2", REPROMPI_CLOCKSYNC_TOPO2 },
+        { "Topo2", REPROMPI_CLOCKSYNC_TOPO2 },
         { "None", REPROMPI_CLOCKSYNC_NONE }
 };
 static const int N_CLOCK_SYNC_TYPES = sizeof(clock_sync_options)/sizeof(sync_type_t);
@@ -121,7 +121,7 @@ void reprompib_register_sync_modules(void) {
   register_hca2_module(&(sync_modules[3]));
   register_hca3_module(&(sync_modules[4]));
   register_topo_aware_sync1_module(&(sync_modules[5]));
-//  register_topo_aware_sync2_module(&(sync_modules[6]));
+  register_topo_aware_sync2_module(&(sync_modules[6]));
 }
 
 void reprompib_deregister_sync_modules(void) {

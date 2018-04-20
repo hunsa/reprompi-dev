@@ -34,7 +34,7 @@
 #include "reprompi_bench/sync/clock_sync/clock_offset_algs/SKaMPIClockOffsetAlg.h"
 #include "reprompi_bench/sync/clock_sync/clock_sync_common.h"
 #include "reprompi_bench/sync/clock_sync/clock_sync_lib.h"
-#include "reprompi_bench/sync/clock_sync/sync_methods/HierarchicalClockSync.h"
+#include "reprompi_bench/sync/clock_sync/sync_methods/TwoLevelClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/SKaMPIClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCA2ClockSync.h"
@@ -75,16 +75,6 @@ static std::vector<std::string> str_split(const char *str, char c = ' ') {
 
 static void topo_synchronize_clocks(void) {
   global_clock = clock_sync->synchronize_all_clocks(MPI_COMM_WORLD, *(local_clock));
-
-  /*
-  GlobalClockLM* lmclock = NULL;
-  if (global_clock != NULL) {
-    lmclock = dynamic_cast<GlobalClockLM*>(global_clock);
-    if (lmclock != NULL) {
-      printf("clock: %20.9f   %20.9f\n", lmclock->get_slope(), lmclock->get_intercept());
-    }
-  } */
-
 }
 
 static double topo_normalized_time(double local_time) {
@@ -105,7 +95,7 @@ static void topo_cleanup_module(void) {
 
 static void topo_print_sync_parameters(FILE* f)
 {
-  fprintf (f, "#@clocksync=Topo1\n");
+  fprintf (f, "#@clocksync=TwoLevelSync\n");
 //  fprintf(f, "#@fitpoints=%d\n", parameters.n_fitpoints);
 //  fprintf(f, "#@exchanges=%d\n", parameters.n_exchanges);
 }
@@ -215,20 +205,13 @@ static void topo_init_module(int argc, char** argv) {
   int use_default = 0;
   ClockSync *alg1;
   ClockSync *alg2;
-  ClockSync *alg3;
-
 
   alg1 = instantiate_clock_sync("topoalg1");
   if( alg1 != NULL ) {
     alg2 = instantiate_clock_sync("topoalg2");
     if( alg2 != NULL ) {
-      alg3 = instantiate_clock_sync("topoalg3");
-      if( alg3 != NULL ) {
-        // now instantiate new hierarchical clock sync
-        clock_sync = new HierarchicalClockSync(alg1, alg2, alg3);
-      } else {
-        use_default = 1;
-      }
+      // now instantiate new two level clock sync
+      clock_sync = new TwoLevelClockSync(alg1, alg2);
     } else {
       use_default = 1;
     }
@@ -236,30 +219,24 @@ static void topo_init_module(int argc, char** argv) {
     use_default = 1;
   }
 
-
   global_clock = NULL;
   local_clock  = initialize_local_clock();
 
   if( use_default == 1 ) {
     ZF_LOGW("!!! using default topo1 clock sync options");
 
-    clock_sync = new HierarchicalClockSync(
+    clock_sync = new TwoLevelClockSync(
       new HCA3ClockSync(new SKaMPIClockOffsetAlg(10,100), 500),
-      //new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
-      //new ClockPropagationSync(),
-      new HCA3ClockSync(new SKaMPIClockOffsetAlg(10,100), 500),
-      //new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
       new ClockPropagationSync());
-      //new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100));
   }
 
 }
 
 
 extern "C"
-void register_topo_aware_sync1_module(reprompib_sync_module_t *sync_mod) {
-  sync_mod->name = (char*)std::string("Topo1").c_str();
-  sync_mod->clocksync = REPROMPI_CLOCKSYNC_TOPO1;
+void register_topo_aware_sync2_module(reprompib_sync_module_t *sync_mod) {
+  sync_mod->name = (char*)std::string("Topo2").c_str();
+  sync_mod->clocksync = REPROMPI_CLOCKSYNC_TOPO2;
   sync_mod->init_module = topo_init_module;
   sync_mod->cleanup_module = topo_cleanup_module;
   sync_mod->sync_clocks = topo_synchronize_clocks;
@@ -270,3 +247,5 @@ void register_topo_aware_sync1_module(reprompib_sync_module_t *sync_mod) {
   sync_mod->get_global_time = topo_normalized_time;
   sync_mod->print_sync_info = topo_print_sync_parameters;
 }
+
+
