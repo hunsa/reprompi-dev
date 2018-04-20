@@ -48,7 +48,9 @@ static const sync_type_t clock_sync_options[] = {
         { "HCA3", REPROMPI_CLOCKSYNC_HCA3},
         { "JK", REPROMPI_CLOCKSYNC_JK },
         { "SKaMPI", REPROMPI_CLOCKSYNC_SKAMPI },
+#ifdef HAVE_HWLOC
         { "Topo1", REPROMPI_CLOCKSYNC_TOPO1 },
+#endif
         { "Topo2", REPROMPI_CLOCKSYNC_TOPO2 },
         { "None", REPROMPI_CLOCKSYNC_NONE }
 };
@@ -111,17 +113,21 @@ void reprompib_init_sync_module(int argc, char** argv, reprompib_sync_module_t* 
 
 
 void reprompib_register_sync_modules(void) {
+  int sync_module_idx;
   sync_modules = calloc(N_CLOCK_SYNC_TYPES, sizeof(reprompib_sync_module_t));
 
-  register_no_clock_sync_module(&(sync_modules[0]));
-  //register_hca_module(&(sync_modules[1]));
-  register_skampi_module(&(sync_modules[1]));
-  register_jk_module(&(sync_modules[2]));
+  sync_module_idx = 0;
 
-  register_hca2_module(&(sync_modules[3]));
-  register_hca3_module(&(sync_modules[4]));
-  register_topo_aware_sync1_module(&(sync_modules[5]));
-  register_topo_aware_sync2_module(&(sync_modules[6]));
+  register_no_clock_sync_module(&(sync_modules[sync_module_idx++]));
+  register_skampi_module(&(sync_modules[sync_module_idx++]));
+  register_jk_module(&(sync_modules[sync_module_idx++]));
+
+  register_hca2_module(&(sync_modules[sync_module_idx++]));
+  register_hca3_module(&(sync_modules[sync_module_idx++]));
+#ifdef HAVE_HWLOC
+  register_topo_aware_sync1_module(&(sync_modules[sync_module_idx++]));
+#endif
+  register_topo_aware_sync2_module(&(sync_modules[sync_module_idx++]));
 }
 
 void reprompib_deregister_sync_modules(void) {

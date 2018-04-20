@@ -13,7 +13,6 @@ ${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_offset_algs/ClockOffsetAlg.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_offset_algs/PingpongClockOffsetAlg.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_offset_algs/SKaMPIClockOffsetAlg.cpp
 
-${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/hwloc_helpers.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/communicator_utils.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/sync_utils.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/hca_sync.cpp
@@ -34,9 +33,6 @@ ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/TwoLevelClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/topo_aware_2l_sync.cpp
 
 
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HierarchicalClockSync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/topo_aware_sync.cpp
-
 #${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
 #${SRC_DIR}/reprompi_bench/option_parser/parse_options.c
 #${SRC_DIR}/reprompi_bench/option_parser/parse_timing_options.c
@@ -50,11 +46,30 @@ ${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
 #${SRC_DIR}/reprompi_bench/misc.c
 )
 
+SET(SYNC_LIB_DEP_LIBS "")
+
+if (HWLOC_INCLUDE_DIR)
+
+set(CLOCKSYNC_SRC_FILES
+${CLOCKSYNC_SRC_FILES}
+${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HierarchicalClockSync.cpp
+${SRC_DIR}/reprompi_bench/sync/clock_sync/topo_aware_sync.cpp
+${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/hwloc_helpers.cpp
+)
+
+set(SYNC_LIB_DEP_LIBS
+${SYNC_LIB_DEP_LIBS}
+${HWLOC_LIBRARIES}
+)
+
+endif (HWLOC_INCLUDE_DIR)
+
+
 
 add_library(synclib
 ${CLOCKSYNC_SRC_FILES}
 )
-TARGET_LINK_LIBRARIES(synclib ${COMMON_LIBRARIES} ${HWLOC_LIBRARIES})
+TARGET_LINK_LIBRARIES(synclib ${COMMON_LIBRARIES} ${SYNC_LIB_DEP_LIBS})
 SET_TARGET_PROPERTIES(synclib PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
 
 

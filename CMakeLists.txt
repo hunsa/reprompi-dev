@@ -58,21 +58,6 @@ endif(ENABLE_PGMPI)
 ####################################
 
 
-####################################
-############ HWLOC support ########
-####################################
-set(HWLOC_LIBRARY_DEFAULT_PATH "" CACHE STRING  "Specify the path of the HWLOC library")
-
-find_package(Hwloc REQUIRED)
-if (HWLOC_INCLUDE_DIR)
-message (STATUS "HWLOC INCLUDES: ${HWLOC_INCLUDE_DIR}")
-else(HWLOC_INCLUDE_DIR)
-message (FATAL_ERROR "The HWLOC library not found.")
-endif(HWLOC_INCLUDE_DIR)
-####################################
-
-
-
 SET(MY_COMPILE_FLAGS "")
 
 ######################################
@@ -117,6 +102,21 @@ endif()
 if(OPTION_PRINT_MSIZES_BYTES)
     SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DOPTION_PRINT_MSIZES_BYTES=${OPTION_PRINT_MSIZES_BYTES}")
 endif()
+
+
+####################################
+############ HWLOC support ########
+####################################
+set(HWLOC_LIBRARY_DEFAULT_PATH "" CACHE STRING  "Specify the path of the HWLOC library")
+
+find_package(Hwloc REQUIRED)
+if (HWLOC_INCLUDE_DIR)
+message (STATUS "HWLOC INCLUDES: ${HWLOC_INCLUDE_DIR}")
+SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DHAVE_HWLOC")
+else(HWLOC_INCLUDE_DIR)
+message (WARNING "The HWLOC library not found. Compiling without hwloc support.")
+endif(HWLOC_INCLUDE_DIR)
+####################################
 
 
 
