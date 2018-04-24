@@ -9,6 +9,7 @@
 #include <gsl/gsl_fit.h>
 
 #include "HCA2ClockSync.h"
+#include "LinearModelFitterStandard.hpp"
 
 HCA2ClockSync::HCA2ClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints) {
   this->offset_alg = offsetAlg;
@@ -24,6 +25,7 @@ LinModel HCA2ClockSync::learn_model(MPI_Comm comm, Clock &c, const int root_rank
   int my_rank;
   LinModel lm;
 
+
   lm.slope = 0;
   lm.intercept = 0;
 
@@ -37,8 +39,9 @@ LinModel HCA2ClockSync::learn_model(MPI_Comm comm, Clock &c, const int root_rank
     }
   } else if (my_rank == other_rank) {
     double *xfit, *yfit;
-    double cov00, cov01, cov11, sumsq;
+    // double cov00, cov01, cov11, sumsq;
     int fit;
+    LinearModelFitter *fitter = new LinearModelFitterStandard();
 
     xfit = new double[n_fitpoints];
     yfit = new double[n_fitpoints];
@@ -54,11 +57,15 @@ LinModel HCA2ClockSync::learn_model(MPI_Comm comm, Clock &c, const int root_rank
       delete offset;
     }
 
-    fit = gsl_fit_linear(xfit, 1, yfit, 1, n_fitpoints, &lm.intercept, &lm.slope, &cov00, &cov01, &cov11, &sumsq);
+//    fit = gsl_fit_linear(xfit, 1, yfit, 1, n_fitpoints, &lm.intercept, &lm.slope, &cov00, &cov01, &cov11, &sumsq);
+    fit = fitter->fit_linear_model(xfit, yfit, n_fitpoints, &lm.slope, &lm.intercept);
+
     delete[] xfit;
     delete[] yfit;
-
+    delete fitter;
   }
+
+
   return lm;
 }
 

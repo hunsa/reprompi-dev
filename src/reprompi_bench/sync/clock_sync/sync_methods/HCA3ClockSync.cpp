@@ -7,9 +7,10 @@
 
 
 #include <math.h>
-#include <gsl/gsl_fit.h>
 
 #include "HCA3ClockSync.h"
+#include "LinearModelFitterStandard.hpp"
+#include "LinearModelFitterDebug.hpp"
 
 //#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
 #define ZF_LOG_LEVEL ZF_LOG_WARN
@@ -49,8 +50,11 @@ LinModel HCA3ClockSync::learn_model(MPI_Comm comm, const int root_rank, const in
     }
   } else if (my_rank == other_rank) {
     double *xfit, *yfit;
-    double cov00, cov01, cov11, sumsq;
     int fit;
+    LinearModelFitter *fitter;
+
+    //fitter = new LinearModelFitterStandard();
+    fitter = new LinearModelFitterDebug(comm, my_rank, root_rank);
 
     xfit = new double[n_fitpoints];
     yfit = new double[n_fitpoints];
@@ -65,13 +69,17 @@ LinModel HCA3ClockSync::learn_model(MPI_Comm comm, const int root_rank, const in
       delete offset;
     }
 
-    fit = gsl_fit_linear(xfit, 1, yfit, 1, n_fitpoints, &lm.intercept, &lm.slope, &cov00, &cov01, &cov11, &sumsq);
+    //fit = gsl_fit_linear(xfit, 1, yfit, 1, n_fitpoints, &lm.intercept, &lm.slope, &cov00, &cov01, &cov11, &sumsq);
+
+    fit = fitter->fit_linear_model(xfit, yfit, n_fitpoints, &lm.slope, &lm.intercept);
+
     delete[] xfit;
     delete[] yfit;
-
+    delete fitter;
   }
 
   ZF_LOGV("%d: learn model %d<->%d DONE", my_rank, root_rank, other_rank);
+
 
   return lm;
 }

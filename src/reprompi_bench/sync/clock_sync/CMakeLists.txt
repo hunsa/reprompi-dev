@@ -29,6 +29,10 @@ ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/SKaMPIClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/ClockPropagationSync.cpp
 
+${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/LinearModelFitterStandard.cpp
+${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/LinearModelFitterDebug.cpp
+
+
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/TwoLevelClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/topo_aware_2l_sync.cpp
 
