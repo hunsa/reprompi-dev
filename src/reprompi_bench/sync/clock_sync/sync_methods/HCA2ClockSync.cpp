@@ -75,11 +75,11 @@ int HCA2ClockSync::my_pow_2(int exp) {
 }
 
 
-void HCA2ClockSync::compute_and_set_intercept(LinModel* lm, int client, int p_ref) {
-}
-
-void HCA2ClockSync::compute_and_set_all_intercepts(LinModel* lm) {
-}
+//void HCA2ClockSync::compute_and_set_intercept(LinModel* lm, int client, int p_ref) {
+//}
+//
+//void HCA2ClockSync::compute_and_set_all_intercepts(LinModel* lm) {
+//}
 
 GlobalClock* HCA2ClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
   int my_rank, nprocs;
@@ -138,7 +138,7 @@ GlobalClock* HCA2ClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
 
         // compute model through linear regression
         learn_model(comm, c, my_rank, other_rank);
-        compute_and_set_intercept(NULL, other_rank, my_rank);
+        //compute_and_set_intercept(NULL, other_rank, my_rank);
 
         // so I also need to receive some other models from my partner rank
         // there should be 2^i models to receive
@@ -160,7 +160,7 @@ GlobalClock* HCA2ClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
         // compute model through linear regression
         linear_models[my_rank] = learn_model(comm, c, other_rank, my_rank);
 
-        compute_and_set_intercept(&linear_models[my_rank], my_rank, other_rank);
+        //compute_and_set_intercept(&linear_models[my_rank], my_rank, other_rank);
 
         // I will need to send my models back to the master
         // there should be 2^i models to send
@@ -198,7 +198,7 @@ GlobalClock* HCA2ClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
 
         // compute model through linear regression
         linear_models[other_rank] = learn_model(comm, c, my_rank, other_rank);
-        compute_and_set_intercept(NULL, other_rank, my_rank);
+        //compute_and_set_intercept(NULL, other_rank, my_rank);
       }
 
     } else {
@@ -206,7 +206,7 @@ GlobalClock* HCA2ClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
 
       // compute model through linear regression
       linear_models[my_rank] = learn_model(comm, c, other_rank, my_rank);
-      compute_and_set_intercept(&linear_models[my_rank], my_rank, other_rank);
+      //compute_and_set_intercept(&linear_models[my_rank], my_rank, other_rank);
     }
 
     if (step_two_comm != MPI_COMM_NULL) {
@@ -234,7 +234,7 @@ GlobalClock* HCA2ClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
   }
 
   MPI_Scatter(linear_models, 1, mpi_lm_t, &lm, 1, mpi_lm_t, master_rank, comm);
-  compute_and_set_all_intercepts(&lm);
+  //compute_and_set_all_intercepts(&lm);
   MPI_Barrier(comm);
 
   if (my_rank == master_rank) {

@@ -23,8 +23,8 @@ protected:
   int my_pow_2(int exp);
 
 
-  virtual void compute_and_set_all_intercepts(LinModel* lm);
-  virtual void compute_and_set_intercept(LinModel* lm, int client, int p_ref);
+//  virtual void compute_and_set_all_intercepts(LinModel* lm);
+//  virtual void compute_and_set_intercept(LinModel* lm, int client, int p_ref);
 
 public:
   HCA2ClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints);
