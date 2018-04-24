@@ -28,6 +28,7 @@ typedef struct reprompib_opt {
     long n_rep; /* --nrep */
     int verbose; /* -v */
     int print_summary_methods; /* --summary */
+    long max_n_rep; /* --max-nrep - maximum value for the number of repetitions (defaults to n_rep)*/
 } reprompib_options_t;
 
 void reprompib_parse_options(reprompib_options_t* opts_p, int argc, char** argv);

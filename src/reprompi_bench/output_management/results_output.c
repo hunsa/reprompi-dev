@@ -275,13 +275,23 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
             current_rep_id = chunk_id * OUTPUT_NITERATIONS_CHUNK + i;
             //#ifdef ENABLE_WINDOWSYNC
             if (print_info->clock_sync->clocksync != REPROMPI_CLOCKSYNC_NONE) {
-              fprintf(f, "%7d %50s %10d %12ld %10d %14.10f %14.10f %14.10f %14.10f\n", proc_id,
-                  get_call_from_index(job.call_index), current_rep_id, msize_value,
-                  errorcodes[proc_id * chunk_nrep + i],
-                  local_start_sec[proc_id * chunk_nrep + i],
-                  local_end_sec[proc_id * chunk_nrep + i],
-                  global_start_sec[proc_id * chunk_nrep + i],
-                  global_end_sec[proc_id * chunk_nrep + i]);
+              if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {// we have error codes
+                fprintf(f, "%7d %50s %10d %12ld %10d %14.10f %14.10f %14.10f %14.10f\n", proc_id,
+                    get_call_from_index(job.call_index), current_rep_id, msize_value,
+                    errorcodes[proc_id * chunk_nrep + i],
+                    local_start_sec[proc_id * chunk_nrep + i],
+                    local_end_sec[proc_id * chunk_nrep + i],
+                    global_start_sec[proc_id * chunk_nrep + i],
+                    global_end_sec[proc_id * chunk_nrep + i]);
+              } else {  // global times but no error codes
+
+                fprintf(f, "%7d %50s %10d %12ld %14.10f %14.10f %14.10f %14.10f\n", proc_id,
+                    get_call_from_index(job.call_index), current_rep_id, msize_value,
+                    local_start_sec[proc_id * chunk_nrep + i],
+                    local_end_sec[proc_id * chunk_nrep + i],
+                    global_start_sec[proc_id * chunk_nrep + i],
+                    global_end_sec[proc_id * chunk_nrep + i]);
+              }
             }
             else {
               //#else

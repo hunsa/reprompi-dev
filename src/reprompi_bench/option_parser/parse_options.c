@@ -56,13 +56,15 @@ static summary_method_info_t summary_methods[] = {
 enum reprompi_common_getopt_ids {
   REPROMPI_ARGS_VERBOSE = 'v',
   REPROMPI_ARGS_NREPS = 500,
-  REPROMPI_ARGS_SUMMARY
+  REPROMPI_ARGS_SUMMARY,
+  REPROMPI_ARGS_MAX_NREP
 };
 
 static const struct option reprompi_default_long_options[] = {
         {"verbose", optional_argument, 0, REPROMPI_ARGS_VERBOSE},
         { "nrep", required_argument, 0, REPROMPI_ARGS_NREPS },
         {"summary", optional_argument, 0, REPROMPI_ARGS_SUMMARY},
+        { "max-nrep", required_argument, 0, REPROMPI_ARGS_MAX_NREP },
         { 0, 0, 0, 0 }
 };
 static const char reprompi_default_opts_str[] = "v";
@@ -85,6 +87,7 @@ static void init_parameters(reprompib_options_t* opts_p) {
     opts_p->verbose = 0;
     opts_p->n_rep = 0;
     opts_p->print_summary_methods = 0;
+    opts_p->max_n_rep = 0;
 }
 
 void reprompib_free_parameters(reprompib_options_t* opts_p) {
@@ -144,6 +147,14 @@ void reprompib_parse_options(reprompib_options_t* opts_p, int argc, char** argv)
             opts_p->n_rep = nreps;
             break;
 
+        case REPROMPI_ARGS_MAX_NREP:
+            err = reprompib_str_to_long(optarg, &nreps);
+            if (err || nreps <= 0) {
+              reprompib_print_error_and_exit("max-nrep value is negative or not correctly specified");
+            }
+            opts_p->max_n_rep = nreps;
+            break;
+
         case REPROMPI_ARGS_SUMMARY: /* list of summary options */
             parse_summary_list(optarg, opts_p);
             break;
@@ -154,6 +165,14 @@ void reprompib_parse_options(reprompib_options_t* opts_p, int argc, char** argv)
         case '?':
             break;
         }
+    }
+
+    if (opts_p->max_n_rep > 0) {  // max-nrep specified from the command line
+      if (opts_p->max_n_rep < opts_p->n_rep) {
+        reprompib_print_error_and_exit("max-nrep error: max-nrep must be >= nrep");
+      }
+    } else {  // initialize to default
+      opts_p->max_n_rep = opts_p->n_rep;
     }
 
 

@@ -27,14 +27,15 @@
 #include "reprompi_bench/sync/clock_sync/synchronization.h"
 
 enum {
-    FLAG_START_TIME_HAS_PASSED = 0x1,
-    FLAG_SYNC_WIN_EXPIRED = 0x2
+    REPROMPI_INVALID_MEASUREMENT = 1,
+    REPROMPI_CORRECT_MEASUREMENT = 0
 };
 
 typedef enum {
   REPROMPI_PROCSYNC_WIN = 0,
   REPROMPI_PROCSYNC_MPIBARRIER,
-  REPROMPI_PROCSYNC_DISSEMBARRIER
+  REPROMPI_PROCSYNC_DISSEMBARRIER,
+  REPROMPI_PROCSYNC_ROUNDSYNC
 } reprompi_procsync_t;
 
 // parameters needed to initialize a synchronization round
@@ -55,7 +56,7 @@ typedef struct reprompib_proc_sync_module{
 
     void (*init_sync_round)(void);
     void (*start_sync)(void);
-    void (*stop_sync)(void);
+    int (*stop_sync)(void);
 
     print_sync_info_t print_sync_info;
     sync_errorcodes_t get_errorcodes;
@@ -75,5 +76,6 @@ void reprompib_cleanup_proc_sync_module(reprompib_proc_sync_module_t* sync_mod);
 void register_window_module(reprompib_proc_sync_module_t *sync_mod);
 void register_dissem_barrier_module(reprompib_proc_sync_module_t *sync_mod);
 void register_mpibarrier_module(reprompib_proc_sync_module_t *sync_mod);
+void register_roundsync_module(reprompib_proc_sync_module_t *sync_mod);
 
 #endif /* REPROMPIB_SYNCHRONIZATION_H_ */

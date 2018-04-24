@@ -43,6 +43,12 @@ const double REPROMPI_SYNC_WAIT_TIME_SEC_DEFAULT = 1e-3;
 const double REPROMPI_SYNC_WIN_SIZE_SEC_DEFAULT = 1e-3;
 
 
+enum {
+    FLAG_START_TIME_HAS_PASSED = 0x1,
+    FLAG_SYNC_WIN_EXPIRED = 0x2
+};
+
+
 static double start_sync = 0;       /* current window start timestamp (global time) */
 static int repetition_counter = 0;  /* current repetition index */
 static int* invalid;
@@ -172,7 +178,7 @@ static void window_start_synchronization(void)
 }
 
 
-static void window_stop_synchronization(void)
+static int window_stop_synchronization(void)
 {
     double global_time;
    // global_time = hca_get_normalized_time(hca_get_adjusted_time());
@@ -185,6 +191,8 @@ static void window_stop_synchronization(void)
 
     start_sync += parameters.window_size_sec;
     repetition_counter++;
+
+    return REPROMPI_CORRECT_MEASUREMENT;
 }
 
 static void window_init_module(int argc, char** argv, reprompib_sync_module_t* clock_sync) {

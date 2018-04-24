@@ -158,6 +158,7 @@ ${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/sync_info.c
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/no_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/barrier_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/window_sync.c
+${SRC_DIR}/reprompi_bench/sync/process_sync/round_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/process_synchronization.c
 #${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
 )
@@ -240,6 +241,25 @@ ${REPROMPIBENCH2_FILES}
 )
 TARGET_LINK_LIBRARIES(mpibenchmark2 ${COMMON_LIBRARIES} synclib)
 SET_TARGET_PROPERTIES(mpibenchmark2 PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
+
+
+
+set(ROUNDSYNC_FILES
+${SRC_DIR}/round_sync.c
+${SRC_DIR}/benchmark_job.c
+${SRC_DIR}/reprompi_bench/misc.c
+${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
+${SRC_DIR}/reprompi_bench/sync/time_measurement.c
+${SRC_DIR}/log/zf_log.c
+# collective functions
+${COLL_OPS_SRC_FILES}
+)
+add_executable(roundsync
+${ROUNDSYNC_FILES}
+)
+TARGET_LINK_LIBRARIES(roundsync ${COMMON_LIBRARIES})
+SET_TARGET_PROPERTIES(roundsync PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
+
 
 
 if (ENABLE_PGMPI)
