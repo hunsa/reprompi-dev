@@ -17,6 +17,7 @@ private:
   MPI_Comm comm;
   int my_rank;
   int other_rank;
+  const char *dbg_path;
 
 public:
   LinearModelFitterDebug(MPI_Comm comm, int my_rank, int other_rank);

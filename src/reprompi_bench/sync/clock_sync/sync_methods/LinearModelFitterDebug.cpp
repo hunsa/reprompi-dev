@@ -21,6 +21,10 @@
 LinearModelFitterDebug::LinearModelFitterDebug(MPI_Comm comm, int my_rank, int other_rank) :
 comm (comm), my_rank(my_rank), other_rank(other_rank)
 {
+  dbg_path = std::getenv("REPROMPI_DEBUG_PATH");
+  if( dbg_path == NULL ) {
+    ZF_LOGW("REPROMPI_DEBUG_PATH not set.. will not write lin model info");
+  }
 }
 
 
@@ -34,10 +38,7 @@ int LinearModelFitterDebug::fit_linear_model(const double *xvals, const double *
 
 //  ZF_LOGV("%d-%d (global %d-%d)", my_rank, other_rank, my_rank_world, other_rank_world);
 
-  const char *dbg_path = std::getenv("REPROMPI_DEBUG_PATH");
-  if( dbg_path == NULL ) {
-    ZF_LOGW("REPROMPI_DEBUG_PATH not set");
-  } else {
+  if( dbg_path != NULL ) {
     std::ofstream myfile;
     //std::string abs_path = dbg_path + "/" + "lin_model_" + my_rank_world + "_" + other_rank_world;
     char abs_path[100];
@@ -51,7 +52,6 @@ int LinearModelFitterDebug::fit_linear_model(const double *xvals, const double *
 
     MPI_Group_translate_ranks(my_group, 1, &my_rank, world_group, &my_rank_world);
     MPI_Group_translate_ranks(my_group, 1, &other_rank, world_group, &other_rank_world);
-
 
     sprintf(abs_path, "%s/lin_model_%d_%d.res", dbg_path, my_rank_world, other_rank_world);
 

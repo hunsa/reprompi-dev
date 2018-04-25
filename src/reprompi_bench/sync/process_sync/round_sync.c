@@ -157,6 +157,7 @@ static void measure_bcast_runtime(void) {
   for (i=0; i< parameters.bcast_n_rep; i++) {
     bcast_times[i] = get_time();
     MPI_Bcast(&dummy_time, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
+//    MPI_Barrier(MPI_COMM_WORLD);
     bcast_times[i] = get_time() - bcast_times[i];
   }
 
@@ -165,7 +166,6 @@ static void measure_bcast_runtime(void) {
   bcast_median_rt = gsl_stats_quantile_from_sorted_data (bcast_times, 1, parameters.bcast_n_rep, 0.5);
   ZF_LOGI("[rank %d] Bcast times [us] mean=%f median=%f min=%f max=%f", my_rank,
       1e6 *bcast_mean_rt, 1e6 *bcast_median_rt, 1e6 *bcast_times[0], 1e6 *bcast_times[parameters.bcast_n_rep-1]);
-  free(bcast_times);
 
   switch(parameters.bcast_meas) {
   case BCAST_MEASURE_MAX:
@@ -179,6 +179,9 @@ static void measure_bcast_runtime(void) {
       MPI_Reduce(&bcast_mean_rt, &bcast_runtime, 1, MPI_DOUBLE, MPI_MAX, master_rank, MPI_COMM_WORLD);
       break;
   }
+
+  free(bcast_times);
+
   // make sure the root records the longest Bcast time
 
 }
@@ -198,7 +201,8 @@ static void roundsync_start_synchronization(void) {
     start_sync = get_time() + bcast_runtime * parameters.bcast_multiplier;
   }
   MPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
-  ZF_LOGV("[rank %d] current_time=%20.10f need_to_wait_us=%f", my_rank, get_time(), 1e6*(start_sync-get_time()));
+  global_time = clock_sync_mod->get_global_time(get_time());
+  ZF_LOGV("[rank %d] current_time=%20.10f need_to_wait_us=%f", my_rank, global_time, 1e6*(start_sync-global_time));
 
   while (1) {
     global_time = clock_sync_mod->get_global_time(get_time());

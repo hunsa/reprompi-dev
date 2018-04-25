@@ -53,8 +53,8 @@ LinModel HCA3ClockSync::learn_model(MPI_Comm comm, const int root_rank, const in
     int fit;
     LinearModelFitter *fitter;
 
-    //fitter = new LinearModelFitterStandard();
-    fitter = new LinearModelFitterDebug(comm, my_rank, root_rank);
+    fitter = new LinearModelFitterStandard();
+    //fitter = new LinearModelFitterDebug(comm, my_rank, root_rank);
 
     xfit = new double[n_fitpoints];
     yfit = new double[n_fitpoints];
