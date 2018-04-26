@@ -13,8 +13,9 @@ ${SRC_DIR}/reprompi_bench/sync/time_measurement.c
 )
 
 set(MEASURE_CLOCK_DRIFT
-measure_clock_drift.c
-parse_test_options.c
+clock_drift/measure_clock_drift.c
+clock_drift/parse_drift_test_options.c
+${SRC_DIR}/reprompi_bench/misc.c
 ${SRC_DIR}/reprompi_bench/option_parser/option_parser_helpers.c
 ${SRC_DIR}/reprompi_bench/misc.c
 ${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
