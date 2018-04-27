@@ -145,55 +145,55 @@ void generate_test_process_list(int process_ratio, int **testprocs_list_p, int* 
   MPI_Comm_size(MPI_COMM_WORLD, &np);
   max_power_two = (int)pow(2, floor(log2(np)));
 
-  if (process_ratio == 0) { // no need to generate random processes to test
+  if (process_ratio == 100) {
+    n = np - 1;   // print all processes
+  } else {
+    n = (int)((double)np * process_ratio/100);
+  }
+
+  if (n < 2) { // no need to generate random processes to test
     if (max_power_two == np) {
       n = 1;    // print the output for one process - the last rank
     } else {
       n = 2;  // print the output for 2 processes - the largest power of two and the last rank
     }
-  } else {
-    if (process_ratio == 100) {
-      n = np - 1;   // print all processes
-    } else {
-      n = (int)((double)np * process_ratio/100);
-    }
   }
   testprocs_list = (int*)calloc(n, sizeof(int));
 
-  switch(n) {
-  case 1:
-    testprocs_list[0] = np-1;
-    break;
-  case 2:
-    testprocs_list[0] = max_power_two-1;
-    testprocs_list[1] = np-1;
-    break;
-  default:
-    if (n >= np-1) {
-      index = 0;
-      for (i=0; i<np; i++) {
-        if (i != OUTPUT_ROOT_PROC) {
-          testprocs_list[index++] = i;
-        }
+  testprocs_list[0] = np-1;
+  if (n > 1 && max_power_two != np) {
+    testprocs_list[1] = max_power_two-1;
+  }
+
+  if (n >= np-1) {  // use all processes except the root for the clock drift tests
+    index = 0;
+    for (i=0; i<np; i++) {
+      if (i != OUTPUT_ROOT_PROC) {
+        testprocs_list[index++] = i;
       }
     }
-    else {
+  } else {
+    if ((n>1 && max_power_two == np) || (n>2)) {
       if (my_rank == OUTPUT_ROOT_PROC) {
         int* tmpprocs_list;
         tmpprocs_list = (int*)calloc(np-1, sizeof(int));
 
         index = 0;
         for (i=0; i<np; i++) {
-          if (i != OUTPUT_ROOT_PROC) {
+          if (i!= OUTPUT_ROOT_PROC && i!= max_power_two-1 && i!= np-1) {
             tmpprocs_list[index++] = i;     // all processes except the root are candidates for the clock drift tests
           }
         }
         // shuffle list of ranks
-        shuffle(tmpprocs_list, np-1);
+        shuffle(tmpprocs_list, index);
 
-        // take the first n ranks
-        for (i=0; i<n; i++) {
-          testprocs_list[i] = tmpprocs_list[i];
+        // take the first n-2 ranks
+        index = 1;  // at least one test rank is already set (np-1)
+        if (max_power_two != np) {
+          index = 2;  // the second test rank is set as well
+        }
+        for (i=index; i<n; i++) {
+          testprocs_list[i] = tmpprocs_list[i-index];
         }
         free(tmpprocs_list);
       }
@@ -285,7 +285,6 @@ int main(int argc, char* argv[]) {
     generate_test_process_list(opts.print_procs_ratio, &testprocs_list, &ntestprocs);
 
     // compute RTTs
-    //p = 0;
     if (my_rank == master_rank) {
       rtts_s = (double*) calloc(ntestprocs, sizeof(double));  // only need the list of RTTs for the master rank
       for (i = 0; i < ntestprocs; i++) {
@@ -293,7 +292,7 @@ int main(int argc, char* argv[]) {
             if (p != master_rank) {
                 estimate_all_rtts(master_rank, p, opts.rtt_pingpongs_nrep, &rtts_s[i]);
             }
-            //printf("rtt to %d: %14.9f\n", p, rtts_s[p]);
+            ZF_LOGV("RTT between (%d - %d): %10.3f us", my_rank, p, 1e6 * rtts_s[i]);
         }
     } else {
       for (i = 0; i < ntestprocs; i++) {
@@ -346,6 +345,10 @@ int main(int argc, char* argv[]) {
 
                     }
                 }
+                ZF_LOGV("[step %d] Measured drift between (%d - %d) into global array indices [%ld, %ld]",
+                    step, my_rank, p,
+                    step * ntestprocs * opts.n_rep + index * opts.n_rep,
+                    step * ntestprocs * opts.n_rep + index * opts.n_rep + opts.n_rep-1);
             }
 
             // wait 1 second

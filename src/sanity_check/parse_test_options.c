@@ -97,12 +97,10 @@ void init_parameters(reprompib_st_opts_t* opts_p, char* name) {
 
 int parse_test_options(reprompib_st_opts_t* opts_p, int argc, char **argv) {
     int c;
-    int printhelp = 0;
 
     init_parameters(opts_p, argv[0]);
 
     opterr = 0;
-
     while (1) {
 
         /* getopt_long stores the option index here. */
@@ -121,7 +119,6 @@ int parse_test_options(reprompib_st_opts_t* opts_p, int argc, char **argv) {
             break;
         case 'h':
             print_help(opts_p->testname);
-            printhelp = 1;
             break;
         case '?':
             break;

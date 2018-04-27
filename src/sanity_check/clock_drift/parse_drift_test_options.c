@@ -61,11 +61,18 @@ void print_help(char* testname) {
         printf("options:\n");
         printf("%-40s %-40s\n", "-h", "print this help");
         printf("%-40s %-40s\n", "--nrep=<nrep>",
-                    "set number of ping-pong rounds between two processes to measure offset");
-        printf("%-40s %-40s\n", "<steps>",
-                    "set number of 1s steps to wait after sync (default: 0)");
-        printf(
-            "\nEXAMPLES: mpirun -np 4 %s --nrep=10 5\n", testname);
+                    "set the number of ping-pong rounds between two processes to measure offset");
+        printf("%-40s %-40s\n", "--steps",
+                    "set the number of 1s steps to wait after sync (default: 0)");
+        printf("%-40s %-40s\n", "--rtt-nrep",
+                            "set the number of pingpogns used to measure the RTT between two processes (default: 100)");
+        printf("%-40s %-40s\n", "--print-procs-ratio",
+        "set the fraction of the total processes to be tested for clock drift. If print-procs-ratio=0, only the last rank and the rank with the largest power of two are tested (default: 0)");
+        printf("%-40s %-40s\n", "--print-procs-allpingpongs",
+                            "print measurement results for all pingpongs or only the min (default: 1)");
+
+        printf("\nEXAMPLES: mpirun -np 4 %s --nrep=2 --clock-sync=HCA2 --print-procs-ratio=10\n", testname);
+        printf("\nEXAMPLES: mpirun -np 4 %s --nrep=2 --clock-sync=HCA2 --steps=5 --print-procs-ratio=10\n", testname);
         printf("\n\n");
     }
 }
@@ -84,7 +91,6 @@ void init_parameters(reprompib_drift_test_opts_t* opts_p, char* name) {
 
 int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char **argv) {
     int c;
-    int printhelp = 0;
 
     init_parameters(opts_p, argv[0]);
 
@@ -122,7 +128,6 @@ int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char
             break;
         case 'h':
             print_help(opts_p->testname);
-            printhelp = 1;
             break;
         case '?':
             break;
@@ -138,11 +143,16 @@ int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char
     if (opts_p->steps < 0) {
       reprompib_print_error_and_exit("Invalid number of steps (should be >=0)");
     }
-    if (opts_p->print_procs_ratio < 0) {
-      reprompib_print_error_and_exit("Invalid process ratio (should be >=0)");
+    if (opts_p->print_procs_ratio < 0 || opts_p->print_procs_ratio > 100) {
+      reprompib_print_error_and_exit("Invalid process ratio (should be an integer between 0 and 100)");
     }
+
+
     if (opts_p->print_procs_allpingpongs <= 0) {
       reprompib_print_error_and_exit("Invalid process ratio (should be positive)");
+    }
+    if (opts_p->print_procs_allpingpongs > 1) {
+      opts_p->print_procs_allpingpongs = 1;
     }
 
     optind = 1;	// reset optind to enable option re-parsing
