@@ -132,6 +132,14 @@ void estimate_all_rtts(int master_rank, int other_rank, const int n_pingpongs,
     *rtt = mean;
 }
 
+static int min_int(const void* a, const void* b) {
+  if (*(int*)a < *(int*)b) {
+    return -1;
+  } else if (*(int*)a == *(int*)b) {
+    return 0;
+  }
+  return 1;
+}
 
 void generate_test_process_list(int process_ratio, int **testprocs_list_p, int* ntestprocs) {
   int *testprocs_list;
@@ -144,6 +152,12 @@ void generate_test_process_list(int process_ratio, int **testprocs_list_p, int* 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &np);
   max_power_two = (int)pow(2, floor(log2(np)));
+
+
+  if (np == 1) {
+    *ntestprocs = 0;
+    *testprocs_list_p = NULL;
+  } else {
 
   if (process_ratio == 100) {
     n = np - 1;   // print all processes
@@ -162,7 +176,8 @@ void generate_test_process_list(int process_ratio, int **testprocs_list_p, int* 
 
   testprocs_list[0] = np-1;
   if (n > 1 && max_power_two != np) {
-    testprocs_list[1] = max_power_two-1;
+    testprocs_list[0] = max_power_two-1;
+    testprocs_list[1] = np-1;
   }
 
   if (n >= np-1) {  // use all processes except the root for the clock drift tests
@@ -197,12 +212,16 @@ void generate_test_process_list(int process_ratio, int **testprocs_list_p, int* 
         }
         free(tmpprocs_list);
       }
+
+      qsort (testprocs_list, n, sizeof(int), min_int);
       // send test list to all processes
       MPI_Bcast(testprocs_list, n, MPI_INT, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
     }
   }
+
   *ntestprocs = n;
   *testprocs_list_p = testprocs_list;
+  }
 
 #if ZF_LOG_LEVEL == ZF_LOG_VERBOSE
   if (my_rank == OUTPUT_ROOT_PROC) {
