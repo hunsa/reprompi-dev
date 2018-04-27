@@ -71,8 +71,8 @@ void print_help(char* testname) {
         printf("%-40s %-40s\n", "--print-procs-allpingpongs",
                             "print measurement results for all pingpongs or only the min (default: 1)");
 
-        printf("\nEXAMPLES: mpirun -np 4 %s --nrep=2 --clock-sync=HCA2 --print-procs-ratio=10\n", testname);
-        printf("\nEXAMPLES: mpirun -np 4 %s --nrep=2 --clock-sync=HCA2 --steps=5 --print-procs-ratio=10\n", testname);
+        printf("\nEXAMPLES: mpirun -np 4 %s --nrep=2 --clock-sync=HCA2 --print-procs-ratio=0.1\n", testname);
+        printf("\nEXAMPLES: mpirun -np 4 %s --nrep=2 --clock-sync=HCA2 --steps=5 --print-procs-ratio=0.1\n", testname);
         printf("\n\n");
     }
 }
@@ -84,7 +84,7 @@ void init_parameters(reprompib_drift_test_opts_t* opts_p, char* name) {
 
     opts_p->rtt_pingpongs_nrep = 100;
     opts_p->print_procs_ratio = 0;
-    opts_p->print_procs_allpingpongs = 1;
+    opts_p->print_procs_allpingpongs = 0;
     strcpy(opts_p->testname,name);
 }
 
@@ -118,10 +118,10 @@ int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char
         case 's': /* number of 1s steps after which to measure the clock drift */
             opts_p->steps = atoi(optarg);
             break;
-        case 'p': /* percentage of processes for which to measure the drift (normal distribution)
+        case 'p': /* fraction of processes for which to measure the drift (normal distribution)
                    if print_procs_ratio==0, print only the largest power of two and the last rank
                    */
-            opts_p->print_procs_ratio = atoi(optarg);
+            opts_p->print_procs_ratio = atof(optarg);
             break;
         case 'a': /* print all pingpong results or only the min clock drift */
             opts_p->print_procs_allpingpongs = atoi(optarg);
@@ -143,8 +143,8 @@ int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char
     if (opts_p->steps < 0) {
       reprompib_print_error_and_exit("Invalid number of steps (should be >=0)");
     }
-    if (opts_p->print_procs_ratio < 0 || opts_p->print_procs_ratio > 100) {
-      reprompib_print_error_and_exit("Invalid process ratio (should be an integer between 0 and 100)");
+    if (opts_p->print_procs_ratio < 0 || opts_p->print_procs_ratio > 1) {
+      reprompib_print_error_and_exit("Invalid process ratio (should be a number between 0 and 1)");
     }
 
 

@@ -141,7 +141,7 @@ static int min_int(const void* a, const void* b) {
   return 1;
 }
 
-void generate_test_process_list(int process_ratio, int **testprocs_list_p, int* ntestprocs) {
+void generate_test_process_list(double process_ratio, int **testprocs_list_p, int* ntestprocs) {
   int *testprocs_list;
   int n;
   int my_rank, np;
@@ -159,10 +159,10 @@ void generate_test_process_list(int process_ratio, int **testprocs_list_p, int* 
     *testprocs_list_p = NULL;
   } else {
 
-  if (process_ratio == 100) {
+  if (process_ratio == 1) {
     n = np - 1;   // print all processes
   } else {
-    n = (int)((double)np * process_ratio/100);
+    n = (int)((double)np * process_ratio);
   }
 
   if (n < 2) { // no need to generate random processes to test

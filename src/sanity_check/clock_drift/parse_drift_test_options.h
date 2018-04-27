@@ -33,7 +33,7 @@ typedef struct opt {
     char testname[256];
 
     long rtt_pingpongs_nrep;  /* --rtt-nrep */
-    int print_procs_ratio;  /* --print-procs-ratio */
+    double print_procs_ratio;  /* --print-procs-ratio */
     int print_procs_allpingpongs; /* --print-procs-allpingpongs */
 
 } reprompib_drift_test_opts_t;
