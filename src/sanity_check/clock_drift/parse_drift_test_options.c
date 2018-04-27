@@ -148,8 +148,8 @@ int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char
     }
 
 
-    if (opts_p->print_procs_allpingpongs <= 0) {
-      reprompib_print_error_and_exit("Invalid process ratio (should be positive)");
+    if (opts_p->print_procs_allpingpongs < 0) {
+      reprompib_print_error_and_exit("Invalid flag for printing all pingpongs (should be >=0)");
     }
     if (opts_p->print_procs_allpingpongs > 1) {
       opts_p->print_procs_allpingpongs = 1;

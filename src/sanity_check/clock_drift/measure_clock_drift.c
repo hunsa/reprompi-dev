@@ -252,7 +252,7 @@ int main(int argc, char* argv[]) {
     FILE* f;
     reprompib_sync_module_t clock_sync;
 
-    double global_time, local_time;
+    double global_time, local_time, min_drift;
 
     double *all_local_times = NULL;
     double *all_global_times = NULL;
@@ -383,23 +383,43 @@ int main(int argc, char* argv[]) {
 
     f = stdout;
     if (my_rank == master_rank) {
+      if (opts.print_procs_allpingpongs > 0) {
         fprintf(f,"%14s %3s %4s %14s %14s %14s\n", "wait_time_s", "p", "rep", "gtime", "reftime", "diff");
+      } else {
+        fprintf(f,"%14s %3s %14s\n", "wait_time_s", "p", "min_diff");
+      }
+
     }
 
     for (step = 0; step < n_wait_steps; step++) {
       if (my_rank == master_rank) {
         for (index = 0; index < ntestprocs; index++) {
           p = testprocs_list[index];    // make sure the current rank is in the test list
+
+          min_drift = -1;
           for (i = 0; i < opts.n_rep; i++) {
             global_time = all_global_times[step * ntestprocs
                                            * opts.n_rep + index * opts.n_rep + i];
             local_time = all_local_times[step * ntestprocs * opts.n_rep
                                          + index * opts.n_rep + i];
-            //global_time_comp = local_time / linear_models[p].slope - linear_models[p].intercept  / linear_models[p].slope;
-            fprintf(f, "%14.9f %3d %4d %14.9f %14.9f %14.9f\n",
+
+            if (opts.print_procs_allpingpongs > 0) {
+              fprintf(f, "%14.9f %3d %4d %14.9f %14.9f %14.9f\n",
                 step * wait_time_s, p, i, global_time,
                 local_time, global_time - local_time);
+            } else {
+              if (min_drift < 0) {
+                min_drift = fabs(global_time - local_time);
+              } else {
+                min_drift = repro_min(min_drift, fabs(global_time - local_time));
+              }
+            }
           }
+
+          if (opts.print_procs_allpingpongs == 0) {
+            fprintf(f, "%14.9f %3d %14.9f\n", step * wait_time_s, p, min_drift);
+          }
+
         }
       }
     }
