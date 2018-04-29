@@ -218,6 +218,33 @@ TARGET_LINK_LIBRARIES(mpibenchmark ${COMMON_LIBRARIES} synclib)
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
 
 
+
+set(REPROMPIBENCH_FILES2
+${SRC_DIR}/benchmarkMPIcalls2.c
+${SRC_DIR}/benchmark_job.c
+${SRC_DIR}/reprompi_bench/misc.c
+${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
+# synchronization methods
+${SYNC_SRC_FILES}
+# output
+${COMMON_OUTPUT_MAN_SRC_FILES}
+${SRC_DIR}/reprompi_bench/output_management/results_output.c
+# command-line options
+${COMMON_OPTION_PARSER_SRC_FILES}
+${SRC_DIR}/reprompi_bench/option_parser/parse_timing_options.c
+${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
+${SRC_DIR}/reprompi_bench/option_parser/parse_options.c
+# collective functions
+${COLL_OPS_SRC_FILES}
+)
+add_executable(mpibenchmarkdyn
+${REPROMPIBENCH_FILES2}
+)
+TARGET_LINK_LIBRARIES(mpibenchmarkdyn ${COMMON_LIBRARIES} synclib)
+SET_TARGET_PROPERTIES(mpibenchmarkdyn PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
+
+
+
 if (ENABLE_PGMPI)
     if (PGMPI_FOUND)
         add_executable(mpibenchmark_pgmpicli
