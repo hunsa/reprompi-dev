@@ -289,17 +289,16 @@ int main(int argc, char* argv[]) {
             if (job_runtime <= current_runtime) {
               ZF_LOGV("[rank %d] current_runtime=%20.10f job_runtime=%f reps=%ld", my_rank, current_runtime, job_runtime, i);
 
-              MPI_Win_fence(0, win);
               stop_flag = 1;
               for (p = 0; p < procs; p++) {
                 if (p != my_rank) {
                   MPI_Put(&stop_flag, 1, MPI_INT, p, 0, 1, MPI_INT, win);
                 }
               }
-              MPI_Win_fence(0, win);
             }
           }
         }
+        MPI_Win_fence(0, win);
 
         job.n_rep = i;  // reset nrep to the number of actually performed measurements
 
