@@ -209,8 +209,8 @@ static void roundtimesync_start_synchronization(void) {
     start_sync = get_time() + bcast_runtime * parameters.bcast_multiplier;
   }
   MPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
-  global_time = clock_sync_mod->get_global_time(get_time());
-  ZF_LOGV("[rank %d] current_time=%20.10f need_to_wait_us=%f", my_rank, global_time, 1e6*(start_sync-global_time));
+//  global_time = clock_sync_mod->get_global_time(get_time());
+//  ZF_LOGV("[rank %d] current_time=%20.10f need_to_wait_us=%f", my_rank, global_time, 1e6*(start_sync-global_time));
 
   while (1) {
     global_time = clock_sync_mod->get_global_time(get_time());
