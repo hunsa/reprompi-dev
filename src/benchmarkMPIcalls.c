@@ -244,8 +244,10 @@ int main(int argc, char* argv[]) {
               break;
             }
           } else if( is_invalid == REPROMPI_OUT_OF_TIME_VALID ) {
+            job.n_rep = i;
             break;
           } else if( is_invalid == REPROMPI_OUT_OF_TIME_INVALID ) {
+            job.n_rep = i-1;
             break;
           } else {
             i++;
