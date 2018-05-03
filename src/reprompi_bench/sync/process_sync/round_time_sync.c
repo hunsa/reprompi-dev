@@ -195,6 +195,7 @@ static void measure_bcast_runtime(void) {
 static void roundtimesync_init_sync_round(void) {
   job_start_time = get_time();
   stop_flag = 0; // all are running
+  invalid = REPROMPI_CORRECT_MEASUREMENT;
 }
 
 static void roundtimesync_start_synchronization(void) {
@@ -285,7 +286,6 @@ static int* roundtimesync_get_errorcodes(void) {
 }
 
 static void roundtimesync_init_synchronization(const reprompib_sync_params_t* init_params) {
-  invalid = REPROMPI_CORRECT_MEASUREMENT;
 }
 
 static void roundtimesync_finalize_synchronization(void) {

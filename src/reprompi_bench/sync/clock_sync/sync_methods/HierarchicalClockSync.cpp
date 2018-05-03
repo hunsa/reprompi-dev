@@ -89,10 +89,10 @@ GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock&
   MPI_Comm_rank(comm, &my_rank);
   MPI_Comm_size(comm, &np);
 
-  if( this->comm_initialized == false ) {
+//  if( this->comm_initialized == false ) {
     this->initialized_communicators(comm);
-    this->comm_initialized = true;
-  }
+//    this->comm_initialized = true;
+//  }
 
   // Step 1: synchronization between nodes
   if (comm_internode != MPI_COMM_NULL) {

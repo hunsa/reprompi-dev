@@ -19,9 +19,8 @@
 #define ZF_LOG_LEVEL ZF_LOG_WARN
 #include "log/zf_log.h"
 
-TwoLevelClockSync::TwoLevelClockSync(ClockSync *syncInterNode, ClockSync *syncIntraNode) {
-  this->syncInterNode = syncInterNode;
-  this->syncIntraNode = syncIntraNode;
+TwoLevelClockSync::TwoLevelClockSync(ClockSync *syncInterNode, ClockSync *syncIntraNode) :
+    syncInterNode(syncInterNode), syncIntraNode(syncIntraNode) {
 
   this->comm_internode = MPI_COMM_NULL;
   this->comm_intranode = MPI_COMM_NULL;
@@ -64,10 +63,10 @@ GlobalClock* TwoLevelClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) 
   MPI_Comm_rank(comm, &my_rank);
   MPI_Comm_size(comm, &np);
 
-  if( this->comm_initialized == false ) {
+//  if( this->comm_initialized == false ) {
     this->initialized_communicators(comm);
-    this->comm_initialized = true;
-  }
+//    this->comm_initialized = true;
+//  }
 
   // Step 1: synchronization between nodes
   if (comm_internode != MPI_COMM_NULL) {
