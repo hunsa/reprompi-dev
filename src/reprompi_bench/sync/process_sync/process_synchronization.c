@@ -40,7 +40,8 @@ static const sync_type_t proc_sync_options[] = {
         { "window", REPROMPI_PROCSYNC_WIN},
         { "MPI_Barrier", REPROMPI_PROCSYNC_MPIBARRIER },
         { "dissem_barrier", REPROMPI_PROCSYNC_DISSEMBARRIER },
-        { "round", REPROMPI_PROCSYNC_ROUNDSYNC }
+        { "round", REPROMPI_PROCSYNC_ROUNDSYNC },
+        { "roundtime", REPROMPI_PROCSYNC_ROUNDTIMESYNC }
 };
 static const int N_PROC_SYNC_TYPES = sizeof(proc_sync_options)/sizeof(sync_type_t);
 static const char PROC_SYNC_ARG[] = "proc-sync";
@@ -70,7 +71,8 @@ static int get_sync_module_index(const char* name) {
 /**********************************************
  * Initialization/cleanup functions for the specified sync module
  **********************************************/
-void reprompib_init_proc_sync_module(int argc, char** argv, reprompib_sync_module_t* clock_sync, reprompib_proc_sync_module_t* sync_mod) {
+void reprompib_init_proc_sync_module(int argc, char** argv, reprompib_sync_module_t* clock_sync,
+    reprompib_proc_sync_module_t* sync_mod) {
   sync_module_info_t sync_module_info;
   int index;
 
@@ -98,6 +100,7 @@ void reprompib_register_proc_sync_modules(void) {
   register_dissem_barrier_module(&(sync_modules[1]));
   register_window_module(&(sync_modules[2]));
   register_roundsync_module(&(sync_modules[3]));
+  register_roundtimesync_module(&(sync_modules[4]));
 }
 
 void reprompib_deregister_proc_sync_modules(void) {

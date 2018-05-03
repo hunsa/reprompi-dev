@@ -239,11 +239,14 @@ int main(int argc, char* argv[]) {
           is_invalid = proc_sync.stop_sync();
           if (is_invalid == REPROMPI_INVALID_MEASUREMENT) { // redo the measurement if we haven't reached the max possible number of reps
             //ZF_LOGV("[%d] invalid_measurement at i=%ld", my_rank, total_n_rep);
-
             if (total_n_rep >= opts.max_n_rep) {
               job.n_rep = i; // record the current number of correct reps
               break;
             }
+          } else if( is_invalid == REPROMPI_OUT_OF_TIME_VALID ) {
+            break;
+          } else if( is_invalid == REPROMPI_OUT_OF_TIME_INVALID ) {
+            break;
           } else {
             i++;
           }
