@@ -280,6 +280,7 @@ int main(int argc, char* argv[]) {
             break;
           }
 
+          MPI_Win_fence(0, win);
 
           // set stop flag if the allocated measurement time slot has passed
           if (my_rank == OUTPUT_ROOT_PROC) {
@@ -297,8 +298,10 @@ int main(int argc, char* argv[]) {
               }
             }
           }
+
+          MPI_Win_fence(0, win);
+
         }
-        MPI_Win_fence(0, win);
 
         job.n_rep = i;  // reset nrep to the number of actually performed measurements
 
