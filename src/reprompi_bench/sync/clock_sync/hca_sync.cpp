@@ -29,26 +29,30 @@
 #include "reprompi_bench/sync/clock_sync/clock_sync_common.h"
 #include "reprompi_bench/sync/clock_sync/clock_sync_lib.h"
 #include "reprompi_bench/sync/clock_sync/clocks/GlobalClock.h"
-#include "reprompi_bench/sync/clock_sync/clock_offset_algs/PingpongClockOffsetAlg.h"
 #include "reprompi_bench/sync/clock_sync/clocks/RdtscpClock.h"
+#include "reprompi_bench/sync/clock_sync/clock_sync_loader.hpp"
+
+#include "reprompi_bench/sync/clock_sync/clock_offset_algs/PingpongClockOffsetAlg.h"
 #include "reprompi_bench/sync/clock_sync/clock_offset_algs/SKaMPIClockOffsetAlg.h"
+
+#include "reprompi_bench/sync/clock_sync/sync_methods/HCAClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCA2ClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCA3ClockSync.h"
 #include "reprompi_bench/misc.h"
-//#include "reprompi_bench/sync/time_measurement.h"
-//#include "reprompi_bench/sync/clock_sync/utils/sync_info.h"
-//#include "reprompi_bench/sync/clock_sync/synchronization.h"
-
-static const int HCA_WARMUP_ROUNDS = 5;
-
-typedef struct {
-    int n_fitpoints; /* --fitpoints */
-    int n_exchanges; /* --exchanges */
-} reprompi_hca_params_t;
 
 
-// options specified from the command line
-static reprompi_hca_params_t parameters;
+//#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
+#define ZF_LOG_LEVEL ZF_LOG_WARN
+#include "log/zf_log.h"
+
+//typedef struct {
+//    int n_fitpoints; /* --fitpoints */
+//    int n_exchanges; /* --exchanges */
+//} reprompi_hca_params_t;
+
+
+//// options specified from the command line
+//static reprompi_hca_params_t parameters;
 
 
 static ClockSync* clock_sync;
@@ -58,8 +62,6 @@ static GlobalClock* global_clock;
 
 static void synchronize_clocks(void) {
   global_clock = clock_sync->synchronize_all_clocks(MPI_COMM_WORLD, *(local_clock));
-  //printf("clock: %20.9f   %20.9f\n", dynamic_cast<GlobalClockLM<RdtscpClock>*>(global_clock)->get_slope(),
-  //    dynamic_cast<GlobalClockLM<RdtscpClock>*>(global_clock)->get_intercept());
 }
 
 static double get_normalized_time(double local_time) {
@@ -75,13 +77,17 @@ static void hca_cleanup_module(void) {
   }
 }
 
-
-
 static void hca_common_print(FILE* f)
 {
-  fprintf(f, "#@fitpoints=%d\n", parameters.n_fitpoints);
-  fprintf(f, "#@exchanges=%d\n", parameters.n_exchanges);
+//  fprintf(f, "#@fitpoints=%d\n", parameters.n_fitpoints);
+//  fprintf(f, "#@exchanges=%d\n", parameters.n_exchanges);
 }
+
+/******************************
+ *
+ * HCA
+ *
+ */
 
 static void hca_print_sync_parameters(FILE* f)
 {
@@ -90,11 +96,86 @@ static void hca_print_sync_parameters(FILE* f)
   fprintf(f, "#@hcasynctype=linear\n");
 }
 
+
+static void hca_init_module(int argc, char** argv) {
+  ClockSyncLoader loader;
+
+  global_clock = NULL;
+  local_clock = initialize_local_clock();
+
+  clock_sync = loader.instantiate_clock_sync("alg");
+  if( clock_sync != NULL ) {
+    // now we make sure it's really an HCA instance
+    if( dynamic_cast<HCAClockSync*>(clock_sync) == NULL ) {
+      ZF_LOGE("instantiated clock sync is not of type HCA. aborting..");
+      exit(1);
+    }
+  } else {
+    ZF_LOGV("using default hca clock sync");
+    clock_sync = new HCAClockSync(new PingpongClockOffsetAlg(100,100), 1000);
+  }
+}
+
+
+/******************************
+ *
+ * HCA2
+ *
+ */
+
 static void hca2_print_sync_parameters(FILE* f)
 {
   hca_common_print(f);
-  fprintf (f, "#@clocksync=HCA2\n");
+  fprintf(f, "#@clocksync=HCA2\n");
   fprintf(f, "#@hcasynctype=logp\n");
+}
+
+
+static void hca2_init_module(int argc, char** argv) {
+  ClockSyncLoader loader;
+
+  global_clock = NULL;
+  local_clock = initialize_local_clock();
+
+  clock_sync = loader.instantiate_clock_sync("alg");
+  if( clock_sync != NULL ) {
+    // now we make sure it's really an HCA2 instance
+    if( dynamic_cast<HCA2ClockSync*>(clock_sync) == NULL ) {
+      ZF_LOGE("instantiated clock sync is not of type HCA2. aborting..");
+      exit(1);
+    }
+  } else {
+    ZF_LOGV("using default hca2 clock sync");
+    clock_sync = new HCA2ClockSync(new PingpongClockOffsetAlg(100,100), 1000, false);
+  }
+}
+
+
+/******************************
+ *
+ * HCA3
+ *
+ */
+
+static void hca3_init_module(int argc, char** argv) {
+  ClockSyncLoader loader;
+
+  global_clock = NULL;
+  local_clock = initialize_local_clock();
+
+  clock_sync = loader.instantiate_clock_sync("alg");
+  if( clock_sync != NULL ) {
+    // now we make sure it's really an HCA3 instance
+    if( dynamic_cast<HCA3ClockSync*>(clock_sync) == NULL ) {
+      ZF_LOGE("instantiated clock sync is not of type HCA3. aborting..");
+      exit(1);
+    }
+  } else {
+    ZF_LOGV("using default hca3 clock sync");
+    clock_sync = new HCA3ClockSync(new PingpongClockOffsetAlg(100,100), 1000, false);
+  }
+
+
 }
 
 static void hca3_print_sync_parameters(FILE* f)
@@ -102,44 +183,21 @@ static void hca3_print_sync_parameters(FILE* f)
   fprintf (f, "#@clocksync=HCA3\n");
 }
 
-static void hca2_init_module(int argc, char** argv) {
-  //reprompib_sync_options_t sync_opts;
-  //hca_parse_options(argc, argv, &sync_opts);
 
-  global_clock = NULL;
-  local_clock = initialize_local_clock();
-  clock_sync = new HCA2ClockSync(new PingpongClockOffsetAlg(100,100), 1000);
+extern "C"
+void register_hca_module(reprompib_sync_module_t *sync_mod) {
+  sync_mod->name = (char*)std::string("HCA").c_str();
+  sync_mod->clocksync = REPROMPI_CLOCKSYNC_HCA;
+  sync_mod->init_module = hca_init_module;
+  sync_mod->cleanup_module = hca_cleanup_module;
+  sync_mod->sync_clocks = synchronize_clocks;
 
-  //clock_sync = new HCAClockSync<SKaMPIClockOffsetAlg>(MPI_COMM_WORLD, local_clock);
-  //parameters.n_exchanges = sync_opts.n_exchanges;
- // parameters.n_fitpoints = sync_opts.n_fitpoints;
-  //printf("HCA\n");
+  sync_mod->init_sync = default_init_synchronization;
+  sync_mod->finalize_sync = default_finalize_synchronization;
 
+  sync_mod->get_global_time = get_normalized_time;
+  sync_mod->print_sync_info = hca_print_sync_parameters;
 }
-
-static void hca3_init_module(int argc, char** argv) {
-
-  global_clock = NULL;
-  local_clock = initialize_local_clock();
-  clock_sync = new HCA3ClockSync(new PingpongClockOffsetAlg(100,100), 1000);
-
-}
-
-
-//extern "C"
-//void register_hca_module(reprompib_sync_module_t *sync_mod) {
-//  sync_mod->name = (char*)std::string("HCA").c_str();
-//  sync_mod->clocksync = REPROMPI_CLOCKSYNC_HCA;
-//  sync_mod->init_module = hca2_init_module;
-//  sync_mod->cleanup_module = hca_cleanup_module;
-//  sync_mod->sync_clocks = synchronize_clocks;
-//
-//  sync_mod->init_sync = default_init_synchronization;
-//  sync_mod->finalize_sync = default_finalize_synchronization;
-//
-//  sync_mod->get_global_time = get_normalized_time;
-//  sync_mod->print_sync_info = hca2_print_sync_parameters;
-//}
 
 extern "C"
 void register_hca2_module(reprompib_sync_module_t *sync_mod) {

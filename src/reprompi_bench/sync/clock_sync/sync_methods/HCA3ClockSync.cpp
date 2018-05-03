@@ -17,71 +17,25 @@
 #include "log/zf_log.h"
 
 
-HCA3ClockSync::HCA3ClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints) {
-
-//  MPI_Comm_rank(comm, &my_rank);
-//  MPI_Comm_size(comm, &nprocs);
-  this->offset_alg = offsetAlg;
-  this->n_fitpoints = n_fitpoints;
-//  this->n_exchanges = n_exchanges;
+HCA3ClockSync::HCA3ClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints, bool recompute_intercept) :
+    HCAAbstractClockSync(offsetAlg, n_fitpoints), recompute_intercept(recompute_intercept) {
 }
 
 HCA3ClockSync::~HCA3ClockSync() {
 
 }
 
-LinModel HCA3ClockSync::learn_model(MPI_Comm comm, const int root_rank, const int other_rank, Clock& current_clock) {
-  int j;
-  int my_rank;
-  LinModel lm;
 
-  lm.slope = 0;
-  lm.intercept = 0;
-
-  MPI_Comm_rank(comm, &my_rank);
-
-  ZF_LOGV("%d: learn model %d<->%d with %d fitpoints", my_rank, root_rank, other_rank, n_fitpoints);
-
-  if (my_rank == root_rank) {
-    for (j = 0; j < n_fitpoints; j++) {
-      ClockOffset* offset = NULL;
-      offset = offset_alg->measure_offset(comm, root_rank, other_rank, current_clock);
-      delete offset;
-    }
-  } else if (my_rank == other_rank) {
-    double *xfit, *yfit;
-    int fit;
-    LinearModelFitter *fitter;
-
-    fitter = new LinearModelFitterStandard();
-    //fitter = new LinearModelFitterDebug(comm, my_rank, root_rank);
-
-    xfit = new double[n_fitpoints];
-    yfit = new double[n_fitpoints];
-
-    for (j = 0; j < n_fitpoints; j++) {
-      ClockOffset* offset = NULL;
-
-      offset = offset_alg->measure_offset(comm, root_rank, my_rank, current_clock);
-      xfit[j] = offset->get_timestamp();
-      yfit[j] = offset->get_offset();
-
-      delete offset;
-    }
-
-    //fit = gsl_fit_linear(xfit, 1, yfit, 1, n_fitpoints, &lm.intercept, &lm.slope, &cov00, &cov01, &cov11, &sumsq);
-
-    fit = fitter->fit_linear_model(xfit, yfit, n_fitpoints, &lm.slope, &lm.intercept);
-
-    delete[] xfit;
-    delete[] yfit;
-    delete fitter;
+void HCA3ClockSync::remeasure_intercept_call_back(MPI_Comm comm, Clock &c,LinModel* lm, int client, int p_ref) {
+  ZF_LOGV("remeasure_intercept_call_back in HCA3");
+  if (true == this->recompute_intercept) {
+    remeasure_intercept(comm, c, lm, client, p_ref);
   }
+}
 
-  ZF_LOGV("%d: learn model %d<->%d DONE", my_rank, root_rank, other_rank);
-
-
-  return lm;
+void HCA3ClockSync::remeasure_all_intercepts_call_back(MPI_Comm comm, Clock &c, LinModel* lm, const int ref_rank) {
+  ZF_LOGV("compute remeasure_all_intercepts_call_back in HCA3");
+  // do nothing here
 }
 
 
@@ -131,14 +85,14 @@ GlobalClock* HCA3ClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
          ZF_LOGV("[rank=%d] parent=%d child=%d", my_rank, my_rank, other_rank);
 
          // compute model through linear regression
-         lm = learn_model(comm, my_rank, other_rank, *(my_clock));
+         lm = learn_model(comm, *(my_clock), my_rank, other_rank);
 
        } else if (my_rank % running_power == next_power) { // child
          other_rank = my_rank - next_power;
          ZF_LOGV("[rank=%d] parent=%d child=%d", my_rank, other_rank, my_rank);
 
          // compute model through linear regression
-         lm = learn_model(comm, other_rank, my_rank, *(my_clock));
+         lm = learn_model(comm, *(my_clock), other_rank, my_rank);
 
          // compute current clock as a global clock based on my drift model with the parent
          my_clock = new GlobalClockLM(c, lm.slope, lm.intercept);
@@ -151,7 +105,7 @@ GlobalClock* HCA3ClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
   if (my_rank >= max_power_two) { // child
     other_rank = my_rank - max_power_two;
     // compute model through linear regression
-    lm = learn_model(comm, other_rank, my_rank, *(my_clock));
+    lm = learn_model(comm, *(my_clock), other_rank, my_rank);
 
     // compute current clock as a global clock based on my drift model with the parent
     my_clock = new GlobalClockLM(c, lm.slope, lm.intercept);
@@ -159,7 +113,7 @@ GlobalClock* HCA3ClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
     other_rank = my_rank + max_power_two;
 
     // compute model through linear regression
-    lm = learn_model(comm, my_rank, other_rank, *(my_clock));
+    lm = learn_model(comm, *(my_clock), my_rank, other_rank);
   }
 
    return my_clock;

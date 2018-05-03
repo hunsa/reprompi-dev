@@ -29,7 +29,7 @@
 extern "C" {
 #endif
 
-//void register_hca_module(reprompib_sync_module_t *sync_mod);
+void register_hca_module(reprompib_sync_module_t *sync_mod);
 void register_hca2_module(reprompib_sync_module_t *sync_mod);
 void register_skampi_module(reprompib_sync_module_t *sync_mod);
 void register_jk_module(reprompib_sync_module_t *sync_mod);

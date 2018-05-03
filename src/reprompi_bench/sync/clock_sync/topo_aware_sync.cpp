@@ -34,6 +34,7 @@
 #include "reprompi_bench/sync/clock_sync/clock_offset_algs/SKaMPIClockOffsetAlg.h"
 #include "reprompi_bench/sync/clock_sync/clock_sync_common.h"
 #include "reprompi_bench/sync/clock_sync/clock_sync_lib.h"
+#include "reprompi_bench/sync/clock_sync/clock_sync_loader.hpp"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HierarchicalClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/SKaMPIClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.h"
@@ -52,39 +53,9 @@ static ClockSync* clock_sync;
 static Clock* local_clock;
 static GlobalClock* global_clock;
 
-static ClockOffsetAlg *instantiate_clock_offset_alg(std::vector<std::string> &tokens);
-static ClockSync* instantiate_clock_sync(const char *param_name);
-static std::vector<std::string> str_split(const char *str, char c);
-
-//////////////////////////////////////////////////////////////////////////////
-
-static std::vector<std::string> str_split(const char *str, char c = ' ') {
-  std::vector<std::string> result;
-
-  do {
-    const char *begin = str;
-
-    while (*str != c && *str)
-      str++;
-
-    result.push_back(std::string(begin, str));
-  } while (0 != *str++);
-
-  return result;
-}
 
 static void topo_synchronize_clocks(void) {
   global_clock = clock_sync->synchronize_all_clocks(MPI_COMM_WORLD, *(local_clock));
-
-  /*
-  GlobalClockLM* lmclock = NULL;
-  if (global_clock != NULL) {
-    lmclock = dynamic_cast<GlobalClockLM*>(global_clock);
-    if (lmclock != NULL) {
-      printf("clock: %20.9f   %20.9f\n", lmclock->get_slope(), lmclock->get_intercept());
-    }
-  } */
-
 }
 
 static double topo_normalized_time(double local_time) {
@@ -106,123 +77,22 @@ static void topo_cleanup_module(void) {
 static void topo_print_sync_parameters(FILE* f)
 {
   fprintf (f, "#@clocksync=Topo1\n");
-//  fprintf(f, "#@fitpoints=%d\n", parameters.n_fitpoints);
-//  fprintf(f, "#@exchanges=%d\n", parameters.n_exchanges);
 }
 
-//static void topo2_print_sync_parameters(FILE* f)
-//{
-//  fprintf (f, "#@clocksync=Topo2\n");
-////  fprintf(f, "#@fitpoints=%d\n", parameters.n_fitpoints);
-////  fprintf(f, "#@exchanges=%d\n", parameters.n_exchanges);
-//}
-
-static ClockOffsetAlg *instantiate_clock_offset_alg(std::vector<std::string> &tokens) {
-  ClockOffsetAlg *offset_alg = NULL;
-
-  if( tokens[0] == "skampi_offset" ) {
-    // skampi_offset,min_nb_ping_pongs,nb_ping_pongs
-    if( tokens.size() != 3 ) {
-      ZF_LOGE("number of parameters to ClockOffsetAlg wrong (!=3)");
-    } else {
-      int min_nb_ping_pongs = atoi(tokens[1].c_str());
-      int nb_ping_pongs     = atoi(tokens[2].c_str());
-      ZF_LOGV("skampi offset with %d,%d ping-pongs", min_nb_ping_pongs, nb_ping_pongs);
-      offset_alg = new SKaMPIClockOffsetAlg(min_nb_ping_pongs, nb_ping_pongs);
-    }
-  } else if( tokens[0] == "pingpong_offset" ) {
-    // pingpong_offset,nexchanges_rtt,nexchanges
-    if( tokens.size() != 3 ) {
-      ZF_LOGE("number of parameters to ClockOffsetAlg wrong (!=3)");
-    } else {
-      int nexchanges_rtt = atoi(tokens[1].c_str());
-      int nexchanges     = atoi(tokens[2].c_str());
-      ZF_LOGV("ping-pong offset with %d,%d exchanges", nexchanges_rtt, nexchanges);
-      offset_alg = new PingpongClockOffsetAlg(nexchanges_rtt, nexchanges);
-    }
-  } else {
-    ZF_LOGE("unknown offset algorithm '%s'", tokens[0].c_str());
-  }
-
-  return offset_alg;
-}
-
-static ClockSync* instantiate_clock_sync(const char *param_name) {
-  ClockSync* ret_sync = NULL;
-  char *alg_str;
-  reprompib_dictionary_t *dict = get_global_param_store();
-
-  if( reprompib_dict_has_key(dict, param_name) == 1 ) {
-    reprompib_get_value_from_dict(dict, param_name, &alg_str);
-
-   std::vector<std::string> tokens = str_split(alg_str, '@');
-   if( tokens.size() <= 0 ) {
-     ZF_LOGE("value of %s incompatible", param_name);
-   } else {
-     std::string sync_alg = tokens[0];
-
-     tokens.erase(tokens.begin());
-
-     if( sync_alg == "hca2" || sync_alg == "hca3" || sync_alg == "jk" ) {
-
-       if( tokens.size() >= 1 ) {
-         // get: number of fitpoints
-         int n_fitpoints = atoi(tokens[0].c_str());
-         tokens.erase(tokens.begin());
-
-         ClockOffsetAlg *offset_alg = instantiate_clock_offset_alg(tokens);
-         if( offset_alg == NULL ) {
-           ZF_LOGE("cannot instantiate clock offset algorithm");
-         } else {
-           if( sync_alg == "hca2" ) {
-             ZF_LOGV("hca2 clock sync with %d fitpoints", n_fitpoints);
-             ret_sync = new HCA2ClockSync(offset_alg, n_fitpoints);
-           } else if( sync_alg == "hca3" ) {
-             ZF_LOGV("hca3 clock sync with %d fitpoints", n_fitpoints);
-             ret_sync = new HCA3ClockSync(offset_alg, n_fitpoints);
-           } else if( sync_alg == "jk" ) {
-             ZF_LOGV("jk clock sync with %d fitpoints", n_fitpoints);
-             ret_sync = new JKClockSync(offset_alg, n_fitpoints);
-           }
-         }
-
-       } else {
-         ZF_LOGE("format error sync alg '%s'", sync_alg.c_str());
-       }
-
-     } else if( sync_alg == "skampi" ) {
-       if( tokens.size() >= 1 ) {
-         ClockOffsetAlg *offset_alg = instantiate_clock_offset_alg(tokens);
-         ret_sync = new SKaMPIClockSync(offset_alg);
-       } else {
-         ZF_LOGE("format error sync alg '%s'", sync_alg.c_str());
-       }
-     } else if( sync_alg == "prop" ) {
-       ret_sync = new ClockPropagationSync();
-     } else {
-       ZF_LOGE("unknown clock sync alg '%s'", sync_alg.c_str());
-     }
-   }
-
-  } else {
-    ZF_LOGE("parameter '%s' not found, using default", param_name);
-  }
-
-  return ret_sync;
-}
 
 static void topo_init_module(int argc, char** argv) {
   int use_default = 0;
   ClockSync *alg1;
   ClockSync *alg2;
   ClockSync *alg3;
+  ClockSyncLoader loader;
 
 
-  alg1 = instantiate_clock_sync("topoalg1");
+  alg1 = loader.instantiate_clock_sync("topoalg1");
   if( alg1 != NULL ) {
-    alg2 = instantiate_clock_sync("topoalg2");
+    alg2 = loader.instantiate_clock_sync("topoalg2");
     if( alg2 != NULL ) {
-      alg3 = instantiate_clock_sync("topoalg3");
+      alg3 = loader.instantiate_clock_sync("topoalg3");
       if( alg3 != NULL ) {
         // now instantiate new hierarchical clock sync
         clock_sync = new HierarchicalClockSync(alg1, alg2, alg3);
@@ -244,17 +114,17 @@ static void topo_init_module(int argc, char** argv) {
     ZF_LOGW("!!! using default topo1 clock sync options");
 
     clock_sync = new HierarchicalClockSync(
-      new HCA3ClockSync(new SKaMPIClockOffsetAlg(10,100), 500),
-      //new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
-      //new ClockPropagationSync(),
-      new HCA3ClockSync(new SKaMPIClockOffsetAlg(10,100), 500),
-      //new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
+      new HCA3ClockSync(new SKaMPIClockOffsetAlg(10,100), 500, false),
+      new HCA3ClockSync(new SKaMPIClockOffsetAlg(10,100), 500, false),
       new ClockPropagationSync());
-      //new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100));
+
+    //new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
+    //new ClockPropagationSync(),
+    //new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
+    //new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100));
   }
 
 }
-
 
 extern "C"
 void register_topo_aware_sync1_module(reprompib_sync_module_t *sync_mod) {

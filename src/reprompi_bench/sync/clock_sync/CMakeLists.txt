@@ -20,9 +20,12 @@ ${SRC_DIR}/reprompi_bench/sync/clock_sync/sk_sync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/jk_sync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_sync_common.cpp
 ${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
+${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_sync_loader.cpp
 #${SRC_DIR}/reprompi_bench/sync/clock_sync/synchronization.c
 #${SRC_DIR}/reprompi_bench/sync/clock_sync/no_sync.c
 
+${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCAAbstractClockSync.cpp
+${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCAClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCA2ClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCA3ClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.cpp

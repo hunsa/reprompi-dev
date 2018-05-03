@@ -14,8 +14,8 @@
 
 #include "LinearModelFitterDebug.hpp"
 
-#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
-//#define ZF_LOG_LEVEL ZF_LOG_WARN
+//#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
+#define ZF_LOG_LEVEL ZF_LOG_WARN
 #include "log/zf_log.h"
 
 LinearModelFitterDebug::LinearModelFitterDebug(MPI_Comm comm, int my_rank, int other_rank) :

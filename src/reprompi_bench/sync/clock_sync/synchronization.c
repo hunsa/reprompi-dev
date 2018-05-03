@@ -43,7 +43,7 @@ static reprompib_sync_module_t* sync_modules;
 static const int HASHTABLE_SIZE=100;
 
 static const sync_type_t clock_sync_options[] = {
-        //{ "HCA", REPROMPI_CLOCKSYNC_HCA},
+        { "HCA", REPROMPI_CLOCKSYNC_HCA},
         { "HCA2", REPROMPI_CLOCKSYNC_HCA2},
         { "HCA3", REPROMPI_CLOCKSYNC_HCA3},
         { "JK", REPROMPI_CLOCKSYNC_JK },
@@ -122,6 +122,7 @@ void reprompib_register_sync_modules(void) {
   register_skampi_module(&(sync_modules[sync_module_idx++]));
   register_jk_module(&(sync_modules[sync_module_idx++]));
 
+  register_hca_module(&(sync_modules[sync_module_idx++]));
   register_hca2_module(&(sync_modules[sync_module_idx++]));
   register_hca3_module(&(sync_modules[sync_module_idx++]));
 #ifdef HAVE_HWLOC

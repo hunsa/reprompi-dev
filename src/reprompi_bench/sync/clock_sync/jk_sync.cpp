@@ -34,14 +34,20 @@
 #include "reprompi_bench/sync/clock_sync/clocks/Clock.h"
 #include "reprompi_bench/sync/clock_sync/clocks/RdtscpClock.h"
 #include "reprompi_bench/sync/clock_sync/clocks/GlobalClockOffset.h"
-#include "reprompi_bench/sync/clock_sync/clock_offset_algs/PingpongClockOffsetAlg.h"
-#include "reprompi_bench/sync/clock_sync/clock_offset_algs/SKaMPIClockOffsetAlg.h"
+#include "reprompi_bench/sync/clock_sync/clock_sync_loader.hpp"
 #include "reprompi_bench/sync/clock_sync/clock_sync_common.h"
 #include "reprompi_bench/sync/clock_sync/clock_sync_lib.h"
+
+#include "reprompi_bench/sync/clock_sync/clock_offset_algs/PingpongClockOffsetAlg.h"
+#include "reprompi_bench/sync/clock_sync/clock_offset_algs/SKaMPIClockOffsetAlg.h"
+
 #include "reprompi_bench/sync/clock_sync/sync_methods/ClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.h"
 #include "reprompi_bench/misc.h"
 
+//#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
+#define ZF_LOG_LEVEL ZF_LOG_WARN
+#include "log/zf_log.h"
 
 
 static ClockSync* clock_sync;
@@ -63,9 +69,23 @@ static double get_normalized_time(double local_time) {
 
 
 void jk_init_module(int argc, char** argv) {
+  ClockSyncLoader loader;
+
   global_clock = NULL;
   local_clock = initialize_local_clock();
-  clock_sync = new JKClockSync(new PingpongClockOffsetAlg(100,100), 1000);
+
+  clock_sync = loader.instantiate_clock_sync("alg");
+  if( clock_sync != NULL ) {
+    // now we make sure it's really a JK instance
+    if( dynamic_cast<JKClockSync*>(clock_sync) == NULL ) {
+      ZF_LOGE("instantiated clock sync is not of type JK. aborting..");
+      exit(1);
+    }
+  } else {
+    ZF_LOGV("using default JK clock sync");
+    clock_sync = new JKClockSync(new PingpongClockOffsetAlg(100,100), 1000);
+  }
+
 }
 
 
