@@ -43,6 +43,8 @@
 #include "collective_ops/collectives.h"
 #include "reprompi_bench/utils/keyvalue_store.h"
 
+#define MY_MAX(x, y) (((x) > (y)) ? (x) : (y))
+
 static const int OUTPUT_ROOT_PROC = 0;
 
 static void print_initial_settings(const reprompib_options_t* opts, const reprompib_common_options_t* common_opts,
@@ -247,7 +249,7 @@ int main(int argc, char* argv[]) {
             job.n_rep = i;
             break;
           } else if( is_invalid == REPROMPI_OUT_OF_TIME_INVALID ) {
-            job.n_rep = i-1;
+            job.n_rep = MY_MAX(0, i-1);
             break;
           } else {
             i++;
