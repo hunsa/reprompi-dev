@@ -175,7 +175,8 @@ int main(int argc, char* argv[]) {
     reprompib_timing_method_t runtime_type;
     long total_n_rep;
     int is_invalid;
-    int *shared_stop_job;
+    int stop_flag;
+
     double job_runtime, job_start_time;
     MPI_Win win;
 
@@ -186,8 +187,8 @@ int main(int argc, char* argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &procs);
 
-    shared_stop_job = (int*)calloc(1, sizeof(int));
-    MPI_Win_create(shared_stop_job, sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+//    shared_stop_job = (int*)calloc(1, sizeof(int));
+    MPI_Win_create(&stop_flag, sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
 
     reprompib_register_sync_modules();
     reprompib_register_proc_sync_modules();
@@ -251,10 +252,11 @@ int main(int argc, char* argv[]) {
 
         i = 0;
         total_n_rep = 0;
-        *shared_stop_job = 0;
+
+        stop_flag = 0;
 
         job_start_time = get_time();
-        while(!*shared_stop_job) {
+        while( stop_flag == 0 ) {
 
           proc_sync.start_sync();
 
@@ -285,20 +287,18 @@ int main(int argc, char* argv[]) {
 
             current_runtime = get_time() - job_start_time;
             if (job_runtime <= current_runtime) {
-              *shared_stop_job = 1;
               ZF_LOGV("[rank %d] current_runtime=%20.10f job_runtime=%f reps=%ld", my_rank, current_runtime, job_runtime, i);
-            }
-          }
 
-          MPI_Win_fence(0, win);
-          if (my_rank == OUTPUT_ROOT_PROC && (*shared_stop_job)==1) { // update the shared_stop_job flag of other processes only when needed
-            for(p=0; p < procs; p++) {
-              if (p != my_rank) {
-                MPI_Put(shared_stop_job, 1, MPI_INT, p, 0, 1, MPI_INT, win);
+              MPI_Win_fence(0, win);
+              stop_flag = 1;
+              for (p = 0; p < procs; p++) {
+                if (p != my_rank) {
+                  MPI_Put(&stop_flag, 1, MPI_INT, p, 0, 1, MPI_INT, win);
+                }
               }
+              MPI_Win_fence(0, win);
             }
           }
-          MPI_Win_fence(0, win);
         }
 
         job.n_rep = i;  // reset nrep to the number of actually performed measurements
@@ -330,7 +330,6 @@ int main(int argc, char* argv[]) {
     reprompib_deregister_proc_sync_modules();
 
     MPI_Win_free(&win);
-    free(shared_stop_job);
     /* shut down MPI */
     MPI_Finalize();
 
