@@ -22,8 +22,8 @@
 #include "reprompi_bench/sync/common/sync_module_helpers.h"
 
 
-#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
-//#define ZF_LOG_LEVEL ZF_LOG_WARN
+//#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
+#define ZF_LOG_LEVEL ZF_LOG_WARN
 #include "log/zf_log.h"
 
 static std::vector<std::string> str_split(const char *str, char c);
