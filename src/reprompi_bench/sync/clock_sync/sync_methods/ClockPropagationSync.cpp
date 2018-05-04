@@ -63,11 +63,14 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
     ZF_LOGV("%d: flattening clocks with nested_level=%d done", my_rank, reinterpret_cast<int*>(buf)[0]);
 
     // source clock
-    for(i=1; i<nprocs; i++) {
-      MPI_Send(&bytes_needed, 1, MPI_INT, i, 0, comm);
-      MPI_Send(buf, bytes_needed, MPI_BYTE, i, 0, comm);
-//      globalClock->copyClock(c, comm, 0, i);
-    }
+    MPI_Bcast(&bytes_needed, 1, MPI_INT, 0, comm);
+    MPI_Bcast(buf, bytes_needed, MPI_BYTE, 0, comm);
+
+//    for(i=1; i<nprocs; i++) {
+//      MPI_Send(&bytes_needed, 1, MPI_INT, i, 0, comm);
+//      MPI_Send(buf, bytes_needed, MPI_BYTE, i, 0, comm);
+//    }
+
     // just use my own clock
     retClock = globalClock;
 
@@ -78,10 +81,13 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
     char *buf;
     Clock *last_clock;
 
-    MPI_Recv(&bytes_to_receive, 1, MPI_INT, 0, 0, comm, &status);
+    MPI_Bcast(&bytes_to_receive, 1, MPI_INT, 0, comm);
+    //MPI_Recv(&bytes_to_receive, 1, MPI_INT, 0, 0, comm, &status);
     ZF_LOGV("%d: recv 1 DONE (%d)", my_rank, bytes_to_receive);
+
     buf = new char[bytes_to_receive];
-    MPI_Recv(buf, bytes_to_receive, MPI_BYTE, 0, 0, comm, &status);
+    MPI_Bcast(buf, bytes_to_receive, MPI_BYTE, 0, comm);
+    //MPI_Recv(buf, bytes_to_receive, MPI_BYTE, 0, 0, comm, &status);
     ZF_LOGV("%d: recv 2 DONE", my_rank);
 
     int nb_types = reinterpret_cast<int*>(buf)[0];
@@ -125,7 +131,7 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
         break;
       }
       default: {
-        std::cerr << "invalid dataype with id" << type_id << std::endl;
+        std::cerr << "invalid datatype with id" << type_id << std::endl;
         break;
       }
       }
