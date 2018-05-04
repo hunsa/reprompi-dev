@@ -36,155 +36,24 @@
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
 #include "reprompi_bench/sync/clock_sync/synchronization.h"
 
+#include "round_sync_common.h"
+
 //#define ZF_LOG_LEVEL ZF_LOG_INFO
 //#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
 #define ZF_LOG_LEVEL ZF_LOG_WARN
 #include "log/zf_log.h"
 
-typedef struct {
-  long bcast_n_rep; /* --bcast-nrep how many bcasts to do for the mean */
-  double bcast_multiplier; /* --bcast-mult multiplier for mean Bcast time */
-  int bcast_meas;     /* --bcast-meas how to compute the bcast run-time (mean, median, max) */
-  //long n_rep;
-} reprompi_roundsync_params_t;
-
-
-#define BCAST_MUTIPLIER 1.2
-#define BCAST_NREP 10
-
-enum {
-  REPROMPI_ARGS_PROCSYNC_BCAST_MULTIPLIER = 1200,
-  REPROMPI_ARGS_PROCSYNC_BCAST_NREP,
-  REPROMPI_ARGS_PROCSYNC_BCAST_MEASURE
-};
-
-enum {
-  BCAST_MEASURE_MEAN = 0,
-  BCAST_MEASURE_MEDIAN,
-  BCAST_MEASURE_MAX
-};
-
 static reprompib_sync_module_t* clock_sync_mod; /* pointer to current clock synchronization module */
 
 // options specified from the command line
-static reprompi_roundsync_params_t parameters;
+static reprompi_roundsync_bcast_params_t bcast_parameters;
 
 static const int master_rank = 0;
 
 // helper variables for the round-sync method
-static int invalid;
+static    int invalid;
 static double start_sync;
 static double bcast_runtime = 0;
-
-
-void roundsync_parse_options(int argc, char **argv, reprompi_roundsync_params_t* opts_p) {
-    int c;
-
-    static const struct option reprompi_sync_long_options[] = {
-            { "bcast-mult", required_argument, 0, REPROMPI_ARGS_PROCSYNC_BCAST_MULTIPLIER },
-            { "bcast-nrep", required_argument, 0, REPROMPI_ARGS_PROCSYNC_BCAST_NREP },
-            { "bcast-meas", required_argument, 0, REPROMPI_ARGS_PROCSYNC_BCAST_MEASURE },
-            { 0, 0, 0, 0 }
-    };
-    static const char reprompi_sync_opts_str[] = "";
-
-    opts_p->bcast_multiplier = BCAST_MUTIPLIER;
-    opts_p->bcast_n_rep      = BCAST_NREP;
-    opts_p->bcast_meas = BCAST_MEASURE_MEAN;
-
-    optind = 1;
-    optopt = 0;
-    opterr = 0; // ignore invalid options
-    while (1) {
-
-        /* getopt_long stores the option index here. */
-        int option_index = 0;
-
-        c = getopt_long(argc, argv, reprompi_sync_opts_str, reprompi_sync_long_options,
-                &option_index);
-
-        /* Detect the end of the options. */
-        if (c == -1)
-            break;
-
-        switch (c) {
-        case REPROMPI_ARGS_PROCSYNC_BCAST_MULTIPLIER:
-            opts_p->bcast_multiplier = atof(optarg);
-            break;
-        case REPROMPI_ARGS_PROCSYNC_BCAST_NREP:
-            opts_p->bcast_n_rep = atol(optarg);
-            break;
-        case REPROMPI_ARGS_PROCSYNC_BCAST_MEASURE:
-              if (strcmp(optarg, "mean") == 0) {
-                opts_p->bcast_meas = BCAST_MEASURE_MEAN;
-              }
-              if (strcmp(optarg, "median") == 0) {
-                opts_p->bcast_meas = BCAST_MEASURE_MEDIAN;
-              }
-              if (strcmp(optarg, "max") == 0) {
-                opts_p->bcast_meas = BCAST_MEASURE_MAX;
-              }
-              break;
-        case '?':
-             break;
-        }
-    }
-
-    // check for errors
-    if (opts_p->bcast_multiplier < 1.0) {
-      reprompib_print_error_and_exit("bcast-mult error: bcast multiplier must be >= 1.0");
-    }
-    if (opts_p->bcast_n_rep <= 0) {
-      reprompib_print_error_and_exit("bcast-nrep error: we need to do at least 1 bcast");
-    }
-
-    optind = 1; // reset optind to enable option re-parsing
-    opterr = 1; // reset opterr
-}
-
-
-static void measure_bcast_runtime(void) {
-  int my_rank;
-  double dummy_time;
-  int i=0;
-  double* bcast_times = NULL;
-  double bcast_mean_rt, bcast_median_rt;
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-  dummy_time = get_time();
-  bcast_times = (double*)calloc(parameters.bcast_n_rep, sizeof(double));
-
-  for (i=0; i< parameters.bcast_n_rep; i++) {
-    bcast_times[i] = get_time();
-    MPI_Bcast(&dummy_time, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
-//    MPI_Barrier(MPI_COMM_WORLD);
-    bcast_times[i] = get_time() - bcast_times[i];
-  }
-
-  gsl_sort(bcast_times, 1, parameters.bcast_n_rep);
-  bcast_mean_rt = gsl_stats_mean(bcast_times, 1, parameters.bcast_n_rep);
-  bcast_median_rt = gsl_stats_quantile_from_sorted_data (bcast_times, 1, parameters.bcast_n_rep, 0.5);
-  ZF_LOGI("[rank %d] Bcast times [us] mean=%f median=%f min=%f max=%f", my_rank,
-      1e6 *bcast_mean_rt, 1e6 *bcast_median_rt, 1e6 *bcast_times[0], 1e6 *bcast_times[parameters.bcast_n_rep-1]);
-
-  switch(parameters.bcast_meas) {
-  case BCAST_MEASURE_MAX:
-    MPI_Reduce(&(bcast_times[parameters.bcast_n_rep-1]), &bcast_runtime, 1, MPI_DOUBLE, MPI_MAX, master_rank, MPI_COMM_WORLD);
-    break;
-  case BCAST_MEASURE_MEDIAN:
-      MPI_Reduce(&bcast_median_rt, &bcast_runtime, 1, MPI_DOUBLE, MPI_MAX, master_rank, MPI_COMM_WORLD);
-      break;
-  case BCAST_MEASURE_MEAN:
-  default:
-      MPI_Reduce(&bcast_mean_rt, &bcast_runtime, 1, MPI_DOUBLE, MPI_MAX, master_rank, MPI_COMM_WORLD);
-      break;
-  }
-
-  free(bcast_times);
-
-  // make sure the root records the longest Bcast time
-
-}
 
 static void roundsync_init_sync_round(void) {
   // nothing to do
@@ -199,7 +68,7 @@ static void roundsync_start_synchronization(void) {
 
   MPI_Barrier(MPI_COMM_WORLD);
   if (my_rank == master_rank) {
-    start_sync = get_time() + bcast_runtime * parameters.bcast_multiplier;
+    start_sync = get_time() + bcast_runtime * bcast_parameters.bcast_multiplier;
   }
   MPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
   global_time = clock_sync_mod->get_global_time(get_time());
@@ -229,14 +98,14 @@ static int roundsync_stop_synchronization(void) {
 
 
 static void roundsync_init_module(int argc, char** argv, reprompib_sync_module_t* clock_sync) {
-  roundsync_parse_options(argc, argv, &parameters);
+  roundsync_parse_bcast_options(argc, argv, &bcast_parameters);
 
   if (clock_sync->clocksync == REPROMPI_CLOCKSYNC_NONE) {
     reprompib_print_error_and_exit("Cannot use the round-sync process synchronization with the selected clock synchronization method (use \"--clock-sync\" to change it)");
   }
 
   clock_sync_mod = clock_sync;
-  measure_bcast_runtime();
+  bcast_runtime = measure_bcast_runtime(MPI_COMM_WORLD, &bcast_parameters);
 }
 
 
@@ -264,7 +133,7 @@ static void roundsync_finalize_synchronization(void) {
 static void roundsync_sync_print(FILE* f)
 {
   fprintf (f, "#@procsync=roundsync\n");
-  fprintf(f, "#@bcast_nrep=%ld\n", parameters.bcast_n_rep);
+  fprintf(f, "#@bcast_nrep=%ld\n", bcast_parameters.bcast_n_rep);
   fprintf(f, "#@bcast_runtime_s=%.10f\n", bcast_runtime);
 }
 
