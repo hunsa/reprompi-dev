@@ -36,9 +36,9 @@
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
 #include "reprompi_bench/sync/clock_sync/synchronization.h"
 
-//#define ZF_LOG_LEVEL ZF_LOG_INFO
+#define ZF_LOG_LEVEL ZF_LOG_INFO
 //#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
-#define ZF_LOG_LEVEL ZF_LOG_WARN
+//#define ZF_LOG_LEVEL ZF_LOG_WARN
 #include "log/zf_log.h"
 
 typedef struct {
@@ -170,7 +170,7 @@ static void measure_bcast_runtime(void) {
   gsl_sort(bcast_times, 1, parameters.bcast_n_rep);
   bcast_mean_rt = gsl_stats_mean(bcast_times, 1, parameters.bcast_n_rep);
   bcast_median_rt = gsl_stats_quantile_from_sorted_data (bcast_times, 1, parameters.bcast_n_rep, 0.5);
-  ZF_LOGI("[rank %d] Bcast times [us] mean=%f median=%f min=%f max=%f", my_rank,
+  ZF_LOGV("[rank %d] Bcast times [us] mean=%f median=%f min=%f max=%f", my_rank,
       1e6 *bcast_mean_rt, 1e6 *bcast_median_rt, 1e6 *bcast_times[0], 1e6 *bcast_times[parameters.bcast_n_rep-1]);
 
   switch(parameters.bcast_meas) {
@@ -187,7 +187,7 @@ static void measure_bcast_runtime(void) {
   }
 
   if( my_rank == 0 ) {
-    ZF_LOGV("[rank %d] Bcast run-time estimate [us]: %f", my_rank, bcast_runtime);
+    ZF_LOGI("[rank %d] Bcast run-time estimate [us]: %f", my_rank, bcast_runtime);
   }
 
   free(bcast_times);
