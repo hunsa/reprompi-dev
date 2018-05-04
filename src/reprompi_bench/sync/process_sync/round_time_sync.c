@@ -186,6 +186,10 @@ static void measure_bcast_runtime(void) {
       break;
   }
 
+  if( my_rank == 0 ) {
+    ZF_LOGV("[rank %d] Bcast run-time estimate [us]: %f", my_rank, bcast_runtime);
+  }
+
   free(bcast_times);
 
   // make sure the root records the longest Bcast time
