@@ -29,7 +29,13 @@ TwoLevelClockSync::TwoLevelClockSync(ClockSync *syncInterNode, ClockSync *syncIn
 }
 
 TwoLevelClockSync::~TwoLevelClockSync() {
+  if (comm_internode != MPI_COMM_NULL) {
+    MPI_Comm_free(&comm_internode);
+  }
 
+  if( comm_intranode != MPI_COMM_NULL ) {
+    MPI_Comm_free(&comm_intranode);
+  }
 }
 
 void TwoLevelClockSync::initialized_communicators(MPI_Comm comm) {
@@ -63,10 +69,10 @@ GlobalClock* TwoLevelClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) 
   MPI_Comm_rank(comm, &my_rank);
   MPI_Comm_size(comm, &np);
 
-//  if( this->comm_initialized == false ) {
+  if( this->comm_initialized == false ) {
     this->initialized_communicators(comm);
-//    this->comm_initialized = true;
-//  }
+    this->comm_initialized = true;
+  }
 
   // Step 1: synchronization between nodes
   if (comm_internode != MPI_COMM_NULL) {
@@ -108,15 +114,6 @@ GlobalClock* TwoLevelClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) 
 
   ZF_LOGV("%d: test clock2, %g", my_rank, global_clock2->get_local_time());
 
-  if (comm_internode != MPI_COMM_NULL) {
-    //printf("[rank %d] has an internode clock\n", my_rank);
-    MPI_Comm_free(&comm_internode);
-
-    return global_clock1;
-  }
-
-  MPI_Comm_free(&comm_intranode);
-  //printf("[rank %d] has an intrasocket clock\n", my_rank);
   return global_clock2;
 }
 

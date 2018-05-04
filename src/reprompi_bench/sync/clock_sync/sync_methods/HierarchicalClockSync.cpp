@@ -19,10 +19,8 @@
 #define ZF_LOG_LEVEL ZF_LOG_WARN
 #include "log/zf_log.h"
 
-HierarchicalClockSync::HierarchicalClockSync(ClockSync *syncInterNode, ClockSync *syncSocket, ClockSync *syncOnSocket) {
-  this->syncInterNode = syncInterNode;
-  this->syncSocket    = syncSocket;
-  this->syncOnSocket  = syncOnSocket;
+HierarchicalClockSync::HierarchicalClockSync(ClockSync *syncInterNode, ClockSync *syncSocket, ClockSync *syncOnSocket) :
+    syncInterNode(syncInterNode), syncSocket(syncSocket), syncOnSocket(syncOnSocket) {
 
   this->comm_internode = MPI_COMM_NULL;
   this->comm_intranode = MPI_COMM_NULL;
@@ -33,6 +31,22 @@ HierarchicalClockSync::HierarchicalClockSync(ClockSync *syncInterNode, ClockSync
 }
 
 HierarchicalClockSync::~HierarchicalClockSync() {
+
+  if( comm_internode != MPI_COMM_NULL ) {
+    MPI_Comm_free(&comm_internode);
+  }
+
+  if( comm_intranode != MPI_COMM_NULL ) {
+    MPI_Comm_free(&comm_intranode);
+  }
+
+  if( comm_intersocket != MPI_COMM_NULL ) {
+    MPI_Comm_free(&comm_intersocket);
+  }
+
+  if( comm_intrasocket != MPI_COMM_NULL ) {
+    MPI_Comm_free(&comm_intrasocket);
+  }
 
 }
 
@@ -89,10 +103,10 @@ GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock&
   MPI_Comm_rank(comm, &my_rank);
   MPI_Comm_size(comm, &np);
 
-//  if( this->comm_initialized == false ) {
+  if (this->comm_initialized == false) {
     this->initialized_communicators(comm);
-//    this->comm_initialized = true;
-//  }
+    this->comm_initialized = true;
+  }
 
   // Step 1: synchronization between nodes
   if (comm_internode != MPI_COMM_NULL) {
@@ -160,22 +174,14 @@ GlobalClock* HierarchicalClockSync::synchronize_all_clocks(MPI_Comm comm, Clock&
 
   ZF_LOGV("%d: test clock3, %g", my_rank, global_clock3->get_local_time());
 
-  if (comm_internode != MPI_COMM_NULL) {
-    //printf("[rank %d] has an internode clock\n", my_rank);
-    MPI_Comm_free(&comm_internode);
+//  if (comm_internode != MPI_COMM_NULL) {
+//    return global_clock1;
+//  }
+//
+//  if (comm_intersocket != MPI_COMM_NULL) {
+//    return global_clock2;
+//  }
 
-    return global_clock1;
-  }
-
-  if (comm_intersocket != MPI_COMM_NULL) {
-    //printf("[rank %d] has an intersocket clock\n", my_rank);
-    MPI_Comm_free(&comm_intersocket);
-
-    return global_clock2;
-  }
-
-  MPI_Comm_free(&comm_intrasocket);
-  //printf("[rank %d] has an intrasocket clock\n", my_rank);
   return global_clock3;
 }
 
