@@ -42,6 +42,7 @@
 #include "reprompi_bench/output_management/results_output.h"
 #include "collective_ops/collectives.h"
 #include "reprompi_bench/utils/keyvalue_store.h"
+#include "reprompi_bench/caching/caching.h"
 
 #define MY_MAX(x, y) (((x) > (y)) ? (x) : (y))
 
@@ -159,6 +160,7 @@ int main(int argc, char* argv[]) {
     reprompib_proc_sync_module_t proc_sync;
     reprompib_sync_params_t sync_params;
     reprompib_timing_method_t runtime_type;
+    reprompi_caching_module_t caching_module;
     long total_n_rep;
     int is_invalid;
 
@@ -171,6 +173,8 @@ int main(int argc, char* argv[]) {
 
     reprompib_register_sync_modules();
     reprompib_register_proc_sync_modules();
+
+    reprompib_register_caching_modules();
 
     // initialize time measurement functions
     init_timer();
@@ -190,6 +194,9 @@ int main(int argc, char* argv[]) {
 
     // parse the benchmark-specific arguments (nreps, summary)
     reprompib_parse_options(&opts, argc, argv);
+
+    // initialize caching strategies
+    reprompib_init_caching_module(argc, argv, &caching_module);
 
     // initialize synchronization module
     reprompib_init_sync_module(argc, argv, &clock_sync);
@@ -258,8 +265,12 @@ int main(int argc, char* argv[]) {
           if (i == job.n_rep) {
             break;
           }
+
+          // apply cache cleaning strategy (if enabled)
+          caching_module.clear_cache();
         }
 
+        printf("[%d] %ld %ld", my_rank, job.n_rep, i);
         //print summarized data
         reprompib_print_bench_output(job, tstart_sec, tend_sec, &opts, &common_opts, &print_info);
 
@@ -283,8 +294,11 @@ int main(int argc, char* argv[]) {
     clock_sync.cleanup_module();
     proc_sync.cleanup_module();
 
+    caching_module.cleanup_module();
+
     reprompib_deregister_sync_modules();
     reprompib_deregister_proc_sync_modules();
+    reprompib_deregister_caching_modules();
     /* shut down MPI */
     MPI_Finalize();
 

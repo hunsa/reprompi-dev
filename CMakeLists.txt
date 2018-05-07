@@ -166,6 +166,12 @@ ${SRC_DIR}/reprompi_bench/sync/process_sync/process_synchronization.c
 )
 
 
+set(CACHING_SRC_FILES
+${SRC_DIR}/reprompi_bench/caching/caching.c
+${SRC_DIR}/reprompi_bench/caching/warm_cache.c
+${SRC_DIR}/reprompi_bench/caching/clear_cache_memset.c
+)
+
 
 # generate commit version
 find_package(Git)
@@ -207,6 +213,8 @@ ${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
 ${SRC_DIR}/reprompi_bench/option_parser/parse_options.c
 # collective functions
 ${COLL_OPS_SRC_FILES}
+# caches cleaning strategy
+${CACHING_SRC_FILES}
 )
 
 #find_library (synclib NAMES synclib)
