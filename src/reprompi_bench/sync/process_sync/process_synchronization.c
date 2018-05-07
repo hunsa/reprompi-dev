@@ -83,7 +83,7 @@ void reprompib_init_proc_sync_module(int argc, char** argv, reprompib_sync_modul
   index = get_sync_module_index(sync_module_info.name);
 
   if (index < 0) {
-    reprompib_print_error_and_exit("No process synchronization module defined for the selected --proc-sync paramter.");
+    reprompib_print_error_and_exit("No process synchronization module defined for the selected --proc-sync parameter.");
   }
 
   *sync_mod = sync_modules[index];
