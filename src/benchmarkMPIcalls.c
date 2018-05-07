@@ -270,7 +270,6 @@ int main(int argc, char* argv[]) {
           caching_module.clear_cache();
         }
 
-        printf("[%d] %ld %ld", my_rank, job.n_rep, i);
         //print summarized data
         reprompib_print_bench_output(job, tstart_sec, tend_sec, &opts, &common_opts, &print_info);
 
