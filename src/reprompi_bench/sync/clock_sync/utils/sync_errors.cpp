@@ -1,5 +1,6 @@
 
 #include <cstdio>
+#include <cstdlib>
 #include <mpi.h>
 
 #include "sync_errors.hpp"
