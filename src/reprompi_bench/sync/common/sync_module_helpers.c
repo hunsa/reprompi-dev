@@ -113,7 +113,3 @@ char* get_name_from_sync_type(const int n_types, const sync_type_t* type_list, i
   }
   return NULL;
 }
-
-
-
-

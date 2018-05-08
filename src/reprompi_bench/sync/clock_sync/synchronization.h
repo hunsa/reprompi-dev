@@ -64,8 +64,6 @@ void reprompib_register_sync_modules(void);
 void reprompib_deregister_sync_modules(void);
 
 void reprompib_init_sync_module(int argc, char** argv, reprompib_sync_module_t* sync_mod);
-void reprompib_cleanup_sync_module(reprompib_sync_module_t* sync_mod);
-
-void register_no_clock_sync_module(reprompib_sync_module_t *sync_mod);
+//void reprompib_cleanup_sync_module(reprompib_sync_module_t* sync_mod);
 
 #endif /* REPROMPIB_SYNCHRONIZATION_H_ */

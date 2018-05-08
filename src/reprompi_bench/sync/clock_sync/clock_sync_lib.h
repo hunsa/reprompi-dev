@@ -36,6 +36,7 @@ void register_jk_module(reprompib_sync_module_t *sync_mod);
 void register_hca3_module(reprompib_sync_module_t *sync_mod);
 void register_topo_aware_sync1_module(reprompib_sync_module_t *sync_mod);
 void register_topo_aware_sync2_module(reprompib_sync_module_t *sync_mod);
+void register_no_clock_sync_module(reprompib_sync_module_t *sync_mod);
 
 #ifdef __cplusplus
 }

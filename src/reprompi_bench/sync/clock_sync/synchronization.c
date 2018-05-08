@@ -38,6 +38,10 @@
 #include "clock_sync_lib.h"
 #include "utils/sync_errors.hpp"
 
+//#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
+#define ZF_LOG_LEVEL ZF_LOG_WARN
+#include "log/zf_log.h"
+
 // Implemented synchronization modules
 static reprompib_sync_module_t* sync_modules;
 
@@ -57,7 +61,6 @@ static const sync_type_t clock_sync_options[] = {
 };
 static const int N_CLOCK_SYNC_TYPES = sizeof(clock_sync_options)/sizeof(sync_type_t);
 static const char CLOCK_SYNC_ARG[] = "clock-sync";
-
 
 static int get_sync_module_index(const char* name) {
   int i;
@@ -131,6 +134,7 @@ void reprompib_register_sync_modules(void) {
 #endif
   register_topo_aware_sync2_module(&(sync_modules[sync_module_idx++]));
 }
+
 
 void reprompib_deregister_sync_modules(void) {
   free(sync_modules);
