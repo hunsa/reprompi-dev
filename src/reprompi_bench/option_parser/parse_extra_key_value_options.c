@@ -48,6 +48,18 @@ static const struct option reprompi_params_long_options[] = {
 static const char reprompi_params_opts_str[] = "";
 
 
+static void exit_after_keyvalue_error(const char* error_str) {
+  int my_rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+  if (my_rank == 0) {
+    fprintf(stderr, "\nERROR: %s\n\n", error_str);
+  }
+  MPI_Finalize();
+  exit(1);
+}
+
+
 
 static void parse_keyvalue_list(char* args, reprompib_dictionary_t* dict) {
     char* params_tok;
@@ -75,15 +87,15 @@ static void parse_keyvalue_list(char* args, reprompib_dictionary_t* dict) {
                 if (!reprompib_dict_has_key(dict, key)) {
                     ok = reprompib_add_element_to_dict(dict, key, val);
                     if (ok != 0) {
-                      reprompib_print_error_and_exit("Cannot add parameter to dictionary");
+                      exit_after_keyvalue_error("Cannot add parameter to dictionary");
                     }
                 }
                 else {
-                  reprompib_print_error_and_exit("Parameter already exists");
+                  exit_after_keyvalue_error("Parameter already exists");
                 }
             }
             else {
-              reprompib_print_error_and_exit("Key-value parameters invalid");
+              exit_after_keyvalue_error("Key-value parameters invalid");
             }
             params_tok = strtok_r(NULL, ",", &save_str);
         }

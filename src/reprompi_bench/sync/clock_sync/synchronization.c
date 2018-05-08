@@ -36,6 +36,7 @@
 
 #include "synchronization.h"
 #include "clock_sync_lib.h"
+#include "utils/sync_errors.hpp"
 
 // Implemented synchronization modules
 static reprompib_sync_module_t* sync_modules;
@@ -102,7 +103,7 @@ void reprompib_init_sync_module(int argc, char** argv, reprompib_sync_module_t* 
   if (index < 0) {
     char err_msg[160];
     sprintf(err_msg, "Unknown synchronization module \"--clock-sync=%s\"", sync_module_info.name);
-    reprompib_print_error_and_exit(err_msg);
+    exit_on_sync_lib_error(err_msg);
   }
 
   *sync_mod = sync_modules[index];
