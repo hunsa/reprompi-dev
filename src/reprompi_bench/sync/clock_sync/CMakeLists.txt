@@ -21,17 +21,14 @@ ${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_sync_loader.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/synchronization.c
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/no_sync.c
-${SRC_DIR}/reprompi_bench/sync/clock_sync/topo_aware_sync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/topo_aware_2l_sync.cpp
 
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/communicator_utils.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/hwloc_helpers.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/sync_utils.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/sync_errors.cpp
 
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/ClockPropagationSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCAAbstractClockSync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HierarchicalClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCAClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCA2ClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCA3ClockSync.cpp
@@ -58,10 +55,14 @@ ${SRC_DIR}/log/zf_log.c
 
 SET(SYNC_LIB_DEP_LIBS "")
 
+# in case that we have HWLOC, we include the sync method based on HWLOC
 if (HWLOC_INCLUDE_DIR)
 
 set(CLOCKSYNC_SRC_FILES
 ${CLOCKSYNC_SRC_FILES}
+${SRC_DIR}/reprompi_bench/sync/clock_sync/topo_aware_sync.cpp
+${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HierarchicalClockSync.cpp
+${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/hwloc_helpers.cpp
 )
 
 set(SYNC_LIB_DEP_LIBS
