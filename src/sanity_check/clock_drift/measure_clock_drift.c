@@ -52,7 +52,7 @@ void estimate_all_rtts(int master_rank, int other_rank, const int n_pingpongs,
     int i;
     double tmp;
     double *rtts = NULL;
-    double mean;
+    double avg;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
@@ -119,17 +119,20 @@ void estimate_all_rtts(int master_rank, int other_rank, const int n_pingpongs,
             }
         }
 
-        mean = gsl_stats_mean(rtts2, 1, n_datapoints);
+        //avg = gsl_stats_mean(rtts2, 1, n_datapoints);
+        // we better use the median here
+        gsl_sort(rtts2, 1, n_datapoints);
+        avg = gsl_stats_median_from_sorted_data(rtts, 1, n_datapoints);
 
         free(rtts);
         free(rtts2);
 
-        MPI_Send(&mean, 1, MPI_DOUBLE, other_rank, 0, MPI_COMM_WORLD);
+        MPI_Send(&avg, 1, MPI_DOUBLE, other_rank, 0, MPI_COMM_WORLD);
     } else {
-        MPI_Recv(&mean, 1, MPI_DOUBLE, master_rank, 0, MPI_COMM_WORLD, &stat);
+        MPI_Recv(&avg, 1, MPI_DOUBLE, master_rank, 0, MPI_COMM_WORLD, &stat);
     }
 
-    *rtt = mean;
+    *rtt = avg;
 }
 
 static int min_int(const void* a, const void* b) {
@@ -344,10 +347,10 @@ int main(int argc, char* argv[]) {
     }
     for (step = 0; step < n_wait_steps; step++) {
         if (my_rank == master_rank) {
-            for (index = 0; index < ntestprocs; index++) {
-                p = testprocs_list[index];    // select the process to exchange pingpongs with
+          for (i = 0; i < opts.n_rep; i++) {
+              for (index = 0; index < ntestprocs; index++) {
+                  p = testprocs_list[index];    // select the process to exchange pingpongs with
 
-                for (i = 0; i < opts.n_rep; i++) {
                     if (p != master_rank) {
                         MPI_Send(&time_msg[0], 2, MPI_DOUBLE, p, 0,
                                 MPI_COMM_WORLD);
