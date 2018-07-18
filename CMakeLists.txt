@@ -127,14 +127,6 @@ ${SRC_DIR}/buf_manager/mem_allocation.c
 set(COLL_OPS_SRC_FILES
 ${SRC_DIR}/collective_ops/collectives.c
 ${SRC_DIR}/collective_ops/mpi_collectives.c
-${SRC_DIR}/collective_ops/mpi_allgather_mockups.c
-${SRC_DIR}/collective_ops/mpi_allreduce_mockups.c
-${SRC_DIR}/collective_ops/mpi_bcast_mockups.c
-${SRC_DIR}/collective_ops/mpi_gather_mockups.c
-${SRC_DIR}/collective_ops/mpi_reduce_mockups.c
-${SRC_DIR}/collective_ops/mpi_reduce_scatter_mockups.c
-${SRC_DIR}/collective_ops/mpi_scan_mockups.c
-${SRC_DIR}/collective_ops/mpi_scatter_mockups.c
 ${SRC_DIR}/collective_ops/pingpong.c
 # memory allocation
 ${BUF_MANAGER_SRC_FILES}

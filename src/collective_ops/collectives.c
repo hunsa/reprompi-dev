@@ -93,101 +93,6 @@ const collective_ops_t collective_calls[] = {
                 &initialize_data_Scatter,
                 &cleanup_data_Scatter
         },
-        [GL_ALLGATHER_AS_ALLREDUCE] = {
-                &execute_GL_Allgather_as_Allreduce,
-                &initialize_data_GL_Allgather_as_Allreduce,
-                &cleanup_data_GL_Allgather_as_Allreduce
-        },
-        [GL_ALLGATHER_AS_ALLTOALL] = {
-                &execute_GL_Allgather_as_Alltoall,
-                &initialize_data_GL_Allgather_as_Alltoall,
-                &cleanup_data_GL_Allgather_as_Alltoall
-        },
-        [GL_ALLGATHER_AS_GATHERBCAST] = {
-                &execute_GL_Allgather_as_GatherBcast,
-                &initialize_data_GL_Allgather_as_GatherBcast,
-                &cleanup_data_GL_Allgather_as_GatherBcast
-        },
-        [GL_ALLREDUCE_AS_REDUCEBCAST] = {
-                &execute_GL_Allreduce_as_ReduceBcast,
-                &initialize_data_GL_Allreduce_as_ReduceBcast,
-                &cleanup_data_GL_Allreduce_as_ReduceBcast
-        },
-//        [GL_ALLREDUCE_AS_REDUCESCATTERALLGATHER] = {
-//                &execute_GL_Allreduce_as_ReducescatterAllgather,
-//                &initialize_data_GL_Allreduce_as_ReducescatterAllgather,
-//                &cleanup_data_GL_Allreduce_as_ReducescatterAllgather
-//        },
-        [GL_ALLREDUCE_AS_REDUCESCATTERALLGATHERV] = {
-                &execute_GL_Allreduce_as_ReducescatterAllgatherv,
-                &initialize_data_GL_Allreduce_as_ReducescatterAllgatherv,
-                &cleanup_data_GL_Allreduce_as_ReducescatterAllgatherv
-        },
-        [GL_ALLREDUCE_AS_REDUCESCATTERBLOCKALLGATHER] = {
-                &execute_GL_Allreduce_as_ReducescatterblockAllgather,
-                &initialize_data_GL_Allreduce_as_ReducescatterblockAllgather,
-                &cleanup_data_GL_Allreduce_as_ReducescatterblockAllgather
-        },
-        [GL_BCAST_AS_SCATTERALLGATHER] = {
-                &execute_GL_Bcast_as_ScatterAllgather,
-                &initialize_data_GL_Bcast_as_ScatterAllgather,
-                &cleanup_data_GL_Bcast_as_ScatterAllgather
-        },
-        [GL_GATHER_AS_ALLGATHER] = {
-                &execute_GL_Gather_as_Allgather,
-                &initialize_data_GL_Gather_as_Allgather,
-                &cleanup_data_GL_Gather_as_Allgather
-        },
-        [GL_GATHER_AS_REDUCE] = {
-                &execute_GL_Gather_as_Reduce,
-                &initialize_data_GL_Gather_as_Reduce,
-                &cleanup_data_GL_Gather_as_Reduce
-        },
-        [GL_REDUCE_AS_ALLREDUCE] = {
-                &execute_GL_Reduce_as_Allreduce,
-                &initialize_data_GL_Reduce_as_Allreduce,
-                &cleanup_data_GL_Reduce_as_Allreduce
-        },
-//        [GL_REDUCE_AS_REDUCESCATTERGATHER] = {
-//                &execute_GL_Reduce_as_ReducescatterGather,
-//                &initialize_data_GL_Reduce_as_ReducescatterGather,
-//                &cleanup_data_GL_Reduce_as_ReducescatterGather
-//        },
-        [GL_REDUCE_AS_REDUCESCATTERGATHERV] = {
-                &execute_GL_Reduce_as_ReducescatterGatherv,
-                &initialize_data_GL_Reduce_as_ReducescatterGatherv,
-                &cleanup_data_GL_Reduce_as_ReducescatterGatherv
-        },
-        [GL_REDUCE_AS_REDUCESCATTERBLOCKGATHER] = {
-                &execute_GL_Reduce_as_ReducescatterblockGather,
-                &initialize_data_GL_Reduce_as_ReducescatterblockGather,
-                &cleanup_data_GL_Reduce_as_ReducescatterblockGather
-        },
-        [GL_REDUCESCATTER_AS_ALLREDUCE] = {
-                &execute_GL_Reduce_scatter_as_Allreduce,
-                &initialize_data_GL_Reduce_scatter_as_Allreduce,
-                &cleanup_data_GL_Reduce_scatter_as_Allreduce
-        },
-        [GL_REDUCESCATTER_AS_REDUCESCATTERV] = {
-                &execute_GL_Reduce_scatter_as_ReduceScatterv,
-                &initialize_data_GL_Reduce_scatter_as_ReduceScatterv,
-                &cleanup_data_GL_Reduce_scatter_as_ReduceScatterv
-        },
-        [GL_REDUCESCATTERBLOCK_AS_REDUCESCATTER] = {
-                &execute_GL_Reduce_scatter_block_as_ReduceScatter,
-                &initialize_data_GL_Reduce_scatter_block_as_ReduceScatter,
-                &cleanup_data_GL_Reduce_scatter_block_as_ReduceScatter
-        },
-        [GL_SCAN_AS_EXSCANREDUCELOCAL] = {
-                &execute_GL_Scan_as_ExscanReducelocal,
-                &initialize_data_GL_Scan_as_ExscanReducelocal,
-                &cleanup_data_GL_Scan_as_ExscanReducelocal
-        },
-        [GL_SCATTER_AS_BCAST] = {
-                &execute_GL_Scatter_as_Bcast,
-                &initialize_data_GL_Scatter_as_Bcast,
-                &cleanup_data_GL_Scatter_as_Bcast
-        },
         [PINGPONG_SEND_RECV] = {
                 &execute_pingpong_Send_Recv,
                 &initialize_data_pingpong,
@@ -239,25 +144,6 @@ static char* const mpi_calls_opts[] = {
         [MPI_REDUCE_SCATTER_BLOCK] = "MPI_Reduce_scatter_block",
         [MPI_SCAN] = "MPI_Scan",
         [MPI_SCATTER] = "MPI_Scatter",
-        [GL_ALLGATHER_AS_ALLREDUCE] = "GL_Allgather_as_Allreduce",
-        [GL_ALLGATHER_AS_ALLTOALL] = "GL_Allgather_as_Alltoall",
-        [GL_ALLGATHER_AS_GATHERBCAST] = "GL_Allgather_as_GatherBcast",
-        [GL_ALLREDUCE_AS_REDUCEBCAST] = "GL_Allreduce_as_ReduceBcast",
-//        [GL_ALLREDUCE_AS_REDUCESCATTERALLGATHER] = "GL_Allreduce_as_ReducescatterAllgather",
-        [GL_ALLREDUCE_AS_REDUCESCATTERALLGATHERV] = "GL_Allreduce_as_ReducescatterAllgatherv",
-        [GL_ALLREDUCE_AS_REDUCESCATTERBLOCKALLGATHER] = "GL_Allreduce_as_ReducescatterblockAllgather",
-        [GL_BCAST_AS_SCATTERALLGATHER] = "GL_Bcast_as_ScatterAllgather",
-        [GL_GATHER_AS_ALLGATHER] = "GL_Gather_as_Allgather",
-        [GL_GATHER_AS_REDUCE] = "GL_Gather_as_Reduce",
-        [GL_REDUCE_AS_ALLREDUCE] = "GL_Reduce_as_Allreduce",
-//        [GL_REDUCE_AS_REDUCESCATTERGATHER] = "GL_Reduce_as_ReducescatterGather",
-        [GL_REDUCE_AS_REDUCESCATTERGATHERV] = "GL_Reduce_as_ReducescatterGatherv",
-        [GL_REDUCE_AS_REDUCESCATTERBLOCKGATHER] = "GL_Reduce_as_ReducescatterblockGather",
-        [GL_REDUCESCATTER_AS_ALLREDUCE] = "GL_Reduce_scatter_as_Allreduce",
-        [GL_REDUCESCATTER_AS_REDUCESCATTERV] = "GL_Reduce_scatter_as_ReduceScatterv",
-        [GL_REDUCESCATTERBLOCK_AS_REDUCESCATTER] = "GL_Reduce_scatter_block_as_ReduceScatter",
-        [GL_SCAN_AS_EXSCANREDUCELOCAL] = "GL_Scan_as_ExscanReducelocal",
-        [GL_SCATTER_AS_BCAST] = "GL_Scatter_as_Bcast",
         [PINGPONG_SEND_RECV] = "Send_Recv",
         [PINGPONG_SENDRECV] = "Sendrecv",
         [PINGPONG_ISEND_RECV] = "Isend_Recv",
