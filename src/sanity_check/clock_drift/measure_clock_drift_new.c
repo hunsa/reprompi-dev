@@ -42,8 +42,8 @@
 #include "log/zf_log.h"
 
 static const int OUTPUT_ROOT_PROC = 0;
-static const int Minimum_ping_pongs =  50;
-static const int Number_ping_pongs  = 100;
+static const int Minimum_ping_pongs =  20;
+static const int Number_ping_pongs  =  30;
 
 double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_rank, reprompib_sync_module_t *clock_sync);
 
