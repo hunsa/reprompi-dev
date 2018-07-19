@@ -21,6 +21,9 @@
 </license>
  */
 
+// avoid getsubopt bug
+#define _XOPEN_SOURCE 500
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -28,10 +31,11 @@
 #include <math.h>
 #include "mpi.h"
 
+#include <getopt.h>
+
 #include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/misc.h"
-#include "parse_drift_test_options.h"
 
 //#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
 #define ZF_LOG_LEVEL ZF_LOG_WARN
@@ -42,6 +46,105 @@ static const int Minimum_ping_pongs =  50;
 static const int Number_ping_pongs  = 100;
 
 double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_rank, reprompib_sync_module_t *clock_sync);
+
+typedef struct opt {
+  int steps;  /* --steps */
+  char testname[256];
+  double print_procs_ratio;  /* --print-procs-ratio */
+} reprompib_drift_test_opts_t;
+
+static const struct option default_long_options[] = {
+        { "steps", required_argument, 0, 's' },
+        { "print-procs-ratio", required_argument, 0, 'p' },
+        { "help", no_argument, 0, 'h' },
+        { 0, 0, 0, 0 }
+};
+
+int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char **argv);
+
+void print_help(char* testname) {
+    int my_rank;
+    int root_proc = 0;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    if (my_rank == root_proc) {
+
+        if (strstr(testname, "measure_clock_drift") != 0) {
+            printf("\nUSAGE: %s [options] [steps]\n", testname);
+        }
+        else {
+            printf("\nUSAGE: %s [options]\n", testname);
+        }
+
+        printf("options:\n");
+        printf("%-40s %-40s\n", "-h", "print this help");
+        printf("%-40s %-40s\n", "--steps",
+                    "set the number of 1s steps to wait after sync (default: 0)");
+        printf("%-40s %-40s\n", "--print-procs-ratio",
+        "set the fraction of the total processes to be tested for clock drift. If print-procs-ratio=0, only the last rank and the rank with the largest power of two are tested (default: 0)");
+
+        printf("\nEXAMPLES: mpirun -np 4 %s --nrep=2 --clock-sync=HCA2 --print-procs-ratio=0.1\n", testname);
+        printf("\nEXAMPLES: mpirun -np 4 %s --nrep=2 --clock-sync=HCA2 --steps=5 --print-procs-ratio=0.1\n", testname);
+        printf("\n\n");
+    }
+}
+
+
+void init_parameters(reprompib_drift_test_opts_t* opts_p, char* name) {
+    opts_p->steps = 0;
+    opts_p->print_procs_ratio = 0;
+    strcpy(opts_p->testname,name);
+}
+
+
+int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char **argv) {
+    int c;
+
+    init_parameters(opts_p, argv[0]);
+
+    opterr = 0;
+
+    while (1) {
+
+        /* getopt_long stores the option index here. */
+        int option_index = 0;
+
+        c = getopt_long(argc, argv, "h", default_long_options,
+                &option_index);
+
+        /* Detect the end of the options. */
+        if (c == -1)
+            break;
+
+        switch (c) {
+        case 's': /* number of 1s steps after which to measure the clock drift */
+            opts_p->steps = atoi(optarg);
+            break;
+        case 'p': /* fraction of processes for which to measure the drift (normal distribution)
+                   if print_procs_ratio==0, print only the largest power of two and the last rank
+                   */
+            opts_p->print_procs_ratio = atof(optarg);
+            break;
+        case 'h':
+            print_help(opts_p->testname);
+            break;
+        case '?':
+            break;
+        }
+    }
+
+    if (opts_p->steps < 0) {
+      reprompib_print_error_and_exit("Invalid number of steps (should be >=0)");
+    }
+    if (opts_p->print_procs_ratio < 0 || opts_p->print_procs_ratio > 1) {
+      reprompib_print_error_and_exit("Invalid process ratio (should be a number between 0 and 1)");
+    }
+
+    optind = 1; // reset optind to enable option re-parsing
+    opterr = 1; // reset opterr to catch invalid options
+
+    return 0;
+}
 
 static int min_int(const void* a, const void* b) {
   if (*(int*)a < *(int*)b) {
@@ -162,7 +265,7 @@ void print_initial_settings(int argc, char* argv[], reprompib_drift_test_opts_t 
             fprintf(f, " %s", argv[i]);
         }
         fprintf(f, "\n");
-        fprintf(f, "#@nrep=%ld\n", opts.n_rep);
+        //fprintf(f, "#@nrep=%ld\n", opts.n_rep);
         fprintf(f, "#@steps=%d\n", opts.steps);
         fprintf(f, "#@timerres=%14.9f\n", MPI_Wtick());
 
@@ -174,18 +277,13 @@ void print_initial_settings(int argc, char* argv[], reprompib_drift_test_opts_t 
 
 int main(int argc, char* argv[]) {
     int my_rank, nprocs, p;
-    int i;
     reprompib_drift_test_opts_t opts;
     int master_rank;
-    MPI_Status stat;
     FILE* f;
     reprompib_sync_module_t clock_sync;
 
-    double global_time, local_time, min_drift;
-
-    double *all_local_times = NULL;
+    double  min_drift;
     double *all_global_times = NULL;
-    double time_msg[2];
 
     int step;
     int n_wait_steps = 0;
@@ -214,10 +312,7 @@ int main(int argc, char* argv[]) {
     generate_test_process_list(opts.print_procs_ratio, &testprocs_list, &ntestprocs);
 
     if (my_rank == master_rank) {
-        all_global_times = (double*) calloc(ntestprocs * opts.n_rep * n_wait_steps,
-                sizeof(double));
-        all_local_times = (double*) calloc(ntestprocs * opts.n_rep * n_wait_steps,
-                sizeof(double));
+      all_global_times = (double*) calloc(ntestprocs * n_wait_steps, sizeof(double));
     }
 
     print_initial_settings(argc, argv, opts, clock_sync.print_sync_info);
@@ -236,28 +331,9 @@ int main(int argc, char* argv[]) {
           for (index = 0; index < ntestprocs; index++) {
               p = testprocs_list[index];    // select the process to exchange pingpongs with
               if (p != master_rank) {
-                for (i = 0; i < opts.n_rep; i++) {
-                        MPI_Send(&time_msg[0], 2, MPI_DOUBLE, p, 0,
-                                MPI_COMM_WORLD);
-                        MPI_Recv(&time_msg[0], 2, MPI_DOUBLE, p, 0,
-                                MPI_COMM_WORLD, &stat);
-
-                        // cannot use the local time on the root as a reference time, it needs to be
-                        // normalized according to the synchronization method
-                        // (for JK, SKaMPI, on the root process global_time  = local_time)
-                        all_local_times[step * ntestprocs * opts.n_rep + index * opts.n_rep + i] =
-                            clock_sync.get_global_time(get_time());
-                        all_global_times[step * ntestprocs * opts.n_rep
-                                         + index * opts.n_rep + i] = time_msg[1];
-
-                    }
-                }
-                ZF_LOGV("[step %d] Measured drift between (%d - %d) into global array indices [%ld, %ld]",
-                    step, my_rank, p,
-                    step * ntestprocs * opts.n_rep + index * opts.n_rep,
-                    step * ntestprocs * opts.n_rep + index * opts.n_rep + opts.n_rep-1);
+                all_global_times[step * ntestprocs + index] = SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &clock_sync);
+              }
             }
-
             // wait 1 second
             sleep_time.tv_sec = wait_time_s;
             sleep_time.tv_nsec = 0;
@@ -267,20 +343,8 @@ int main(int argc, char* argv[]) {
         } else {
           for (index = 0; index < ntestprocs; index++) {
             p = testprocs_list[index];    // make sure the current rank is in the test list
-
             if (my_rank == p) {
-              for (i = 0; i < opts.n_rep; i++) {
-                MPI_Recv(&time_msg[0], 2, MPI_DOUBLE, master_rank, 0,
-                    MPI_COMM_WORLD, &stat);
-
-                local_time = get_time();
-                global_time = clock_sync.get_global_time(local_time);
-                time_msg[0] = local_time;
-                time_msg[1] = global_time;
-
-                MPI_Send(&time_msg[0], 2, MPI_DOUBLE, master_rank, 0,
-                    MPI_COMM_WORLD);
-              }
+              SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &clock_sync);
             }
           }
         }
@@ -290,49 +354,20 @@ int main(int argc, char* argv[]) {
 
     f = stdout;
     if (my_rank == master_rank) {
-      if (opts.print_procs_allpingpongs > 0) {
-        fprintf(f,"%14s %3s %4s %14s %14s %14s\n", "wait_time_s", "p", "rep", "gtime", "reftime", "diff");
-      } else {
-        fprintf(f,"%14s %3s %14s\n", "wait_time_s", "p", "min_diff");
-      }
-
+      fprintf(f,"%14s %3s %14s\n", "wait_time_s", "p", "min_diff");
     }
 
     for (step = 0; step < n_wait_steps; step++) {
       if (my_rank == master_rank) {
         for (index = 0; index < ntestprocs; index++) {
           p = testprocs_list[index];    // make sure the current rank is in the test list
-
-          min_drift = -1;
-          for (i = 0; i < opts.n_rep; i++) {
-            global_time = all_global_times[step * ntestprocs
-                                           * opts.n_rep + index * opts.n_rep + i];
-            local_time = all_local_times[step * ntestprocs * opts.n_rep
-                                         + index * opts.n_rep + i];
-
-            if (opts.print_procs_allpingpongs > 0) {
-              fprintf(f, "%14.9f %3d %4d %14.9f %14.9f %14.9f\n",
-                step * wait_time_s, p, i, global_time,
-                local_time, global_time - local_time);
-            } else {
-              if (min_drift < 0) {
-                min_drift = fabs(global_time - local_time);
-              } else {
-                min_drift = repro_min(min_drift, fabs(global_time - local_time));
-              }
-            }
-          }
-
-          if (opts.print_procs_allpingpongs == 0) {
-            fprintf(f, "%14.9f %3d %14.9f\n", step * wait_time_s, p, min_drift);
-          }
-
+          min_drift = all_global_times[step * ntestprocs + index];
+          fprintf(f, "%14.9f %3d %14.9f\n", step * wait_time_s, p, min_drift);
         }
       }
     }
 
     if (my_rank == master_rank) {
-        free(all_local_times);
         free(all_global_times);
     }
 

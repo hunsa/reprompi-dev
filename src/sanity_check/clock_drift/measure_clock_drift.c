@@ -21,6 +21,9 @@
 </license>
  */
 
+// avoid getsubopt bug
+#define _XOPEN_SOURCE 500
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -28,11 +31,11 @@
 #include <math.h>
 #include "mpi.h"
 
+#include <getopt.h>
+
 #include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/misc.h"
-#include "parse_drift_test_options.h"
-
 
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_fit.h>
@@ -44,6 +47,145 @@
 
 static const int RTT_WARMUP_ROUNDS = 5;
 static const int OUTPUT_ROOT_PROC = 0;
+
+typedef struct opt {
+    long n_rep; /* --nrep */
+    int steps;  /* --steps */
+    char testname[256];
+
+    long rtt_pingpongs_nrep;  /* --rtt-nrep */
+    double print_procs_ratio;  /* --print-procs-ratio */
+    int print_procs_allpingpongs; /* --print-procs-allpingpongs */
+
+} reprompib_drift_test_opts_t;
+
+static const struct option default_long_options[] = {
+        { "nrep", required_argument, 0, 'n' },
+        { "steps", required_argument, 0, 's' },
+        { "rtt-nrep", required_argument, 0, 'r' },
+        { "print-procs-ratio", required_argument, 0, 'p' },
+        { "print-procs-allpingpongs", required_argument, 0, 'a' },
+        { "help", no_argument, 0, 'h' },
+        { 0, 0, 0, 0 }
+};
+
+int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char **argv);
+
+void print_help(char* testname) {
+    int my_rank;
+    int root_proc = 0;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    if (my_rank == root_proc) {
+
+        if (strstr(testname, "measure_clock_drift") != 0) {
+            printf("\nUSAGE: %s [options] [steps]\n", testname);
+        }
+        else {
+            printf("\nUSAGE: %s [options]\n", testname);
+        }
+
+        printf("options:\n");
+        printf("%-40s %-40s\n", "-h", "print this help");
+        printf("%-40s %-40s\n", "--nrep=<nrep>",
+                    "set the number of ping-pong rounds between two processes to measure offset");
+        printf("%-40s %-40s\n", "--steps",
+                    "set the number of 1s steps to wait after sync (default: 0)");
+        printf("%-40s %-40s\n", "--rtt-nrep",
+                            "set the number of pingpogns used to measure the RTT between two processes (default: 100)");
+        printf("%-40s %-40s\n", "--print-procs-ratio",
+        "set the fraction of the total processes to be tested for clock drift. If print-procs-ratio=0, only the last rank and the rank with the largest power of two are tested (default: 0)");
+        printf("%-40s %-40s\n", "--print-procs-allpingpongs",
+                            "print measurement results for all pingpongs or only the min (default: 1)");
+
+        printf("\nEXAMPLES: mpirun -np 4 %s --nrep=2 --clock-sync=HCA2 --print-procs-ratio=0.1\n", testname);
+        printf("\nEXAMPLES: mpirun -np 4 %s --nrep=2 --clock-sync=HCA2 --steps=5 --print-procs-ratio=0.1\n", testname);
+        printf("\n\n");
+    }
+}
+
+
+void init_parameters(reprompib_drift_test_opts_t* opts_p, char* name) {
+    opts_p->n_rep = 0;
+    opts_p->steps = 0;
+
+    opts_p->rtt_pingpongs_nrep = 100;
+    opts_p->print_procs_ratio = 0;
+    opts_p->print_procs_allpingpongs = 0;
+    strcpy(opts_p->testname,name);
+}
+
+
+int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char **argv) {
+    int c;
+
+    init_parameters(opts_p, argv[0]);
+
+    opterr = 0;
+
+    while (1) {
+
+        /* getopt_long stores the option index here. */
+        int option_index = 0;
+
+        c = getopt_long(argc, argv, "h", default_long_options,
+                &option_index);
+
+        /* Detect the end of the options. */
+        if (c == -1)
+            break;
+
+        switch (c) {
+        case 'n': /* number of repetitions (pingpongs) */
+            opts_p->n_rep = atol(optarg);
+            break;
+        case 'r': /* number of pingpongs performed to estimate the RTT between two processes */
+            opts_p->rtt_pingpongs_nrep = atol(optarg);
+            break;
+        case 's': /* number of 1s steps after which to measure the clock drift */
+            opts_p->steps = atoi(optarg);
+            break;
+        case 'p': /* fraction of processes for which to measure the drift (normal distribution)
+                   if print_procs_ratio==0, print only the largest power of two and the last rank
+                   */
+            opts_p->print_procs_ratio = atof(optarg);
+            break;
+        case 'a': /* print all pingpong results or only the min clock drift */
+            opts_p->print_procs_allpingpongs = atoi(optarg);
+            break;
+        case 'h':
+            print_help(opts_p->testname);
+            break;
+        case '?':
+            break;
+        }
+    }
+
+    if (opts_p->n_rep <= 0) {
+      reprompib_print_error_and_exit("Invalid number of repetitions (should be positive)");
+    }
+    if (opts_p->rtt_pingpongs_nrep <= 0) {
+      reprompib_print_error_and_exit("Invalid number of repetitions for the RTT (should be positive)");
+    }
+    if (opts_p->steps < 0) {
+      reprompib_print_error_and_exit("Invalid number of steps (should be >=0)");
+    }
+    if (opts_p->print_procs_ratio < 0 || opts_p->print_procs_ratio > 1) {
+      reprompib_print_error_and_exit("Invalid process ratio (should be a number between 0 and 1)");
+    }
+    if (opts_p->print_procs_allpingpongs < 0) {
+      reprompib_print_error_and_exit("Invalid flag for printing all pingpongs (should be >=0)");
+    }
+    if (opts_p->print_procs_allpingpongs > 1) {
+      opts_p->print_procs_allpingpongs = 1;
+    }
+
+    optind = 1; // reset optind to enable option re-parsing
+    opterr = 1; // reset opterr to catch invalid options
+
+    return 0;
+}
+
 
 void estimate_all_rtts(int master_rank, int other_rank, const int n_pingpongs,
         double *rtt) {
@@ -332,7 +474,6 @@ int main(int argc, char* argv[]) {
         all_local_times = (double*) calloc(ntestprocs * opts.n_rep * n_wait_steps,
                 sizeof(double));
     }
-
 
     print_initial_settings(argc, argv, opts, clock_sync.print_sync_info);
 

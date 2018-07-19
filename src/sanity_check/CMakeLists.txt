@@ -14,12 +14,11 @@ ${SRC_DIR}/reprompi_bench/sync/time_measurement.c
 
 set(MEASURE_CLOCK_DRIFT
 clock_drift/measure_clock_drift.c
-clock_drift/parse_drift_test_options.c
 ${SRC_DIR}/reprompi_bench/misc.c
 ${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
 ${SRC_DIR}/reprompi_bench/option_parser/option_parser_helpers.c
 ${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
-${SYNC_SRC_FILES}
+${SRC_DIR}/reprompi_bench/sync/time_measurement.c
 )
 
 add_executable(measure_clock_drift
@@ -28,14 +27,12 @@ add_executable(measure_clock_drift
 
 add_executable(measure_clock_drift_new
 clock_drift/measure_clock_drift_new.c
-clock_drift/parse_drift_test_options.c
 ${SRC_DIR}/reprompi_bench/misc.c
 ${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
 ${SRC_DIR}/reprompi_bench/option_parser/option_parser_helpers.c
 ${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
 ${SRC_DIR}/reprompi_bench/sync/time_measurement.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/process_synchronization.c
-#${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/barrier_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/round_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/round_time_sync.c
