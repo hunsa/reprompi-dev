@@ -362,7 +362,7 @@ int main(int argc, char* argv[]) {
         for (index = 0; index < ntestprocs; index++) {
           p = testprocs_list[index];    // make sure the current rank is in the test list
           min_drift = all_global_times[step * ntestprocs + index];
-          fprintf(f, "%14.9f %3d %14.9f\n", step * wait_time_s, p, min_drift);
+          fprintf(f, "%14.9f %3d %14.9f\n", step * wait_time_s, p, abs(min_drift));
         }
       }
     }
