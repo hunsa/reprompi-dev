@@ -12,17 +12,8 @@
 #include "reprompi_bench/sync/clock_sync/clocks/GlobalClockOffset.h"
 
 SKaMPIClockSync::SKaMPIClockSync(ClockOffsetAlg *offsetAlg) {
-  //int nprocs, i;
-  //, my_rank;
-  //int root = 0;
-
   this->offset_alg = offsetAlg;
   this->tds = NULL;
-
-//  MPI_Comm_size(comm, &nprocs);
-//  MPI_Comm_rank(comm, &my_rank);
-
-
 }
 
 SKaMPIClockSync::~SKaMPIClockSync() {
