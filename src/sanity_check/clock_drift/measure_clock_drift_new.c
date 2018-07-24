@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
+//#include <time.h>
 #include <math.h>
 #include "mpi.h"
 
@@ -42,22 +42,24 @@
 #include "log/zf_log.h"
 
 static const int OUTPUT_ROOT_PROC = 0;
-static const int Minimum_ping_pongs =  20;
-static const int Number_ping_pongs  =  30;
+static int Minimum_ping_pongs =  20;
+static int Number_ping_pongs  =  100;
 
 double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_rank, reprompib_sync_module_t *clock_sync);
 
 typedef struct opt {
+  long n_rep; /* --nrep */
   int steps;  /* --steps */
   char testname[256];
   double print_procs_ratio;  /* --print-procs-ratio */
 } reprompib_drift_test_opts_t;
 
 static const struct option default_long_options[] = {
-        { "steps", required_argument, 0, 's' },
-        { "print-procs-ratio", required_argument, 0, 'p' },
-        { "help", no_argument, 0, 'h' },
-        { 0, 0, 0, 0 }
+    { "nrep", required_argument, 0, 'n' },
+    { "steps", required_argument, 0, 's' },
+    { "print-procs-ratio", required_argument, 0, 'p' },
+    { "help", no_argument, 0, 'h' },
+    { 0, 0, 0, 0 }
 };
 
 int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char **argv);
@@ -80,6 +82,8 @@ void print_help(char* testname) {
         printf("%-40s %-40s\n", "-h", "print this help");
         printf("%-40s %-40s\n", "--steps",
                     "set the number of 1s steps to wait after sync (default: 0)");
+        printf("%-40s %-40s\n", "--nrep=<nrep>",
+                    "set the number of ping-pong rounds between two processes to measure offset");
         printf("%-40s %-40s\n", "--print-procs-ratio",
         "set the fraction of the total processes to be tested for clock drift. If print-procs-ratio=0, only the last rank and the rank with the largest power of two are tested (default: 0)");
 
@@ -91,9 +95,10 @@ void print_help(char* testname) {
 
 
 void init_parameters(reprompib_drift_test_opts_t* opts_p, char* name) {
-    opts_p->steps = 0;
-    opts_p->print_procs_ratio = 0;
-    strcpy(opts_p->testname,name);
+  opts_p->n_rep = 0;
+  opts_p->steps = 0;
+  opts_p->print_procs_ratio = 0;
+  strcpy(opts_p->testname,name);
 }
 
 
@@ -117,13 +122,16 @@ int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char
             break;
 
         switch (c) {
-        case 's': /* number of 1s steps after which to measure the clock drift */
+        case 's': /* here only two steps, the first after sync and the second after 's' seconds */
             opts_p->steps = atoi(optarg);
             break;
         case 'p': /* fraction of processes for which to measure the drift (normal distribution)
                    if print_procs_ratio==0, print only the largest power of two and the last rank
                    */
             opts_p->print_procs_ratio = atof(optarg);
+            break;
+        case 'n': /* number of repetitions (pingpongs) */
+            opts_p->n_rep = atol(optarg);
             break;
         case 'h':
             print_help(opts_p->testname);
@@ -265,7 +273,7 @@ void print_initial_settings(int argc, char* argv[], reprompib_drift_test_opts_t 
             fprintf(f, " %s", argv[i]);
         }
         fprintf(f, "\n");
-        //fprintf(f, "#@nrep=%ld\n", opts.n_rep);
+        fprintf(f, "#@nrep=%ld\n", opts.n_rep);
         fprintf(f, "#@steps=%d\n", opts.steps);
         fprintf(f, "#@timerres=%14.9f\n", MPI_Wtick());
 
@@ -285,10 +293,10 @@ int main(int argc, char* argv[]) {
     double  min_drift;
     double *all_global_times = NULL;
 
-    int step;
+    //int step;
     int n_wait_steps = 0;
-    double wait_time_s = 1;
-    struct timespec sleep_time;
+    //double wait_time_s = 1;
+    //struct timespec sleep_time;
     double runtime_s;
     int ntestprocs;
     int* testprocs_list;
@@ -305,7 +313,7 @@ int main(int argc, char* argv[]) {
     reprompib_init_sync_module(argc, argv, &clock_sync);
     init_timer();
 
-    n_wait_steps = opts.steps + 1;
+    n_wait_steps = 2;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
@@ -323,52 +331,84 @@ int main(int argc, char* argv[]) {
     clock_sync.sync_clocks();
     runtime_s = get_time() - runtime_s;
 
+    Number_ping_pongs = opts.n_rep;
+
     if (my_rank == master_rank) {
-        printf ("#@sync_duration=%14.9f\n", runtime_s);
-    }
-    for (step = 0; step < n_wait_steps; step++) {
-        if (my_rank == master_rank) {
-          for (index = 0; index < ntestprocs; index++) {
-              p = testprocs_list[index];    // select the process to exchange pingpongs with
-              if (p != master_rank) {
-                all_global_times[step * ntestprocs + index] = SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &clock_sync);
-              }
-            }
-            // wait 1 second
-            sleep_time.tv_sec = wait_time_s;
-            sleep_time.tv_nsec = 0;
+      double target_time = get_time() + ((double)opts.steps);
+      int first_iter = 1;
 
-            nanosleep(&sleep_time, &sleep_time);
+      printf ("#@sync_duration=%14.9f\n", runtime_s);
 
+      int offset = 0;
+
+      // measure once
+      for (index = 0; index < ntestprocs; index++) {
+        p = testprocs_list[index];    // select the process to exchange pingpongs with
+        if (p != master_rank) {
+          all_global_times[offset * ntestprocs + index] = SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &clock_sync);
+        }
+      }
+
+      //printf("target_time=%14.9f, cur_time=%14.9f\n", target_time, get_time());
+      // wait until 's' seconds are done
+      do {
+        double cur_time = get_time();
+        if( cur_time >= target_time ) {
+          if( first_iter == 1 ) {
+            // we were late.. report a warning
+            printf ("#@LATE_WARNING=%d\n", opts.steps);
+          }
+          break;
         } else {
-          for (index = 0; index < ntestprocs; index++) {
-            p = testprocs_list[index];    // make sure the current rank is in the test list
-            if (my_rank == p) {
-              SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &clock_sync);
-            }
+          first_iter = 0;
+        }
+      } while( 1 );
+
+      // measure again
+      offset = 1;
+      for (index = 0; index < ntestprocs; index++) {
+        p = testprocs_list[index];    // select the process to exchange pingpongs with
+        if (p != master_rank) {
+          all_global_times[offset * ntestprocs + index] = SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &clock_sync);
+        }
+      }
+
+
+    } else {
+      int i;
+
+      for(i=0; i<n_wait_steps; i++) {
+        // measure twice (n_wait_steps should be 2)
+        for (index = 0; index < ntestprocs; index++) {
+          p = testprocs_list[index];    // make sure the current rank is in the test list
+          if (my_rank == p) {
+            SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &clock_sync);
           }
         }
-
+      }
     }
     clock_sync.finalize_sync();
 
     f = stdout;
     if (my_rank == master_rank) {
+      int offset = 0;
+
       fprintf(f,"%14s %3s %14s\n", "wait_time_s", "p", "min_diff");
-    }
 
-    for (step = 0; step < n_wait_steps; step++) {
-      if (my_rank == master_rank) {
-        for (index = 0; index < ntestprocs; index++) {
-          p = testprocs_list[index];    // make sure the current rank is in the test list
-          min_drift = all_global_times[step * ntestprocs + index];
-          fprintf(f, "%14.9f %3d %14.9f\n", step * wait_time_s, p, fabs(min_drift));
-        }
+      for (index = 0; index < ntestprocs; index++) {
+        p = testprocs_list[index];
+        min_drift = all_global_times[offset * ntestprocs + index];
+        fprintf(f, "%14.9f %3d %14.9f\n", 0.0f, p, fabs(min_drift));
       }
-    }
 
-    if (my_rank == master_rank) {
-        free(all_global_times);
+      offset = 1;
+      for (index = 0; index < ntestprocs; index++) {
+        p = testprocs_list[index];
+        min_drift = all_global_times[offset * ntestprocs + index];
+        fprintf(f, "%14.9f %3d %14.9f\n", (double)opts.steps, p, fabs(min_drift));
+      }
+
+      free(all_global_times);
     }
 
     free(testprocs_list);
@@ -401,6 +441,8 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
    */
 
   MPI_Comm_rank(comm, &my_rank);
+
+  //printf("nb_ping_pongs: %d\n", Number_ping_pongs);
 
   // check whether I am participating here
   // if not, there is no offset
