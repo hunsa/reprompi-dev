@@ -132,7 +132,7 @@ static void roundsync_finalize_synchronization(void) {
 
 static void roundsync_sync_print(FILE* f)
 {
-  fprintf (f, "#@procsync=roundsync\n");
+  fprintf(f, "#@procsync=roundsync\n");
   fprintf(f, "#@bcast_nrep=%ld\n", bcast_parameters.bcast_n_rep);
   fprintf(f, "#@bcast_runtime_s=%.10f\n", bcast_runtime);
 }

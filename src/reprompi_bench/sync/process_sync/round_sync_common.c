@@ -81,7 +81,7 @@ void roundsync_parse_bcast_options(int argc, char **argv, reprompi_roundsync_bca
 
     opts_p->bcast_multiplier = BCAST_MUTIPLIER;
     opts_p->bcast_n_rep      = BCAST_NREP;
-    opts_p->bcast_meas = BCAST_MEASURE_MEAN;
+    opts_p->bcast_meas       = BCAST_MEASURE_MEAN;
 
     optind = 1;
     optopt = 0;
