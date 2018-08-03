@@ -68,8 +68,8 @@ void print_command_line_args(int argc, char* argv[]) {
 }
 
 
-void print_common_settings_to_file(FILE* f, const reprompib_bench_print_info_t* print_info,
-    const reprompib_dictionary_t* dict) {
+void print_common_settings_to_file(FILE* f, const reprompib_bench_print_info_t* print_info) {
+  // , const reprompib_dictionary_t* dict) {
     int my_rank, np;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -80,7 +80,7 @@ void print_common_settings_to_file(FILE* f, const reprompib_bench_print_info_t* 
     }
 
     if (my_rank == OUTPUT_ROOT_PROC) {
-      reprompib_print_dictionary(dict, f);
+      // reprompib_print_dictionary(dict, f);
 
       fprintf(f, "#@reproMPIcommitSHA1=%s\n", git_commit);
       fprintf(f, "#@nprocs=%d\n", np);
@@ -91,7 +91,7 @@ void print_common_settings_to_file(FILE* f, const reprompib_bench_print_info_t* 
 }
 
 static void print_benchmark_common_settings_to_file(FILE* f, const reprompib_bench_print_info_t* print_info,
-    const reprompib_common_options_t* opts, const reprompib_dictionary_t* dict) {
+    const reprompib_common_options_t* opts) { //, const reprompib_dictionary_t* dict) {
     int my_rank, len;
     char type_name[MPI_MAX_OBJECT_NAME];
     MPI_Aint lb, extent;
@@ -133,14 +133,14 @@ static void print_benchmark_common_settings_to_file(FILE* f, const reprompib_ben
         if (opts->pingpong_ranks[0] >=0 && opts->pingpong_ranks[1] >=0) {
           fprintf(f, "#@pingpong_ranks=%d,%d\n", opts->pingpong_ranks[0], opts->pingpong_ranks[1]);
         }
-        print_common_settings_to_file(f, print_info, dict);
+        print_common_settings_to_file(f, print_info);//, dict);
         fprintf(f, "#@runtime_type=%s\n", reprompib_get_timing_method_name(print_info->timing_method));
     }
 }
 
 
 void print_common_settings(const reprompib_bench_print_info_t* print_info,
-    const reprompib_common_options_t* opts, const reprompib_dictionary_t* dict) {
+    const reprompib_common_options_t* opts) { //, const reprompib_dictionary_t* dict) {
     FILE* f = stdout;
     int my_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -150,11 +150,11 @@ void print_common_settings(const reprompib_bench_print_info_t* print_info,
        return;
     }
 
-    print_benchmark_common_settings_to_file(stdout, print_info, opts, dict);
+    print_benchmark_common_settings_to_file(stdout, print_info, opts); //, dict);
     if (my_rank == OUTPUT_ROOT_PROC) {
         if (opts->output_file != NULL) {
             f = fopen(opts->output_file, "a");
-            print_benchmark_common_settings_to_file(f, print_info, opts, dict);
+            print_benchmark_common_settings_to_file(f, print_info, opts); //, dict);
             fflush(f);
             fclose(f);
         }

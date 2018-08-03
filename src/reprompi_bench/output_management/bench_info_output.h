@@ -39,9 +39,9 @@ typedef struct bench_print_info {
 
 void print_command_line_args(int argc, char* argv[]);
 void print_common_settings(const reprompib_bench_print_info_t* print_info,
-    const reprompib_common_options_t* opts, const reprompib_dictionary_t* dict);
-void print_common_settings_to_file(FILE* f, const reprompib_bench_print_info_t* print_info,
-    const reprompib_dictionary_t* dict);
+    const reprompib_common_options_t* opts); //, const reprompib_dictionary_t* dict);
+void print_common_settings_to_file(FILE* f, const reprompib_bench_print_info_t* print_info);
+//,   const reprompib_dictionary_t* dict);
 void print_final_info(const reprompib_common_options_t* opts, const time_t start_time, const time_t end_time);
 
 #endif /* REPROMPIB_BENCH_INFO_OUTPUT_H_ */
