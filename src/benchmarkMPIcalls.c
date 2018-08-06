@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
     reprompib_sync_params_t sync_params;
     reprompib_timing_method_t runtime_type;
     reprompi_caching_module_t caching_module;
-    long total_n_rep;
+    //long total_n_rep;
     int is_invalid;
 
     /* start up MPI
@@ -239,7 +239,6 @@ int main(int argc, char* argv[]) {
         proc_sync.init_sync_round();         // broadcast first window
 
         i = 0;
-        total_n_rep = 0;
         while(1) {
           proc_sync.start_sync();
 
@@ -248,12 +247,10 @@ int main(int argc, char* argv[]) {
           tend_sec[i] = get_time();
 
           is_invalid = proc_sync.stop_sync();
-          if (is_invalid == REPROMPI_INVALID_MEASUREMENT) { // redo the measurement if we haven't reached the max possible number of reps
+          if (is_invalid == REPROMPI_INVALID_MEASUREMENT) {
+            // redo the measurement
+            // we are still in the time frame
             //ZF_LOGV("[%d] invalid_measurement at i=%ld", my_rank, total_n_rep);
-            if (total_n_rep >= opts.max_n_rep) {
-              job.n_rep = i; // record the current number of correct reps
-              break;
-            }
           } else if( is_invalid == REPROMPI_OUT_OF_TIME_VALID ) {
             job.n_rep = i;
             break;
@@ -263,7 +260,6 @@ int main(int argc, char* argv[]) {
           } else {
             i++;
           }
-          total_n_rep++;
           if (i == job.n_rep) {
             break;
           }
