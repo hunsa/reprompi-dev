@@ -89,27 +89,28 @@ void cleanup_sync_options(sync_module_info_t* opts_p) {
 
 int get_sync_type(const int n_types, const sync_type_t* type_list, const char* name) {
   int i;
+  int type = -1;
 
-  if (name == NULL) {
-    return -1;
-  }
-
-  for (i=0; i<n_types; i++) {
-    if (strcmp(name, type_list[i].name) == 0) {
-        return type_list[i].type;
+  if (name != NULL) {
+    for (i=0; i<n_types; i++) {
+      if (strcmp(name, type_list[i].name) == 0) {
+        type = type_list[i].type;
+      }
     }
   }
 
-  return -1;
+  return type;
 }
 
 
 char* get_name_from_sync_type(const int n_types, const sync_type_t* type_list, int type) {
   int i;
+  char *name = NULL;
+
   for (i=0; i<n_types; i++) {
     if (type_list[i].type == type) {
-        return strdup(type_list[i].name);
+      name = strdup(type_list[i].name);
     }
   }
-  return NULL;
+  return name;
 }

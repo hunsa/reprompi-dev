@@ -38,9 +38,9 @@
 
 #include "round_sync_common.h"
 
-#define ZF_LOG_LEVEL ZF_LOG_INFO
+//#define ZF_LOG_LEVEL ZF_LOG_INFO
 //#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
-//#define ZF_LOG_LEVEL ZF_LOG_WARN
+#define ZF_LOG_LEVEL ZF_LOG_WARN
 #include "log/zf_log.h"
 
 typedef struct {
@@ -60,13 +60,17 @@ static int invalid;
 static double start_sync    = 0.0;
 static double bcast_runtime = 0.0;
 static double job_start_time= 0.0;
-static int stop_flag = 0;
+static int stop_flag        = 0;
+
+static int barrier_sync_mode  = 0;   // boolean: indicates whether to use clock sync (0) or barrier (1)
+static int switch_count       = -1;  // when to start switching to barrier, default -1 means never
 
 void roundtimesync_parse_options(int argc, char **argv, reprompi_roundtime_sync_params_t* opts_p) {
     int c;
 
     static const struct option reprompi_sync_long_options[] = {
-            { "bench-time-ms", required_argument, 0, 't' },
+            { "rt-bench-time-ms", required_argument, 0, 1000 },
+            { "rt-barrier-count", required_argument, 0, 1001 },
             { 0, 0, 0, 0 }
     };
     static const char reprompi_sync_opts_str[] = "";
@@ -74,6 +78,7 @@ void roundtimesync_parse_options(int argc, char **argv, reprompi_roundtime_sync_
     optind = 1;
     optopt = 0;
     opterr = 0; // ignore invalid options
+
     while (1) {
 
         /* getopt_long stores the option index here. */
@@ -87,8 +92,11 @@ void roundtimesync_parse_options(int argc, char **argv, reprompi_roundtime_sync_
             break;
 
         switch (c) {
-        case 't':
+        case 1000:
             opts_p->time_slot = atof(optarg) * 1e-3;
+            break;
+        case 1001:
+            switch_count = atoi(optarg);
             break;
         case '?':
              break;
@@ -102,68 +110,81 @@ void roundtimesync_parse_options(int argc, char **argv, reprompi_roundtime_sync_
 
 
 static void roundtimesync_init_sync_round(void) {
-  job_start_time = get_time();
-  stop_flag = 0; // all are running
-  invalid = REPROMPI_CORRECT_MEASUREMENT;
+  job_start_time     = get_time();
+  stop_flag          = 0; // all are running
+  invalid            = REPROMPI_CORRECT_MEASUREMENT;
 }
 
 static void roundtimesync_start_synchronization(void) {
-  int is_first = 1;
-  double global_time;
-  int my_rank;
 
-  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+  if( barrier_sync_mode == 1 ) {
+    MPI_Barrier(MPI_COMM_WORLD);
 
-  MPI_Barrier(MPI_COMM_WORLD);
-  if (my_rank == master_rank) {
-    start_sync = get_time() + bcast_runtime * bcast_parameters.bcast_multiplier;
-  }
-  MPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
-//  global_time = clock_sync_mod->get_global_time(get_time());
-//  ZF_LOGV("[rank %d] current_time=%20.10f need_to_wait_us=%f", my_rank, global_time, 1e6*(start_sync-global_time));
+  } else {
+    int is_first = 1;
+    double global_time;
+    int my_rank;
 
-  while (1) {
-    global_time = clock_sync_mod->get_global_time(get_time());
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    if (global_time >= start_sync) {
-      if (is_first == 1) {
-        invalid = REPROMPI_INVALID_MEASUREMENT;
-      }
-      break;
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (my_rank == master_rank) {
+      start_sync = get_time() + bcast_runtime * bcast_parameters.bcast_multiplier;
     }
-    is_first = 0;
+    MPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
+
+#if ZF_LOG_LEVEL < ZF_LOG_WARN
+    global_time = clock_sync_mod->get_global_time(get_time());
+    ZF_LOGI("[rank %d] current_time=%20.10f need_to_wait_us=%f", my_rank, global_time, 1e6*(start_sync-global_time));
+#endif
+
+    while (1) {
+      global_time = clock_sync_mod->get_global_time(get_time());
+
+      if (global_time >= start_sync) {
+        if (is_first == 1) {
+          invalid = REPROMPI_INVALID_MEASUREMENT;
+        }
+        break;
+      }
+      is_first = 0;
+    }
+
   }
 }
 
 static int roundtimesync_stop_synchronization(void) {
-  //double global_time;
   int current_meas_flag = REPROMPI_CORRECT_MEASUREMENT;
-  double current_runtime = 0;
-  int packet[2];
 
-  current_runtime = get_time() - job_start_time;
-  if (current_runtime >= roundtime_parameters.time_slot) {
-    // stop job
-    stop_flag = 1; // someone is raising flag
-  }
+  //if( barrier_sync_mode == 0 ) {
+    double current_runtime = 0;
+    int packet[2];
 
-  packet[0] = invalid;
-  packet[1] = stop_flag;
+    current_runtime = get_time() - job_start_time;
+    if (current_runtime >= roundtime_parameters.time_slot) {
+      // stop job
+      stop_flag = 1; // someone is raising flag
+    }
 
-  MPI_Allreduce(MPI_IN_PLACE, packet, 2, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+    packet[0] = invalid;
+    packet[1] = stop_flag;
 
-  if (packet[1] == 1) {
-    // we ran out of time, check measurement and exit
-    if (packet[0] == REPROMPI_CORRECT_MEASUREMENT) {
-      current_meas_flag = REPROMPI_OUT_OF_TIME_VALID;
+    MPI_Allreduce(MPI_IN_PLACE, packet, 2, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+
+    if (packet[1] == 1) {
+      // we ran out of time, check measurement and exit
+      if (packet[0] == REPROMPI_CORRECT_MEASUREMENT) {
+        current_meas_flag = REPROMPI_OUT_OF_TIME_VALID;
+      } else {
+        current_meas_flag = REPROMPI_OUT_OF_TIME_INVALID;
+      }
     } else {
-      current_meas_flag = REPROMPI_OUT_OF_TIME_INVALID;
+      if (packet[0] != REPROMPI_CORRECT_MEASUREMENT) {
+        current_meas_flag = REPROMPI_INVALID_MEASUREMENT;
+      }
     }
-  } else {
-    if (packet[0] != REPROMPI_CORRECT_MEASUREMENT) {
-      current_meas_flag = REPROMPI_INVALID_MEASUREMENT;
-    }
-  }
+  //}
+
 
   return current_meas_flag;
 }
@@ -173,9 +194,9 @@ static void roundtimesync_init_module(int argc, char** argv, reprompib_sync_modu
   roundtimesync_parse_options(argc, argv, &roundtime_parameters);
   roundsync_parse_bcast_options(argc, argv, &bcast_parameters);
 
-  if (clock_sync->clocksync == REPROMPI_CLOCKSYNC_NONE) {
-    reprompib_print_error_and_exit("Cannot use the round-sync process synchronization with the selected clock synchronization method (use \"--clock-sync\" to change it)");
-  }
+//  if (clock_sync->clocksync == REPROMPI_CLOCKSYNC_NONE) {
+//    reprompib_print_error_and_exit("Cannot use the round-sync process synchronization with the selected clock synchronization method (use \"--clock-sync\" to change it)");
+//  }
 
   clock_sync_mod = clock_sync;
   bcast_runtime = measure_bcast_runtime(MPI_COMM_WORLD, &bcast_parameters);
@@ -196,6 +217,15 @@ static int* roundtimesync_get_errorcodes(void) {
 }
 
 static void roundtimesync_init_synchronization(const reprompib_sync_params_t* init_params) {
+
+  if( init_params == NULL ) {
+    fprintf(stderr, "ERROR: sync init_params are NULL....continuing\n");
+  } else {
+    if( barrier_sync_mode == 0 && switch_count > -1 && init_params->count >= switch_count ) {
+      barrier_sync_mode = 1;
+    }
+  }
+
 }
 
 static void roundtimesync_finalize_synchronization(void) {
@@ -207,6 +237,7 @@ static void roundtimesync_sync_print(FILE* f)
   fprintf(f, "#@procsync=roundtimesync\n");
   fprintf(f, "#@bcast_nrep=%ld\n", bcast_parameters.bcast_n_rep);
   fprintf(f, "#@bcast_runtime_s=%.10f\n", bcast_runtime);
+  fprintf(f, "#@barrier_switch_count=%d\n", switch_count);
 }
 
 void register_roundtimesync_module(reprompib_proc_sync_module_t *sync_mod) {

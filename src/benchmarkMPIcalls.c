@@ -216,18 +216,19 @@ int main(int argc, char* argv[]) {
         job = jlist.jobs[jlist.job_indices[jindex]];
 
         tstart_sec = (double*) malloc(job.n_rep * sizeof(double));
-        tend_sec = (double*) malloc(job.n_rep * sizeof(double));
+        tend_sec   = (double*) malloc(job.n_rep * sizeof(double));
 
         collective_calls[job.call_index].initialize_data(coll_basic_info, job.count, &coll_params);
 
         // initialize synchronization
-        sync_params.nrep = job.n_rep;
+        sync_params.nrep  = job.n_rep;
+        sync_params.count = job.count;
         proc_sync.init_sync(&sync_params);
         clock_sync.init_sync();
 
 
         print_info.clock_sync = &clock_sync;
-        print_info.proc_sync = &proc_sync;
+        print_info.proc_sync  = &proc_sync;
         print_info.timing_method = runtime_type;
         if (jindex == 0) {
             //print_initial_settings(&opts, &common_opts, &params_dict, &print_info);

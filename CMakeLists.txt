@@ -25,7 +25,7 @@ endif(GSL_INCLUDE_DIR)
 INCLUDE_DIRECTORIES(${GSL_INCLUDE_DIR} "src")
 set(COMMON_LIBRARIES ${GSL_LIBRARIES} )
 
-option(ENABLE_LOGP_SYNC "Enable O(log(p)) clock synchronization for the HCA algorithm [default: disabled]" off)
+# option(ENABLE_LOGP_SYNC "Enable O(log(p)) clock synchronization for the HCA algorithm [default: disabled]" off)
 option(RDTSC_CALIBRATION "Calibrate the frequency of RTDSC [default: off (uses FREQUENCY_MHZ)]" off)
 
 option(ENABLE_RDTSC "Use RDTSC for time measurements [default: MPI_Wtime()]" off)
@@ -83,9 +83,9 @@ endif()
 ###############################################
 ############ Set synchronization flags ########
 ###############################################
-if(ENABLE_LOGP_SYNC)
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_LOGP_SYNC")
-endif()
+#if(ENABLE_LOGP_SYNC)
+#    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_LOGP_SYNC")
+#endif()
 
 if(ENABLE_DOUBLE_BARRIER)
     SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_DOUBLE_BARRIER")
@@ -150,7 +150,6 @@ ${SRC_DIR}/reprompi_bench/sync/time_measurement.c
 #${SRC_DIR}/reprompi_bench/sync/clock_sync/no_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/barrier_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/window_sync.c
-${SRC_DIR}/reprompi_bench/sync/process_sync/round_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/round_time_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/round_sync_common.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/process_synchronization.c

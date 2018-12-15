@@ -36,12 +36,12 @@ static void empty_init_module(int argc, char** argv) {
 }
 
 static double get_normalized_time(double local_time) {
-  int my_rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-
-  if (my_rank == 0) {
-    fprintf(stderr, "WARNING: Global time is not defined.\n");
-  }
+//  int my_rank;
+//  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+//
+//  if (my_rank == 0) {
+//    fprintf(stderr, "WARNING: Global time is not defined.\n");
+//  }
 
   return local_time;
 }

@@ -37,13 +37,13 @@ typedef enum {
   REPROMPI_PROCSYNC_WIN = 0,
   REPROMPI_PROCSYNC_MPIBARRIER,
   REPROMPI_PROCSYNC_DISSEMBARRIER,
-  REPROMPI_PROCSYNC_ROUNDSYNC,
   REPROMPI_PROCSYNC_ROUNDTIMESYNC,
 } reprompi_procsync_t;
 
 // parameters needed to initialize a synchronization round
 typedef struct reprompib_sync_params {
   long nrep;
+  int count;
 } reprompib_sync_params_t;
 
 
@@ -79,7 +79,6 @@ void reprompib_cleanup_proc_sync_module(reprompib_proc_sync_module_t* sync_mod);
 void register_window_module(reprompib_proc_sync_module_t *sync_mod);
 void register_dissem_barrier_module(reprompib_proc_sync_module_t *sync_mod);
 void register_mpibarrier_module(reprompib_proc_sync_module_t *sync_mod);
-void register_roundsync_module(reprompib_proc_sync_module_t *sync_mod);
 void register_roundtimesync_module(reprompib_proc_sync_module_t *sync_mod);
 
 #endif /* REPROMPIB_SYNCHRONIZATION_H_ */
