@@ -234,14 +234,14 @@ static void roundtimesync_finalize_synchronization(void) {
 
 static void roundtimesync_sync_print(FILE* f)
 {
-  fprintf(f, "#@procsync=roundtimesync\n");
+  fprintf(f, "#@procsync=roundtime\n");
   fprintf(f, "#@bcast_nrep=%ld\n", bcast_parameters.bcast_n_rep);
   fprintf(f, "#@bcast_runtime_s=%.10f\n", bcast_runtime);
   fprintf(f, "#@barrier_switch_count=%d\n", switch_count);
 }
 
 void register_roundtimesync_module(reprompib_proc_sync_module_t *sync_mod) {
-  sync_mod->name = "roundtimesync";
+  sync_mod->name = "roundtime";
   sync_mod->procsync = REPROMPI_PROCSYNC_ROUNDTIMESYNC;
 
   sync_mod->init_module = roundtimesync_init_module;
