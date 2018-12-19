@@ -71,4 +71,7 @@ void print_time_parameters(FILE* f) {
     fprintf(f, "#@frequency_hz=%lf\n", FREQ_HZ);
 #endif
     fprintf(f, "#@clock=%s\n", clock);
+#if !defined(ENABLE_RDTSCP) && !defined(ENABLE_RDTSC)
+    fprintf(f, "#@clock_tick=%1.10f\n", MPI_Wtick());
+#endif
 }
