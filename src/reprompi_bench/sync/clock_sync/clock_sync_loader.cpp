@@ -81,6 +81,9 @@ ClockSync* ClockSyncLoader::instantiate_clock_sync(const char *param_name) {
   ClockSync* ret_sync = NULL;
   char *alg_str;
   reprompib_dictionary_t *dict = get_global_param_store();
+  int rank;
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   //ZF_LOGV("instantiate clock for %s", param_name);
 
@@ -168,7 +171,9 @@ ClockSync* ClockSyncLoader::instantiate_clock_sync(const char *param_name) {
    }
 
   } else {
-    ZF_LOGE("parameter '%s' not found, using default", param_name);
+    if(rank == 0) {
+      ZF_LOGE("parameter '%s' not found, using default", param_name);
+    }
   }
 
   return ret_sync;

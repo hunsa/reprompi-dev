@@ -103,7 +103,11 @@ static void topo_init_module(int argc, char** argv) {
   local_clock  = initialize_local_clock();
 
   if( use_default == 1 ) {
-    ZF_LOGW("!!! using default topo1 clock sync options");
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if( rank == 0 ) {
+      ZF_LOGW("!!! using default topo1 clock sync options");
+    }
 
     clock_sync = new TwoLevelClockSync(
       new HCA3ClockSync(new SKaMPIClockOffsetAlg(10,100), 500, false),
