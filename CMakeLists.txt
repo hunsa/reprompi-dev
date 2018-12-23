@@ -30,6 +30,7 @@ option(RDTSC_CALIBRATION "Calibrate the frequency of RTDSC [default: off (uses F
 
 option(ENABLE_RDTSC "Use RDTSC for time measurements [default: MPI_Wtime()]" off)
 option(ENABLE_RDTSCP "Use RDTSCP for time measurements [default: MPI_Wtime()]" off)
+option(ENABLE_GETTIME_REALTIME "Use clock_gettime(CLOCK_REALTIME) for time measurements [default: MPI_Wtime()]" off)
 option(ENABLE_DOUBLE_BARRIER "Call barrier twice for synchronization [default: disabled]" off)
 set(FREQUENCY_MHZ 2300 CACHE STRING "CPU Frequency (needed for RDTSCP-based time measurements)")
 
@@ -73,6 +74,10 @@ endif()
 
 if(ENABLE_RDTSCP)
     SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_RDTSCP")
+endif()
+
+if(ENABLE_GETTIME_REALTIME)
+    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_GETTIME_REALTIME")
 endif()
 
 if(FREQUENCY_MHZ)

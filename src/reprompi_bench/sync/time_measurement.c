@@ -29,6 +29,11 @@
 #include "rdtsc.h"
 #endif
 
+#if defined ENABLE_GETTIME_REALTIME
+#include <time.h>
+#include <stdlib.h>
+#endif
+
 #include "time_measurement.h"
 
 #if defined ENABLE_RDTSCP || defined ENABLE_RDTSC
@@ -39,6 +44,11 @@ const double FREQ_HZ=FREQUENCY_MHZ*1.0e6;
 #else
 const double FREQ_HZ=2300*1.0e6;
 #endif
+#endif
+
+#if defined(ENABLE_GETTIME_REALTIME)
+double wtime;
+struct timespec ts;
 #endif
 
 void init_timer(void) {
@@ -54,13 +64,20 @@ inline double get_time(void) {
     return (double)rdtscp()/FREQ_HZ;
 #elif ENABLE_RDTSC
     return (double)rdtsc()/FREQ_HZ;
+#elif ENABLE_GETTIME_REALTIME
+    if( clock_gettime( CLOCK_REALTIME, &ts) == -1 ) {
+      perror( "clock gettime" );
+      exit( EXIT_FAILURE );
+    }
+    wtime = (double)(ts.tv_nsec) / 1.0e+9 + ts.tv_sec;
+    return wtime;
 #else
     return MPI_Wtime();
 #endif
 }
 
 void print_time_parameters(FILE* f) {
-    char clock[10];
+    char clock[25];
 
     strcpy(clock, "MPI_Wtime");
 #ifdef ENABLE_RDTSCP
@@ -69,9 +86,11 @@ void print_time_parameters(FILE* f) {
 #elif ENABLE_RDTSC
     strcpy(clock, "RDTSC");
     fprintf(f, "#@frequency_hz=%lf\n", FREQ_HZ);
+#elif ENABLE_GETTIME_REALTIME
+    strcpy(clock, "clock_gettime_REALTIME");
 #endif
     fprintf(f, "#@clock=%s\n", clock);
-#if !defined(ENABLE_RDTSCP) && !defined(ENABLE_RDTSC)
+#if !defined(ENABLE_RDTSCP) && !defined(ENABLE_RDTSC) && !defined(ENABLE_GETTIME_REALTIME)
     fprintf(f, "#@clock_tick=%1.10f\n", MPI_Wtick());
 #endif
 }
