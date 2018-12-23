@@ -7,6 +7,7 @@ ${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/GlobalClockOffset.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/MPIClock.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/RdtscpClock.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/RdtscClock.cpp
+${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/GettimeClock.cpp
 
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_offset_algs/ClockOffset.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_offset_algs/ClockOffsetAlg.cpp
