@@ -3,8 +3,10 @@
 #define REPROMPIB_MPI_CLOCK_CLASS_H_
 
 #include "Clock.h"
-#include <time.h>
-#include <stdlib.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
 
 class GettimeClock : public Clock {
 
