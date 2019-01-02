@@ -253,7 +253,7 @@ int main(int argc, char* argv[]) {
             // we are still in the time frame
             //ZF_LOGV("[%d] invalid_measurement at i=%ld", my_rank, total_n_rep);
           } else if( is_invalid == REPROMPI_OUT_OF_TIME_VALID ) {
-            job.n_rep = i;
+            job.n_rep = i+1;
             break;
           } else if( is_invalid == REPROMPI_OUT_OF_TIME_INVALID ) {
             job.n_rep = MY_MAX(0, i-1);
