@@ -33,9 +33,9 @@ double measure_bcast_runtime(MPI_Comm comm, reprompi_roundsync_bcast_params_t *p
   bcast_times = (double*) calloc(parameters->bcast_n_rep, sizeof(double));
 
   for (i = 0; i < parameters->bcast_n_rep; i++) {
+    MPI_Barrier(MPI_COMM_WORLD);
     bcast_times[i] = get_time();
     MPI_Bcast(&bcast_runtime, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
-    MPI_Barrier(MPI_COMM_WORLD);
     bcast_times[i] = get_time() - bcast_times[i];
   }
 
