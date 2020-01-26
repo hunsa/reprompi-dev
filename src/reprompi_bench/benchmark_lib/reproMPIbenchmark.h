@@ -46,13 +46,21 @@ typedef struct {
 } reprompib_job_t;
 
 
-void reprompib_initialize_benchmark(int argc, char* argv[], reprompib_options_t* opts_p, reprompib_sync_module_t* sync_module);
-void reprompib_cleanup_benchmark(reprompib_options_t* opts_p, reprompib_sync_module_t* sync_module);
+void reprompib_initialize_benchmark(int argc, char* argv[],
+    reprompib_options_t *opts_p,
+    reprompib_sync_module_t* clock_sync,
+    reprompib_proc_sync_module_t* sync_module);
 
-void reprompib_print_bench_output(const reprompib_job_t* job_p,
-    const reprompib_sync_module_t* sync_module,
+void reprompib_cleanup_benchmark(
+    reprompib_options_t* opts_p,
+    reprompib_sync_module_t* clock_sync,
+    reprompib_proc_sync_module_t* sync_module);
+
+void reprompib_print_bench_output(
+    const reprompib_job_t* job_p,
+    const reprompib_sync_module_t* clock_sync_module,
+    const reprompib_proc_sync_module_t* sync_module,
     const reprompib_options_t* opts);
-
 
 void reprompib_initialize_job(const long nrep, const double* tstart, const double* tend,
     const char* operation, const char* timername, const char* timertype,
@@ -61,5 +69,7 @@ void reprompib_cleanup_job(reprompib_job_t* job_p);
 void reprompib_add_svar_to_job(char* name, char* s, reprompib_job_t* job_p);
 void reprompib_add_ivar_to_job(char* name, int v, reprompib_job_t* job_p);
 int reprompib_add_parameter_to_bench(const char* key, const char* val);
+
+#define MY_MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 #endif /* REPROMPI_BENCHMARK_H_ */

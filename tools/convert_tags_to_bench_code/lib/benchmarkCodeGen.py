@@ -28,14 +28,13 @@ if(NOT EXISTS ${REPRO_MPI_BENCHMARK_DIR})
     message(FATAL_ERROR "Please specify the path to the ReproMPI benchmark directory")
 endif(NOT EXISTS ${REPRO_MPI_BENCHMARK_DIR})
 
-find_package(GSL REQUIRED)
-
-if (GSL_INCLUDE_DIR)
-message (STATUS "GSL INCLUDES: ${GSL_INCLUDE_DIR}")
-else(GSL_INCLUDE_DIR)
-message (FATAL_ERROR "GSL libraries not found.")
-endif(GSL_INCLUDE_DIR)
-
+# find_package(GSL REQUIRED)
+# 
+# if (GSL_INCLUDE_DIR)
+# message (STATUS "GSL INCLUDES: ${GSL_INCLUDE_DIR}")
+# else(GSL_INCLUDE_DIR)
+# message (FATAL_ERROR "GSL libraries not found.")
+# endif(GSL_INCLUDE_DIR)
 
 set(REPRO_MPI_BENCHMARK_LIB ${REPRO_MPI_BENCHMARK_DIR}/lib)
 set(REPRO_MPI_BENCHMARK_INCLUDE ${REPRO_MPI_BENCHMARK_DIR}/include)
@@ -46,12 +45,14 @@ add_executable(%s
 )
 
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src ${REPRO_MPI_BENCHMARK_INCLUDE})
-TARGET_LINK_LIBRARIES(%s ${REPRO_MPI_BENCHMARK_LIB}/libreproMPIbench.${LIBRARY_SUFFIX} ${MPI_LIBRARIES} ${GSL_LIBRARIES})
-
+TARGET_LINK_LIBRARIES(%s ${REPRO_MPI_BENCHMARK_LIB}/libreproMPIbench.${LIBRARY_SUFFIX} ${MPI_LIBRARIES})
+# SET_TARGET_PROPERTIES(%s PROPERTIES LINKER_LANGUAGE CXX)
+# ${GSL_LIBRARIES})
 
 """ % (src_dir, 
        binary_name,
        "\n".join([ "${SRC_DIR}/%s" %f for f in sourcefiles_list]), 
+       binary_name,
        binary_name)
 
     return common_cmake_text

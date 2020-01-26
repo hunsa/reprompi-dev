@@ -44,8 +44,10 @@ static const int HASHTABLE_SIZE=100;
 static int first_print_call = 1;
 
 static reprompib_dictionary_t params_dict;
+static reprompib_bench_print_info_t print_info;
+static reprompib_timing_method_t runtime_type;
 
-void print_initial_settings(long nrep, print_sync_info_t print_sync_info) {
+void print_initial_settings(long nrep, reprompib_bench_print_info_t *print_info) {
   int my_rank, np;
   FILE* f = stdout;
 
@@ -54,12 +56,16 @@ void print_initial_settings(long nrep, print_sync_info_t print_sync_info) {
 
   if (my_rank == OUTPUT_ROOT_PROC) {
     fprintf(f, "#@nrep=%ld\n", nrep);
-    print_common_settings_to_file(f, print_sync_info, &params_dict);
+    print_common_settings_to_file(f, print_info);
   }
 }
 
-void reprompib_print_bench_output(const reprompib_job_t* job_p,
-    const reprompib_sync_module_t* sync_module, const reprompib_options_t* opts) {
+void reprompib_print_bench_output(
+    const reprompib_job_t* job_p,
+    const reprompib_sync_module_t* clock_sync_module,
+    const reprompib_proc_sync_module_t* proc_sync_module,
+    const reprompib_options_t* opts) {
+
   FILE* f = stdout;
   reprompib_lib_output_info_t output_info;
   int my_rank;
@@ -69,21 +75,23 @@ void reprompib_print_bench_output(const reprompib_job_t* job_p,
   output_info.print_summary_methods = opts->print_summary_methods;
 
   if (first_print_call) {
-    print_initial_settings(opts->n_rep, sync_module->print_sync_info);
-    print_results_header(&output_info, job_p, sync_module);
+    print_initial_settings(opts->n_rep, &print_info);
+    print_results_header(&output_info, job_p, clock_sync_module, proc_sync_module);
     first_print_call = 0;
   }
 
   if (opts->print_summary_methods > 0) {
-    print_summary(stdout, &output_info, job_p, sync_module);
+    print_summary(stdout, &output_info, job_p, clock_sync_module, proc_sync_module);
   } else {
-    print_measurement_results(f, &output_info, job_p, sync_module);
+    print_measurement_results(f, &output_info, job_p, clock_sync_module, proc_sync_module);
   }
 
 }
 
 void reprompib_initialize_benchmark(int argc, char* argv[],
-    reprompib_options_t *opts_p, reprompib_sync_module_t* clock_sync) {
+    reprompib_options_t *opts_p,
+    reprompib_sync_module_t* clock_sync,
+    reprompib_proc_sync_module_t* proc_sync) {
   int my_rank;
   reprompib_sync_params_t sync_params;
 
@@ -101,8 +109,11 @@ void reprompib_initialize_benchmark(int argc, char* argv[],
   // parse arguments and set-up benchmarking jobs
   print_command_line_args(argc, argv);
 
-  // parse extra parameters into the global dictionary
-  reprompib_parse_extra_key_value_options(&params_dict, argc, argv);
+//  // parse extra parameters into the global dictionary
+//  reprompib_parse_extra_key_value_options(&params_dict, argc, argv);
+
+  // parse timing options
+  reprompib_parse_timing_options(&runtime_type, argc, argv);
 
   // parse the benchmark-specific arguments (nreps, summary)
   reprompib_parse_options(opts_p, argc, argv);
@@ -114,12 +125,14 @@ void reprompib_initialize_benchmark(int argc, char* argv[],
   // initialize synchronization
   sync_params.nrep = opts_p->n_rep;
   proc_sync->init_sync(&sync_params);
+
+  print_info.clock_sync    = clock_sync;
+  print_info.proc_sync     = proc_sync;
+  print_info.timing_method = runtime_type;
 }
 
-void reprompib_initialize_job(const long nrep,
-    const double* tstart, const double* tend,
-    const char* operation, const char* timername, const char* timertype,
-    reprompib_job_t* job_p) {
+void reprompib_initialize_job(const long nrep, const double* tstart, const double* tend, const char* operation,
+    const char* timername, const char* timertype, reprompib_job_t* job_p) {
   job_p->n_rep = nrep;
   job_p->tstart_sec = tstart;
   job_p->tend_sec = tend;
@@ -196,13 +209,18 @@ int reprompib_add_parameter_to_bench(const char* key, const char* val) {
   return ret;
 }
 
-void reprompib_cleanup_benchmark(reprompib_options_t* opts_p, reprompib_sync_module_t* sync_module) {
+void reprompib_cleanup_benchmark(
+    reprompib_options_t* opts_p,
+    reprompib_sync_module_t* clock_sync,
+    reprompib_proc_sync_module_t* sync_module) {
+
   reprompib_free_parameters(opts_p);
   reprompib_cleanup_dictionary(&params_dict);
 
   sync_module->finalize_sync();
   sync_module->cleanup_module();
-  reprompib_deregister_sync_modules();
 
+  clock_sync->finalize_sync();
+  clock_sync->cleanup_module();
 }
 

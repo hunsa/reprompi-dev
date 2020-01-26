@@ -78,6 +78,7 @@ static void print_initial_settings(const reprompib_options_t* opts, const reprom
 static void reprompib_print_bench_output(job_t job, double* tstart_sec, double* tend_sec,
         const reprompib_options_t* opts, const reprompib_common_options_t* common_opts,
         const reprompib_bench_print_info_t* print_info) {
+
     FILE* f = stdout;
     int my_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);

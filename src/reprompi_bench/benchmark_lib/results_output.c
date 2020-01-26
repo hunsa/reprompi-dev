@@ -28,7 +28,6 @@
 #include <gsl/gsl_sort.h>
 #include "mpi.h"
 
-#include "reprompi_bench/sync/synchronization.h"
 #include "reprompi_bench/option_parser/parse_options.h"
 #include "reprompi_bench/output_management/runtimes_computation.h"
 #include "reproMPIbenchmark.h"
@@ -38,7 +37,10 @@
 static const int OUTPUT_ROOT_PROC = 0;
 
 void print_results_header(const reprompib_lib_output_info_t* output_info_p,
-    const reprompib_job_t* job_p, const reprompib_proc_sync_module_t* sync_module) {
+    const reprompib_job_t* job_p,
+    const reprompib_sync_module_t* clock_sync_module,
+    const reprompib_proc_sync_module_t* proc_sync_module)
+{
     FILE* f = stdout;
     int my_rank;
 
@@ -57,7 +59,7 @@ void print_results_header(const reprompib_lib_output_info_t* output_info_p,
         fprintf(f, "%20s %4s", "measure_type", "proc");
 
         if (output_info_p->verbose == 1 && output_info_p->print_summary_methods == 0) {
-          if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+          if (proc_sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
             fprintf(f, " %12s", "errorcode");
             fprintf(f," %8s %16s %16s %16s %16s\n", "nrep", "loc_tstart_sec", "loc_tend_sec", "gl_tstart_sec", "gl_tend_sec");
           }
@@ -79,7 +81,7 @@ void print_results_header(const reprompib_lib_output_info_t* output_info_p,
               fprintf(f, "\n");
             }
             else {
-              if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+              if (proc_sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
                 fprintf(f, " %12s", "errorcode");
               }
               fprintf(f, " %8s %16s\n", "nrep", "runtime_sec");
@@ -134,7 +136,8 @@ void compute_runtimes_local_clocks_with_reduction(
 
 
 void print_runtimes(FILE* f, const reprompib_job_t* job_p,
-    const reprompib_sync_module_t* sync_module) {
+    const reprompib_sync_module_t* clock_sync_module,
+    const reprompib_proc_sync_module_t* sync_module) {
 
     double* maxRuntimes_sec;
     int i;
@@ -162,7 +165,7 @@ void print_runtimes(FILE* f, const reprompib_job_t* job_p,
     if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
       collect_errorcodes(current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC, sync_module->get_errorcodes, sync_errorcodes);
       compute_runtimes_global_clocks(job_p->tstart_sec, job_p->tend_sec, current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC,
-          sync_module->get_global_time, maxRuntimes_sec);
+          clock_sync_module->get_global_time, maxRuntimes_sec);
     }
     else {
       compute_runtimes_local_clocks_with_reduction(job_p->tstart_sec, job_p->tend_sec, current_start_index, job_p->n_rep,
@@ -202,8 +205,10 @@ void print_runtimes(FILE* f, const reprompib_job_t* job_p,
 
 
 
-void print_runtimes_allprocs(FILE* f, const reprompib_job_t* job_p,
-    const reprompib_sync_module_t* sync_module,
+void print_runtimes_allprocs(FILE* f,
+    const reprompib_job_t* job_p,
+    const reprompib_sync_module_t* clock_sync_module,
+    const reprompib_proc_sync_module_t* sync_module,
     const double* global_start_sec, const double* global_end_sec,
     int* errorcodes) {
 
@@ -260,7 +265,8 @@ void print_runtimes_allprocs(FILE* f, const reprompib_job_t* job_p,
 void print_measurement_results(FILE* f,
     const reprompib_lib_output_info_t* output_info_p,
     const reprompib_job_t* job_p,
-    const reprompib_sync_module_t* sync_module) {
+    const reprompib_sync_module_t* clock_sync_module,
+    const reprompib_proc_sync_module_t* proc_sync_module) {
 
     int i, proc_id;
     double* local_start_sec = NULL;
@@ -276,13 +282,13 @@ void print_measurement_results(FILE* f,
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
     if (output_info_p->verbose == 0 && strcmp(job_p->timertype, "all") != 0) {
-        print_runtimes(f, job_p, sync_module);
+        print_runtimes(f, job_p, clock_sync_module, proc_sync_module);
 
     }
     else {
 
-      if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
-        int* local_errorcodes = sync_module->get_errorcodes();
+      if (proc_sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+        int* local_errorcodes = proc_sync_module->get_errorcodes();
 
         if (my_rank == OUTPUT_ROOT_PROC)
         {
@@ -319,8 +325,8 @@ void print_measurement_results(FILE* f,
         tmp_local_end_sec = (double*) malloc(
             job_p->n_rep * np * sizeof(double));
         for (i = 0; i < job_p->n_rep; i++) {
-            tmp_local_start_sec[i] = sync_module->get_global_time(job_p->tstart_sec[i]);
-            tmp_local_end_sec[i] = sync_module->get_global_time(job_p->tend_sec[i]);
+            tmp_local_start_sec[i] = clock_sync_module->get_global_time(job_p->tstart_sec[i]);
+            tmp_local_end_sec[i] = clock_sync_module->get_global_time(job_p->tend_sec[i]);
         }
         MPI_Gather(tmp_local_start_sec, job_p->n_rep, MPI_DOUBLE,
             global_start_sec, job_p->n_rep, MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
@@ -332,8 +338,8 @@ void print_measurement_results(FILE* f,
         free(tmp_local_end_sec);
 
         if (output_info_p->verbose == 0  && strcmp(job_p->timertype, "all") == 0) {
-
-            print_runtimes_allprocs(f, job_p, sync_module, global_start_sec, global_end_sec, errorcodes);
+          print_runtimes_allprocs(f, job_p, clock_sync_module, proc_sync_module, global_start_sec, global_end_sec,
+                                  errorcodes);
         }
 
         else {      // verbose == 1
@@ -349,7 +355,7 @@ void print_measurement_results(FILE* f,
                             fprintf(f, "%10d ", job_p->user_ivars[j]);
                         }
 
-                        if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+                        if (proc_sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
                           fprintf(f, "%20s %4d %12d %8d %16.10f %16.10f %16.10f %16.10f\n",
                             job_p->timername, proc_id,
                                 errorcodes[proc_id * job_p->n_rep + i], i,
@@ -374,7 +380,7 @@ void print_measurement_results(FILE* f,
             free(local_end_sec);
             free(global_start_sec);
             free(global_end_sec);
-            if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
+            if (proc_sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
               free(errorcodes);
             }
         }
@@ -387,7 +393,8 @@ void print_measurement_results(FILE* f,
 void print_summary(FILE* f,
         const reprompib_lib_output_info_t* output_info_p,
         const reprompib_job_t* job_p,
-        const reprompib_sync_module_t* sync_module) {
+        const reprompib_sync_module_t* clock_sync_module,
+        const reprompib_proc_sync_module_t* sync_module) {
 
     double* maxRuntimes_sec;
     int i, j;
@@ -420,7 +427,7 @@ void print_summary(FILE* f,
         collect_errorcodes(current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC, sync_module->get_errorcodes, sync_errorcodes);
         compute_runtimes_global_clocks(job_p->tstart_sec, job_p->tend_sec,
                 current_start_index, job_p->n_rep, OUTPUT_ROOT_PROC,
-                sync_module->get_global_time, maxRuntimes_sec);
+                clock_sync_module->get_global_time, maxRuntimes_sec);
       }
       else {
         compute_runtimes_local_clocks_with_reduction(job_p->tstart_sec, job_p->tend_sec, current_start_index, job_p->n_rep,
@@ -453,8 +460,8 @@ void print_summary(FILE* f,
           tmp_local_start_sec = (double*) malloc(job_p->n_rep * np * sizeof(double));
           tmp_local_end_sec = (double*) malloc(job_p->n_rep * np * sizeof(double));
           for (i = 0; i < job_p->n_rep; i++) {
-            tmp_local_start_sec[i] = sync_module->get_global_time(job_p->tstart_sec[i]);
-            tmp_local_end_sec[i] = sync_module->get_global_time(job_p->tend_sec[i]);
+            tmp_local_start_sec[i] = clock_sync_module->get_global_time(job_p->tstart_sec[i]);
+            tmp_local_end_sec[i] = clock_sync_module->get_global_time(job_p->tend_sec[i]);
           }
           MPI_Gather(tmp_local_start_sec, job_p->n_rep, MPI_DOUBLE, global_start_sec,
             job_p->n_rep, MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);

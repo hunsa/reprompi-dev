@@ -25,7 +25,7 @@
 #define REPROMPIB_RESULTS_OUTPUT_H_
 
 #include "reproMPIbenchmark.h"
-#include "reprompi_bench/sync/synchronization.h"
+//#include "reprompi_bench/sync/synchronization.h"
 
 
 typedef struct {
@@ -34,19 +34,21 @@ typedef struct {
 } reprompib_lib_output_info_t;
 
 
-void print_results_header(const reprompib_lib_output_info_t* output_info_p, const reprompib_job_t* job_p,
-    const reprompib_proc_sync_module_t* sync_module);
+void print_results_header(const reprompib_lib_output_info_t* output_info_p,
+    const reprompib_job_t* job_p,
+    const reprompib_sync_module_t* clock_sync_module,
+    const reprompib_proc_sync_module_t* proc_sync_module);
 
 void print_measurement_results(FILE* f,
     const reprompib_lib_output_info_t* output_info_p,
     const reprompib_job_t* job_p,
-    const reprompib_sync_module_t* sync_module
-		);
+    const reprompib_sync_module_t* clock_sync_module,
+    const reprompib_proc_sync_module_t* proc_sync_module);
 
 void print_summary(FILE* f,
     const reprompib_lib_output_info_t* output_info_p,
     const reprompib_job_t* job_p,
-    const reprompib_sync_module_t* sync_module
-    );
+    const reprompib_sync_module_t* clock_sync_module,
+    const reprompib_proc_sync_module_t* proc_sync_module);
 
 #endif /* REPROMPIB_RESULTS_OUTPUT_H_ */
