@@ -281,11 +281,12 @@ void print_measurement_results(FILE* f,
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
+    //printf("print verbose: %d\n", output_info_p->verbose);
+
     if (output_info_p->verbose == 0 && strcmp(job_p->timertype, "all") != 0) {
         print_runtimes(f, job_p, clock_sync_module, proc_sync_module);
 
-    }
-    else {
+    } else {
 
       if (proc_sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
         int* local_errorcodes = proc_sync_module->get_errorcodes();
@@ -340,9 +341,7 @@ void print_measurement_results(FILE* f,
         if (output_info_p->verbose == 0  && strcmp(job_p->timertype, "all") == 0) {
           print_runtimes_allprocs(f, job_p, clock_sync_module, proc_sync_module, global_start_sec, global_end_sec,
                                   errorcodes);
-        }
-
-        else {      // verbose == 1
+        } else {      // verbose == 1
 
             if (my_rank == OUTPUT_ROOT_PROC) {
                 for (proc_id = 0; proc_id < np; proc_id++) {
