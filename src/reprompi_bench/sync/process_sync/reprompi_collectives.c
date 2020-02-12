@@ -25,6 +25,7 @@
 #include <mpi.h>
 
 #define ALLREDUCE_TAG 777
+#define BCAST_TAG 778
 
 static int Allreduce_bitwise_commutative(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
     MPI_Comm comm);
@@ -64,15 +65,14 @@ int Allreduce_bitwise_commutative(const void *sendbuf, void *recvbuf, int count,
 //  MPI_Op_commutative(op, &commute);
 //  assert(commute);
 
-  MPI_Comm_rank(comm,&rank);
-  MPI_Comm_size(comm,&size);
+  MPI_Comm_rank(comm, &rank);
+  MPI_Comm_size(comm, &size);
 
   MPI_Type_get_extent(datatype, &lb, &extent);
 
-  if (sendbuf!=MPI_IN_PLACE) {
-    MPI_Sendrecv(sendbuf,count,datatype,0,ALLREDUCE_TAG,
-     recvbuf,count,datatype,0,ALLREDUCE_TAG,
-     MPI_COMM_SELF,MPI_STATUS_IGNORE);
+  if (sendbuf != MPI_IN_PLACE) {
+    MPI_Sendrecv(sendbuf, count, datatype, 0, ALLREDUCE_TAG, recvbuf, count, datatype, 0, ALLREDUCE_TAG,
+    MPI_COMM_SELF, MPI_STATUS_IGNORE);
   }
 
   partbuf = (void*) malloc(count * extent);
@@ -151,11 +151,11 @@ int RemproMPI_Bcast_binomial(void *buffer, int count, MPI_Datatype datatype, int
   }
 
   if (rank != root) {
-    MPI_Recv(buffer, count, datatype, rank - dd, 0, comm, MPI_STATUS_IGNORE);
+    MPI_Recv(buffer, count, datatype, rank - dd, BCAST_TAG, comm, MPI_STATUS_IGNORE);
   }
 
   while (rank + d < size) {
-    MPI_Send(buffer, count, datatype, rank + d, 0, comm);
+    MPI_Send(buffer, count, datatype, rank + d, BCAST_TAG, comm);
     d <<= 1;
   }
 
