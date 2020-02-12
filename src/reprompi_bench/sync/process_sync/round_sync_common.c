@@ -13,6 +13,7 @@
 #include "reprompi_bench/sync/time_measurement.h"
 
 #include "round_sync_common.h"
+#include "reprompi_collectives.h"
 
 //#define ZF_LOG_LEVEL ZF_LOG_INFO
 //#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
@@ -35,7 +36,7 @@ double measure_bcast_runtime(MPI_Comm comm, reprompi_roundsync_bcast_params_t *p
   for (i = 0; i < parameters->bcast_n_rep; i++) {
     MPI_Barrier(MPI_COMM_WORLD);
     bcast_times[i] = get_time();
-    MPI_Bcast(&bcast_runtime, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
+    ReproMPI_Bcast(&bcast_runtime, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
     bcast_times[i] = get_time() - bcast_times[i];
   }
 

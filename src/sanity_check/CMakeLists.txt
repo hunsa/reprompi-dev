@@ -32,11 +32,11 @@ ${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
 ${SRC_DIR}/reprompi_bench/option_parser/option_parser_helpers.c
 ${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
 ${SRC_DIR}/reprompi_bench/sync/time_measurement.c
-${SRC_DIR}/reprompi_bench/sync/process_sync/process_synchronization.c
-${SRC_DIR}/reprompi_bench/sync/process_sync/barrier_sync.c
-${SRC_DIR}/reprompi_bench/sync/process_sync/round_time_sync.c
-${SRC_DIR}/reprompi_bench/sync/process_sync/window_sync.c
-${SRC_DIR}/reprompi_bench/sync/process_sync/round_sync_common.c
+#${SRC_DIR}/reprompi_bench/sync/process_sync/process_synchronization.c
+#${SRC_DIR}/reprompi_bench/sync/process_sync/barrier_sync.c
+#${SRC_DIR}/reprompi_bench/sync/process_sync/round_time_sync.c
+#${SRC_DIR}/reprompi_bench/sync/process_sync/window_sync.c
+#${SRC_DIR}/reprompi_bench/sync/process_sync/round_sync_common.c
 )
 
 

@@ -157,6 +157,7 @@ ${SRC_DIR}/reprompi_bench/sync/process_sync/barrier_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/window_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/round_time_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/round_sync_common.c
+${SRC_DIR}/reprompi_bench/sync/process_sync/reprompi_collectives.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/process_synchronization.c
 #${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
 )

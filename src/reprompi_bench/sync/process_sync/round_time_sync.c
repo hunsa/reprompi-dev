@@ -34,6 +34,7 @@
 #include "reprompi_bench/misc.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
+#include "reprompi_bench/sync/process_sync/reprompi_collectives.h"
 #include "reprompi_bench/sync/clock_sync/synchronization.h"
 
 #include "round_sync_common.h"
@@ -131,7 +132,7 @@ static void roundtimesync_start_synchronization(void) {
     if (my_rank == master_rank) {
       start_sync = get_time() + bcast_runtime * bcast_parameters.bcast_multiplier;
     }
-    MPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
+    ReproMPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
 
 #if ZF_LOG_LEVEL < ZF_LOG_WARN
     global_time = clock_sync_mod->get_global_time(get_time());
@@ -169,7 +170,7 @@ static int roundtimesync_stop_synchronization(void) {
     packet[0] = invalid;
     packet[1] = stop_flag;
 
-    MPI_Allreduce(MPI_IN_PLACE, packet, 2, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+    ReproMPI_Allreduce(MPI_IN_PLACE, packet, 2, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
 
     if (packet[1] == 1) {
       // we ran out of time, check measurement and exit
