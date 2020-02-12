@@ -42,6 +42,9 @@ inline unsigned int flp2(unsigned int n) {
 }
 
 // Algorithm of Bar-Noy, Kipnis, Schieber, 1993; Bruck, Ho, 1993
+/*
+ * implementation by Jesper Larsson Traff, September 2019
+ */
 int Allreduce_bitwise_commutative(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
     MPI_Comm comm) {
   int rank, size;
