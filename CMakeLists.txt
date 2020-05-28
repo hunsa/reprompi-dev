@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
-   
+
 project(reprompi)
 
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
@@ -10,7 +10,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}")
 
 
-set(INCLUDE_PLATFORM_CONFIG_FILE "${CMAKE_SOURCE_DIR}/platform_files/default.cmake" 
+set(INCLUDE_PLATFORM_CONFIG_FILE "${CMAKE_SOURCE_DIR}/platform_files/default.cmake"
     CACHE STRING "Configure project to use a specific platform file")
 include(${INCLUDE_PLATFORM_CONFIG_FILE})
 
@@ -41,6 +41,7 @@ option(COMPILE_SANITY_CHECK_TESTS "Enable sanity check tests" on)
 option(COMPILE_SANITY_CHECK_CLOCK "Enable clock sanity checks" off)
 set(OPTION_BUFFER_ALIGNMENT "" CACHE STRING "Alignment to use for buffer allocation [default: no alignment(allocation with calloc)]")
 option(OPTION_PRINT_MSIZES_BYTES "Print message sizes in the output instead of MPI call counts [default: counts]" off)
+option(LIKWID_PERFMON "Enables LIKWID" off)
 
 ####################################
 ############ PGtune support ########
@@ -50,7 +51,7 @@ option(ENABLE_PGMPI "Use PGMPI" on)
 
 if (ENABLE_PGMPI)
     find_package(PGMPI)
-    
+
     if(NOT PGMPI_FOUND)
         message(STATUS "PGMPI not found. Skipping the generation of PGMPI-linked benchmark binaries." )
     endif(NOT PGMPI_FOUND)
@@ -105,6 +106,12 @@ endif()
 
 if(OPTION_PRINT_MSIZES_BYTES)
     SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DOPTION_PRINT_MSIZES_BYTES=${OPTION_PRINT_MSIZES_BYTES}")
+endif()
+
+if(LIKWID_PERFMON)
+    # message("Activated LIKWID_PERFMON")
+    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -pthread -DLIKWID_PERFMON")
+    SET(COMMON_LIBRARIES "${COMMON_LIBRARIES} -I/usr/include/ -L/usr/lib/x86_64-linux-gnu/ -llikwid")
 endif()
 
 
@@ -274,6 +281,10 @@ ADD_SUBDIRECTORY(${SRC_DIR}/reprompi_bench/sync/clock_sync)
 add_executable(mpibenchmark
 ${REPROMPIBENCH_FILES}
 )
+
+message("My compile Flags: ${MY_COMPILE_FLAGS}")
+message("Common Libraries: ${COMMON_LIBRARIES}")
+
 TARGET_LINK_LIBRARIES(mpibenchmark ${COMMON_LIBRARIES} synclib)
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES LINKER_LANGUAGE CXX )
@@ -285,7 +296,7 @@ if (ENABLE_PGMPI)
         )
         TARGET_LINK_LIBRARIES(mpibenchmark_pgmpicli ${PGMPI_CLI_LIBRARIES} ${COMMON_LIBRARIES} )
         SET_TARGET_PROPERTIES(mpibenchmark_pgmpicli PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
-        
+
         add_executable(mpibenchmark_pgmpituned
         ${REPROMPIBENCH_FILES}
         )
@@ -293,8 +304,8 @@ if (ENABLE_PGMPI)
         SET_TARGET_PROPERTIES(mpibenchmark_pgmpituned PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
     endif(PGMPI_FOUND)
 endif (ENABLE_PGMPI)
-    
-    
+
+
 if (COMPILE_SANITY_CHECK_TESTS)
     ADD_SUBDIRECTORY(${SRC_DIR}/sanity_check)
 endif()

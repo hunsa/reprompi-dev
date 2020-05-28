@@ -44,13 +44,30 @@
 #include "reprompi_bench/utils/keyvalue_store.h"
 #include "reprompi_bench/caching/caching.h"
 
+#ifdef LIKWID_PERFMON
+
+#include <likwid.h>
+
+#else
+#define LIKWID_MARKER_INIT
+#define LIKWID_MARKER_THREADINIT
+#define LIKWID_MARKER_SWITCH
+#define LIKWID_MARKER_REGISTER(regionTag)
+#define LIKWID_MARKER_START(regionTag)
+#define LIKWID_MARKER_STOP(regionTag)
+#define LIKWID_MARKER_CLOSE
+#define LIKWID_MARKER_GET(regionTag, nevents, events, time, count)
+#endif
+
 #define MY_MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 static const int OUTPUT_ROOT_PROC = 0;
 
-static void print_initial_settings(const reprompib_options_t* opts, const reprompib_common_options_t* common_opts,
-    //const reprompib_dictionary_t* dict,
-    const reprompib_bench_print_info_t* print_info) {
+char * get_region_name(long rep, long nrep);
+
+static void print_initial_settings(const reprompib_options_t *opts, const reprompib_common_options_t *common_opts,
+        //const reprompib_dictionary_t* dict,
+                                   const reprompib_bench_print_info_t *print_info) {
     int my_rank, np;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -59,27 +76,27 @@ static void print_initial_settings(const reprompib_options_t* opts, const reprom
     print_common_settings(print_info, common_opts);//, dict);
 
     if (my_rank == OUTPUT_ROOT_PROC) {
-        FILE* f;
+        FILE *f;
 
         f = stdout;
         if (opts->n_rep > 0) {
-          fprintf(f, "#@nrep=%ld\n", opts->n_rep);
-          if (common_opts->output_file != NULL) {
-            f = fopen(common_opts->output_file, "a");
             fprintf(f, "#@nrep=%ld\n", opts->n_rep);
-            fflush(f);
-            fclose(f);
-          }
+            if (common_opts->output_file != NULL) {
+                f = fopen(common_opts->output_file, "a");
+                fprintf(f, "#@nrep=%ld\n", opts->n_rep);
+                fflush(f);
+                fclose(f);
+            }
         }
     }
 }
 
 
-static void reprompib_print_bench_output(job_t job, double* tstart_sec, double* tend_sec,
-        const reprompib_options_t* opts, const reprompib_common_options_t* common_opts,
-        const reprompib_bench_print_info_t* print_info) {
+static void reprompib_print_bench_output(job_t job, double *tstart_sec, double *tend_sec,
+                                         const reprompib_options_t *opts, const reprompib_common_options_t *common_opts,
+                                         const reprompib_bench_print_info_t *print_info) {
 
-    FILE* f = stdout;
+    FILE *f = stdout;
     int my_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
@@ -89,14 +106,13 @@ static void reprompib_print_bench_output(job_t job, double* tstart_sec, double* 
         }
     }
 
-    if (opts->print_summary_methods >0)  {
+    if (opts->print_summary_methods > 0) {
         print_summary(stdout, job, tstart_sec, tend_sec, print_info, opts);
         if (common_opts->output_file != NULL) {
             print_measurement_results(f, job, tstart_sec, tend_sec, print_info, opts);
         }
 
-    }
-    else {
+    } else {
         print_measurement_results(f, job, tstart_sec, tend_sec, print_info, opts);
     }
 
@@ -110,13 +126,13 @@ static void reprompib_print_bench_output(job_t job, double* tstart_sec, double* 
 }
 
 
-static void reprompib_parse_bench_options(int argc, char** argv) {
+static void reprompib_parse_bench_options(int argc, char **argv) {
     int c;
     opterr = 0;
 
     const struct option bench_long_options[] = {
-        { "help", required_argument, 0, 'h' },
-        { 0, 0, 0, 0 }
+            {"help", required_argument, 0, 'h'},
+            {0, 0,                      0, 0}
     };
 
     while (1) {
@@ -131,11 +147,11 @@ static void reprompib_parse_bench_options(int argc, char** argv) {
             break;
 
         switch (c) {
-        case 'h': /* list of summary options */
-            reprompib_print_benchmark_help();
-            break;
-        case '?':
-            break;
+            case 'h': /* list of summary options */
+                reprompib_print_benchmark_help();
+                break;
+            case '?':
+                break;
         }
     }
 
@@ -144,12 +160,12 @@ static void reprompib_parse_bench_options(int argc, char** argv) {
 }
 
 
-
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
+    //printf("# Started\n");
     int my_rank, procs;
     long i, jindex;
-    double* tstart_sec;
-    double* tend_sec;
+    double *tstart_sec;
+    double *tend_sec;
     reprompib_options_t opts;
     reprompib_common_options_t common_opts;
     job_list_t jlist;
@@ -172,6 +188,10 @@ int main(int argc, char* argv[]) {
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &procs);
+
+    // init LIKWID
+    LIKWID_MARKER_INIT;
+    LIKWID_MARKER_THREADINIT;
 
     reprompib_register_sync_modules();
     reprompib_register_proc_sync_modules();
@@ -197,6 +217,13 @@ int main(int argc, char* argv[]) {
     // parse the benchmark-specific arguments (nreps, summary)
     reprompib_parse_options(&opts, argc, argv);
 
+    // INIT LIKWID Sections
+    for (i = 0; i < opts.n_rep; i++) {
+        char * region_name = get_region_name(i, opts.n_rep);
+        LIKWID_MARKER_REGISTER(region_name);
+        free(region_name);
+    }
+
     // initialize caching strategies
     reprompib_init_caching_module(argc, argv, &caching_module);
 
@@ -204,8 +231,9 @@ int main(int argc, char* argv[]) {
     reprompib_init_sync_module(argc, argv, &clock_sync);
     reprompib_init_proc_sync_module(argc, argv, &clock_sync, &proc_sync);
 
-    if (common_opts.input_file == NULL && opts.n_rep <=0) { // make sure nrep is specified when there is no input file
-      reprompib_print_error_and_exit("The number of repetitions is not defined (specify the \"--nrep\" command-line argument or provide an input file)\n");
+    if (common_opts.input_file == NULL && opts.n_rep <= 0) { // make sure nrep is specified when there is no input file
+        reprompib_print_error_and_exit(
+                "The number of repetitions is not defined (specify the \"--nrep\" command-line argument or provide an input file)\n");
     }
     generate_job_list(&common_opts, opts.n_rep, &jlist);
 
@@ -216,20 +244,20 @@ int main(int argc, char* argv[]) {
         job_t job;
         job = jlist.jobs[jlist.job_indices[jindex]];
 
-        tstart_sec = (double*) malloc(job.n_rep * sizeof(double));
-        tend_sec   = (double*) malloc(job.n_rep * sizeof(double));
+        tstart_sec = (double *) malloc(job.n_rep * sizeof(double));
+        tend_sec = (double *) malloc(job.n_rep * sizeof(double));
 
         collective_calls[job.call_index].initialize_data(coll_basic_info, job.count, &coll_params);
 
         // initialize synchronization
-        sync_params.nrep  = job.n_rep;
+        sync_params.nrep = job.n_rep;
         sync_params.count = job.count;
         proc_sync.init_sync(&sync_params);
         clock_sync.init_sync();
 
 
         print_info.clock_sync = &clock_sync;
-        print_info.proc_sync  = &proc_sync;
+        print_info.proc_sync = &proc_sync;
         print_info.timing_method = runtime_type;
         if (jindex == 0) {
             //print_initial_settings(&opts, &common_opts, &params_dict, &print_info);
@@ -240,36 +268,43 @@ int main(int argc, char* argv[]) {
         clock_sync.sync_clocks();
         proc_sync.init_sync_round();         // broadcast first window
 
+
         i = 0;
-        while(1) {
-          proc_sync.start_sync();
+        while (1) {
+            //Start LIKWID Region
+            char *regionTag = get_region_name(i, job.n_rep);
+            LIKWID_MARKER_START(regionTag);
 
-          tstart_sec[i] = get_time();
-          collective_calls[job.call_index].collective_call(&coll_params);
-          tend_sec[i] = get_time();
+            proc_sync.start_sync();
 
-          is_invalid = proc_sync.stop_sync();
-          if (is_invalid == REPROMPI_INVALID_MEASUREMENT) {
-            // redo the measurement
-            // we are still in the time frame
-            //ZF_LOGV("[%d] invalid_measurement at i=%ld", my_rank, total_n_rep);
-          } else if( is_invalid == REPROMPI_OUT_OF_TIME_VALID ) {
-            job.n_rep = i+1;
-            break;
-          } else if( is_invalid == REPROMPI_OUT_OF_TIME_INVALID ) {
-            job.n_rep = MY_MAX(0, i-1);
-            break;
-          } else {
-            i++;
-          }
-          if (i == job.n_rep) {
-            break;
-          }
+            tstart_sec[i] = get_time();
+            collective_calls[job.call_index].collective_call(&coll_params);
+            tend_sec[i] = get_time();
 
-          // apply cache cleaning strategy (if enabled)
-          caching_module.clear_cache();
+            is_invalid = proc_sync.stop_sync();
+            LIKWID_MARKER_STOP(regionTag);
+            free(regionTag);
+            if (is_invalid == REPROMPI_INVALID_MEASUREMENT) {
+                // redo the measurement
+                // we are still in the time frame
+                //ZF_LOGV("[%d] invalid_measurement at i=%ld", my_rank, total_n_rep);
+            } else if (is_invalid == REPROMPI_OUT_OF_TIME_VALID) {
+                job.n_rep = i + 1;
+                break;
+            } else if (is_invalid == REPROMPI_OUT_OF_TIME_INVALID) {
+                job.n_rep = MY_MAX(0, i - 1);
+                break;
+            } else {
+                i++;
+            }
+            if (i == job.n_rep) {
+                break;
+            }
+
+
+            // apply cache cleaning strategy (if enabled)
+            caching_module.clear_cache();
         }
-
         //print summarized data
         reprompib_print_bench_output(job, tstart_sec, tend_sec, &opts, &common_opts, &print_info);
 
@@ -284,6 +319,9 @@ int main(int argc, char* argv[]) {
 
 
     end_time = time(NULL);
+
+    LIKWID_MARKER_CLOSE;
+
     print_final_info(&common_opts, start_time, end_time);
 
     cleanup_job_list(jlist);
@@ -302,4 +340,21 @@ int main(int argc, char* argv[]) {
     MPI_Finalize();
 
     return 0;
+}
+
+char * get_region_name(long rep, long nrep) {
+    //printf("Number of jobs %ld\n", nrep);
+    int maxDigits;
+    if (nrep > 1) {
+        maxDigits = (int) log10((double) nrep - 1) + 1;
+    } else {
+        maxDigits = 1;
+    }
+    int tagLength = 6 + maxDigits;
+    //printf("Tag length %d\n", tagLength);
+    char *regionTag;
+    regionTag = malloc(sizeof(char) * tagLength);
+    snprintf(regionTag, tagLength, "nrep_%0*ld", maxDigits, rep);
+    //printf("Started region %s\n", regionTag);
+    return regionTag;
 }
