@@ -110,6 +110,6 @@ void reprompib_print_warning(const char* warning_str) {
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
   if (my_rank == OUTPUT_ROOT_PROC) {
-    fprintf(stderr, "\nWARNING: %s\n\n", warning_str);
+    fprintf(stderr, "\n# WARNING: %s\n", warning_str);
   }
 }

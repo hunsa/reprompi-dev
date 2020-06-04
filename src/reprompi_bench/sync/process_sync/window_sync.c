@@ -199,7 +199,8 @@ static void window_init_module(int argc, char** argv, reprompib_sync_module_t* c
   winsync_parse_options(argc, argv, &parameters);
 
   if (clock_sync->clocksync == REPROMPI_CLOCKSYNC_NONE) {
-    reprompib_print_error_and_exit("Cannot use window-based process synchronization with the selected clock synchronization method (use \"--clock-sync\" to change it)");
+    //reprompib_print_error_and_exit("Cannot use window-based process synchronization with the selected clock synchronization method (use \"--clock-sync\" to change it)");
+    reprompib_print_warning("beware, window-based process synchronization only works with synchronized clocks, and no clocksync was selected");
   }
 
   clock_sync_mod = clock_sync;
@@ -217,7 +218,7 @@ static int* get_local_sync_errorcodes(void)
 
 static void window_sync_print(FILE* f)
 {
-  fprintf (f, "#@procsync=window\n");
+  fprintf(f, "#@procsync=window\n");
   fprintf(f, "#@window_s=%.10f\n", parameters.window_size_sec);
   fprintf(f, "#@wait_time_s=%.10f\n", parameters.wait_time_sec);
 }
