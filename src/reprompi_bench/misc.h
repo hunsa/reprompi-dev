@@ -33,6 +33,7 @@ void shuffle(int *array, size_t n);
 
 int reprompib_str_to_long(const char *str, long* result);
 void reprompib_print_error_and_exit(const char* error_str);
+void reprompib_print_warning(const char* warning_str);
 
 
 

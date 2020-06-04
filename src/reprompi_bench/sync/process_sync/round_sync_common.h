@@ -8,7 +8,7 @@ typedef struct {
   int bcast_meas;           /* --bcast-meas how to compute the bcast run-time (mean, median, max) */
 } reprompi_roundsync_bcast_params_t;
 
-#define BCAST_MUTIPLIER 2
+#define BCAST_MUTIPLIER 3
 #define BCAST_NREP 10
 
 enum {

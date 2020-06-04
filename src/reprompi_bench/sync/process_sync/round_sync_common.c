@@ -109,12 +109,14 @@ void roundsync_parse_bcast_options(int argc, char **argv, reprompi_roundsync_bca
         case REPROMPI_ARGS_PROCSYNC_BCAST_MEASURE:
               if (strcmp(optarg, "mean") == 0) {
                 opts_p->bcast_meas = BCAST_MEASURE_MEAN;
-              }
-              if (strcmp(optarg, "median") == 0) {
+              } else if (strcmp(optarg, "median") == 0) {
                 opts_p->bcast_meas = BCAST_MEASURE_MEDIAN;
-              }
-              if (strcmp(optarg, "max") == 0) {
+              } else if (strcmp(optarg, "max") == 0) {
                 opts_p->bcast_meas = BCAST_MEASURE_MAX;
+              } else {
+                char msg[200];
+                sprintf(msg, "unknown bcast measure type: %s", optarg);
+                reprompib_print_warning(msg);
               }
               break;
         case '?':
