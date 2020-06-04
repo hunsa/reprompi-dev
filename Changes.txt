@@ -1,4 +1,5 @@
 Version 1.1
+- removed nrep prediction code (not needed anymore due to roundtime sync)
 - fixed: window process sync does not work without clocksync option 
 - fixed: no warning if roundtime sync uses bcast meas != max/mean/median
 - removed all mock-ups from supported operations (now in PGMPITuneLib)

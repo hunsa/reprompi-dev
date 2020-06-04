@@ -34,7 +34,6 @@ option(ENABLE_GETTIME_REALTIME "Use clock_gettime(CLOCK_REALTIME) for time measu
 option(ENABLE_DOUBLE_BARRIER "Call barrier twice for synchronization [default: disabled]" off)
 set(FREQUENCY_MHZ 2300 CACHE STRING "CPU Frequency (needed for RDTSCP-based time measurements)")
 
-option(COMPILE_PRED_BENCHMARK "Enable the NREP prediction benchmarks [default: enabled]" off)
 option(COMPILE_BENCH_LIBRARY "Compile ReproMPI library [default: disabled]" off)
 option(COMPILE_BENCH_TESTS "Enable benchmark testing [default: disabled]" off)
 
@@ -298,11 +297,6 @@ endif (ENABLE_PGMPI)
     
 if (COMPILE_SANITY_CHECK_TESTS)
     ADD_SUBDIRECTORY(${SRC_DIR}/sanity_check)
-endif()
-
-if (COMPILE_PRED_BENCHMARK)
-    ADD_SUBDIRECTORY(${SRC_DIR}/pred_bench)
-    ADD_SUBDIRECTORY(${SRC_DIR}/nrep_prediction)
 endif()
 
 if (COMPILE_BENCH_TESTS)
