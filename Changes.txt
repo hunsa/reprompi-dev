@@ -1,4 +1,4 @@
-Version 1.1
+Version 1.1.0
 - removed nrep prediction code (not needed anymore due to roundtime sync)
 - fixed: window process sync does not work without clocksync option 
 - fixed: no warning if roundtime sync uses bcast meas != max/mean/median

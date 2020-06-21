@@ -66,11 +66,6 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
     MPI_Bcast(&bytes_needed, 1, MPI_INT, 0, comm);
     MPI_Bcast(buf, bytes_needed, MPI_BYTE, 0, comm);
 
-//    for(i=1; i<nprocs; i++) {
-//      MPI_Send(&bytes_needed, 1, MPI_INT, i, 0, comm);
-//      MPI_Send(buf, bytes_needed, MPI_BYTE, i, 0, comm);
-//    }
-
     // just use my own clock
     retClock = globalClock;
 
