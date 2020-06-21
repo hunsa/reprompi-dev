@@ -126,6 +126,8 @@ static void roundtimesync_start_synchronization(void) {
     double global_time;
     int my_rank;
 
+    invalid = REPROMPI_CORRECT_MEASUREMENT;
+
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
     MPI_Barrier(MPI_COMM_WORLD);
