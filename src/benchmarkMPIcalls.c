@@ -44,6 +44,20 @@
 #include "reprompi_bench/utils/keyvalue_store.h"
 #include "reprompi_bench/caching/caching.h"
 
+#ifdef PAPI
+
+#include "papi.h"
+
+#else
+
+#define PAPI_OK 0
+#define PAPI_strerror(retVal) ""
+#define PAPI_hl_region_begin(region) PAPI_OK
+#define PAPI_hl_region_end(region) PAPI_OK
+#define PAPI_hl_stop() PAPI_OK
+
+#endif
+
 #ifdef LIKWID_PERFMON
 
 #include <likwid.h>
@@ -63,7 +77,9 @@
 
 static const int OUTPUT_ROOT_PROC = 0;
 
-char * get_region_name(long rep, long nrep);
+char *get_region_name(long rep, long nrep);
+
+void handle_error(int retval);
 
 static void print_initial_settings(const reprompib_options_t *opts, const reprompib_common_options_t *common_opts,
         //const reprompib_dictionary_t* dict,
@@ -182,6 +198,9 @@ int main(int argc, char *argv[]) {
     //long total_n_rep;
     int is_invalid;
 
+    //PAPI return value
+    int retval;
+
     /* start up MPI
      *
      * */
@@ -219,7 +238,7 @@ int main(int argc, char *argv[]) {
 
     // INIT LIKWID Sections
     for (i = 0; i < opts.n_rep; i++) {
-        char * region_name = get_region_name(i, opts.n_rep);
+        char *region_name = get_region_name(i, opts.n_rep);
         LIKWID_MARKER_REGISTER(region_name);
         free(region_name);
     }
@@ -273,8 +292,12 @@ int main(int argc, char *argv[]) {
         while (1) {
             //Start LIKWID Region
             char *regionTag = get_region_name(i, job.n_rep);
-            LIKWID_MARKER_START(regionTag);
 
+            LIKWID_MARKER_START(regionTag);
+            retval = PAPI_hl_region_begin(regionTag);
+            if (retval != PAPI_OK) {
+                handle_error(retval);
+            }
             proc_sync.start_sync();
 
             tstart_sec[i] = get_time();
@@ -282,7 +305,13 @@ int main(int argc, char *argv[]) {
             tend_sec[i] = get_time();
 
             is_invalid = proc_sync.stop_sync();
+
+            retval = PAPI_hl_region_end(regionTag);
+            if (retval != PAPI_OK) {
+                handle_error(retval);
+            }
             LIKWID_MARKER_STOP(regionTag);
+
             free(regionTag);
             if (is_invalid == REPROMPI_INVALID_MEASUREMENT) {
                 // redo the measurement
@@ -321,7 +350,10 @@ int main(int argc, char *argv[]) {
     end_time = time(NULL);
 
     LIKWID_MARKER_CLOSE;
-
+    retval = PAPI_hl_stop();
+    if (retval != PAPI_OK) {
+        handle_error(retval);
+    }
     print_final_info(&common_opts, start_time, end_time);
 
     cleanup_job_list(jlist);
@@ -342,7 +374,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-char * get_region_name(long rep, long nrep) {
+char *get_region_name(long rep, long nrep) {
     //printf("Number of jobs %ld\n", nrep);
     int maxDigits;
     if (nrep > 1) {
@@ -358,3 +390,9 @@ char * get_region_name(long rep, long nrep) {
     //printf("Started region %s\n", regionTag);
     return regionTag;
 }
+
+void handle_error(int retval) {
+    printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
+    exit(1);
+}
+

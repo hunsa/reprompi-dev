@@ -42,6 +42,7 @@ option(COMPILE_SANITY_CHECK_CLOCK "Enable clock sanity checks" off)
 set(OPTION_BUFFER_ALIGNMENT "" CACHE STRING "Alignment to use for buffer allocation [default: no alignment(allocation with calloc)]")
 option(OPTION_PRINT_MSIZES_BYTES "Print message sizes in the output instead of MPI call counts [default: counts]" off)
 option(LIKWID_PERFMON "Enables LIKWID" off)
+option(ENABLE_PAPI "Enables PAPI" off)
 
 ####################################
 ############ PGtune support ########
@@ -109,9 +110,23 @@ if(OPTION_PRINT_MSIZES_BYTES)
 endif()
 
 if(LIKWID_PERFMON)
+    FIND_PACKAGE(LIKWID REQUIRED)
     # message("Activated LIKWID_PERFMON")
+    INCLUDE_DIRECTORIES(${likwid_INCLUDE_DIRS})
+
     SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -pthread -DLIKWID_PERFMON")
-    SET(COMMON_LIBRARIES "${COMMON_LIBRARIES} -I/usr/include/ -L/usr/lib/x86_64-linux-gnu/ -llikwid")
+    SET(COMMON_LIBRARIES "${COMMON_LIBRARIES} ${LIKWID_LIBRARY}")
+endif()
+
+if(ENABLE_PAPI)
+    # SET(PAPI_INCLUDE_DIR "/usr/local/include")
+    # SET(PAPI_LIBRARIES "/usr/local/lib")
+    SET(PAPI_DIR "/opt/spack/spack_git/opt/spack/linux-debian10-skylake_avx512/gcc-8.3.0/papi-6.0.0-sfx6lx3wz4fdqhkgncydzq3dm4slgntr")
+    FIND_PACKAGE(PAPI REQUIRED)
+    INCLUDE_DIRECTORIES(${PAPI_INCLUDE_DIR})
+
+    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DPAPI")
+    SET(COMMON_LIBRARIES "${COMMON_LIBRARIES} ${PAPI_LIBRARY}")
 endif()
 
 
