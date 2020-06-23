@@ -283,14 +283,16 @@ if (ENABLE_PGMPI)
         add_executable(mpibenchmark_pgmpicli
         ${REPROMPIBENCH_FILES}
         )
-        TARGET_LINK_LIBRARIES(mpibenchmark_pgmpicli ${PGMPI_CLI_LIBRARIES} ${COMMON_LIBRARIES} )
+        TARGET_LINK_LIBRARIES(mpibenchmark_pgmpicli ${PGMPI_CLI_LIBRARIES} ${COMMON_LIBRARIES} synclib)
         SET_TARGET_PROPERTIES(mpibenchmark_pgmpicli PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
+        SET_TARGET_PROPERTIES(mpibenchmark_pgmpicli PROPERTIES LINKER_LANGUAGE CXX )
         
         add_executable(mpibenchmark_pgmpituned
         ${REPROMPIBENCH_FILES}
         )
-        TARGET_LINK_LIBRARIES(mpibenchmark_pgmpituned ${PGMPI_TUNED_LIBRARIES} ${COMMON_LIBRARIES} )
+        TARGET_LINK_LIBRARIES(mpibenchmark_pgmpituned ${PGMPI_TUNED_LIBRARIES} ${COMMON_LIBRARIES} synclib)
         SET_TARGET_PROPERTIES(mpibenchmark_pgmpituned PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
+        SET_TARGET_PROPERTIES(mpibenchmark_pgmpituned PROPERTIES LINKER_LANGUAGE CXX )
     endif(PGMPI_FOUND)
 endif (ENABLE_PGMPI)
     
