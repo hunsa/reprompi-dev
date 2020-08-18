@@ -75,11 +75,27 @@
 
 #define MY_MAX(x, y) (((x) > (y)) ? (x) : (y))
 
+#define NELEMS(x)  (sizeof(x) / sizeof((x)[0]))
+
+typedef struct pvar_record {
+    int rank;
+    long nrep;
+    char pvar_name[256];
+    long long value;
+} pvar_record;
+
 static const int OUTPUT_ROOT_PROC = 0;
 
 char *get_region_name(long rep, long nrep);
 
 void handle_error(int retval);
+
+void get_all_MPI_T_pvars(char ***pvars, int *num);
+
+void get_handles_for_MPI_T_pvars(char **pvar_names, MPI_T_pvar_handle *pvar_handles, int number_of_pvars,
+                                 MPI_T_pvar_session session);
+
+void print_pvars(int my_rank, int procs, const pvar_record *pvar_records, int number_of_pvar_records);
 
 static void print_initial_settings(const reprompib_options_t *opts, const reprompib_common_options_t *common_opts,
         //const reprompib_dictionary_t* dict,
@@ -208,6 +224,47 @@ int main(int argc, char *argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &procs);
 
+    // init MPI_T
+    int provided;
+    MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
+    char **pvar_names;
+    int number_of_pvars;
+    get_all_MPI_T_pvars(&pvar_names, &number_of_pvars);
+    /*char *pvar_names[] = {"runtime_spc_OMPI_SPC_BYTES_RECEIVED_USER",
+                          "runtime_spc_OMPI_SPC_BYTES_RECEIVED_MPI",
+                          "runtime_spc_OMPI_SPC_BYTES_SENT_USER",
+                          "runtime_spc_OMPI_SPC_BYTES_SENT_MPI"};
+    int number_of_pvars = NELEMS(pvar_names);*/
+    MPI_T_pvar_handle pvar_handles[number_of_pvars];
+    long long int pvar_prev_values[number_of_pvars];
+
+    MPI_T_pvar_session session;
+    MPI_T_pvar_session_create(&session);
+
+    // printf("Session created\n");
+    // fflush(stdout);
+
+//    if (my_rank == 0) {
+//        for (int j = 0; j < number_of_pvars; j++) {
+//            printf("%d ", j);
+//            fflush(stdout);
+//            printf("(%X -> ", &pvar_names[j]);
+//            fflush(stdout);
+//            printf("%X): ", pvar_names[j]);
+//            fflush(stdout);
+//            printf("%s\n", pvar_names[j]);
+//            fflush(stdout);
+//        }
+//    }
+
+    get_handles_for_MPI_T_pvars(pvar_names, pvar_handles, number_of_pvars, session);
+
+    for (int j = 0; j < number_of_pvars; j++) {
+        // printf("# Index for pvar %s: %s\n", pvar_names[j], pvar_handles[j]->pvar->name);
+        MPI_T_pvar_start(session, pvar_handles[j]);
+    }
+    // printf("Rank %d: handles initialized\n", my_rank);
+
     // init LIKWID
     LIKWID_MARKER_INIT;
     LIKWID_MARKER_THREADINIT;
@@ -242,6 +299,10 @@ int main(int argc, char *argv[]) {
         LIKWID_MARKER_REGISTER(region_name);
         free(region_name);
     }
+
+    // INIT pvar record array
+    int number_of_pvar_records = (int) opts.n_rep * number_of_pvars;
+    pvar_record *pvar_records = malloc(number_of_pvar_records * sizeof(pvar_record));
 
     // initialize caching strategies
     reprompib_init_caching_module(argc, argv, &caching_module);
@@ -290,14 +351,24 @@ int main(int argc, char *argv[]) {
 
         i = 0;
         while (1) {
+            //Reset pvar Counters
+            for (int j = 0; j < number_of_pvars; j++) {
+                long long int value;
+                MPI_T_pvar_reset(session, pvar_handles[j]);
+                MPI_T_pvar_read(session, pvar_handles[j], &value);
+                pvar_prev_values[j] = value;
+            }
+
             //Start LIKWID Region
             char *regionTag = get_region_name(i, job.n_rep);
-
             LIKWID_MARKER_START(regionTag);
+
+            //Start PAPI Region
             retval = PAPI_hl_region_begin(regionTag);
             if (retval != PAPI_OK) {
                 handle_error(retval);
             }
+
             proc_sync.start_sync();
 
             tstart_sec[i] = get_time();
@@ -306,11 +377,30 @@ int main(int argc, char *argv[]) {
 
             is_invalid = proc_sync.stop_sync();
 
+            // End PAPI region
             retval = PAPI_hl_region_end(regionTag);
             if (retval != PAPI_OK) {
                 handle_error(retval);
             }
+
+            // End LIKWID region
             LIKWID_MARKER_STOP(regionTag);
+
+            // Save pvar variables
+            //printf("Rank %d: saving pvars\n", my_rank);
+            for (int j = 0; j < number_of_pvars; j++) {
+                pvar_record pvar_record;
+                pvar_record.nrep = i;
+                pvar_record.rank = my_rank;
+                strcpy(pvar_record.pvar_name, pvar_names[j]);
+                long long int value;
+                MPI_T_pvar_read(session, pvar_handles[j], &value);
+                pvar_record.value = value - pvar_prev_values[j];
+                pvar_records[i * number_of_pvars + j] = pvar_record;
+            }
+            // printf("Rank %d: saved pvars %ld/%d, nrep: %ld/%ld\n", my_rank, i * number_of_pvars,
+            //        number_of_pvar_records, i, opts.n_rep);
+            // fflush(stdout);
 
             free(regionTag);
             if (is_invalid == REPROMPI_INVALID_MEASUREMENT) {
@@ -337,6 +427,10 @@ int main(int argc, char *argv[]) {
         //print summarized data
         reprompib_print_bench_output(job, tstart_sec, tend_sec, &opts, &common_opts, &print_info);
 
+        //print pvar data
+        print_pvars(my_rank, procs, pvar_records, number_of_pvar_records);
+
+
         clock_sync.finalize_sync();
         proc_sync.finalize_sync();
 
@@ -349,12 +443,35 @@ int main(int argc, char *argv[]) {
 
     end_time = time(NULL);
 
+    // Clean up LIKWID
     LIKWID_MARKER_CLOSE;
+
+    //Clean up PAPI
     retval = PAPI_hl_stop();
     if (retval != PAPI_OK) {
         handle_error(retval);
     }
     print_final_info(&common_opts, start_time, end_time);
+    fflush(stdout);
+
+    //Clean up MPI_T
+    for (int j = 0; j < number_of_pvars; j++) {
+        // printf("Rank %d freeing pvar handle %d\n", my_rank, j);
+        // fflush(stdout);
+        MPI_T_pvar_stop(session, pvar_handles[j]);
+        // MPI_T_pvar_handle_free(session, &pvar_handles[j]);
+        // printf("Rank %d freeing pvar name %d (%X->%s)\n", my_rank, j, &pvar_names[j], pvar_names[j]);
+        // fflush(stdout);
+        // free(pvar_names[j]);
+    }
+    // printf("Rank %d freeing pvar names\n", my_rank);
+    // fflush(stdout);
+    // free(pvar_names);
+    // printf("Rank %d freeing pvar records\n", my_rank);
+    // fflush(stdout);
+    // free(pvar_records);
+    MPI_T_pvar_session_free(&session);
+    MPI_T_finalize();
 
     cleanup_job_list(jlist);
     reprompib_free_common_parameters(&common_opts);
@@ -372,6 +489,42 @@ int main(int argc, char *argv[]) {
     MPI_Finalize();
 
     return 0;
+}
+
+void print_pvars(int my_rank, int procs, const pvar_record *pvar_records, int number_of_pvar_records) {
+    int root = 0;
+    MPI_Datatype mpi_pvar_record;
+    int array_of_block_lengths[] = {1, 1, 256, 1};
+    MPI_Aint array_of_displacements[] = {
+            offsetof(pvar_record, rank),
+            offsetof(pvar_record, nrep),
+            offsetof(pvar_record, pvar_name),
+            offsetof(pvar_record, value)
+    };
+    MPI_Datatype array_of_types[] = {MPI_INT, MPI_LONG, MPI_CHAR, MPI_LONG_LONG};
+
+    MPI_Type_create_struct(4, array_of_block_lengths, array_of_displacements, array_of_types, &mpi_pvar_record);
+    MPI_Type_commit(&mpi_pvar_record);
+
+    pvar_record *pvars_receive_buffer;
+    if (my_rank == root) {
+        pvars_receive_buffer = malloc(procs * number_of_pvar_records * sizeof(pvar_record));
+    }
+    MPI_Gather(pvar_records, number_of_pvar_records, mpi_pvar_record,
+               pvars_receive_buffer, number_of_pvar_records, mpi_pvar_record,
+               root, MPI_COMM_WORLD);
+    if (my_rank == root) {
+        printf("# Number of pvar_records: %d\n", number_of_pvar_records * procs);
+        printf("nrep,rank,pvar_name,value\n");
+        for (int j = 0; j < number_of_pvar_records * procs; j++) {
+            printf("%ld,%d,%s,%lld\n",
+                   pvars_receive_buffer[j].nrep,
+                   pvars_receive_buffer[j].rank,
+                   pvars_receive_buffer[j].pvar_name,
+                   pvars_receive_buffer[j].value);
+            fflush(stdout);
+        }
+    }
 }
 
 char *get_region_name(long rep, long nrep) {
@@ -394,5 +547,76 @@ char *get_region_name(long rep, long nrep) {
 void handle_error(int retval) {
     printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
     exit(1);
+}
+
+void get_all_MPI_T_pvars(char ***pvars, int *num) {
+    int i, name_len, desc_len, verbosity, bind, var_class, readonly, continuous, atomic, rc;
+    MPI_Datatype datatype;
+    MPI_T_enum enumtype;
+    char name[256], description[256];
+
+    MPI_T_pvar_get_num(num);
+    *pvars = malloc(sizeof(char *) * *num);
+    int v = 0;
+    for (i = 0; i < *num; i++) {
+        name_len = desc_len = 256;
+        rc = PMPI_T_pvar_get_info(i, name, &name_len, &verbosity,
+                                  &var_class, &datatype, &enumtype, description, &desc_len, &bind,
+                                  &readonly, &continuous, &atomic);
+        if (rc == MPI_SUCCESS) {
+            (*pvars)[v] = malloc(sizeof(char) * (name_len + 1));
+            strncpy((*pvars)[v], name, name_len + 1);
+            v++;
+        }
+    }
+    // *pvars = realloc(*pvars, sizeof(char *) * v);
+    *num = v;
+}
+
+void get_handles_for_MPI_T_pvars(char **pvar_names, MPI_T_pvar_handle *pvar_handles, int number_of_pvars,
+                                 MPI_T_pvar_session session) {
+    int i, num, name_len, desc_len, verbosity, bind, var_class, readonly, continuous, atomic, count, index;
+    MPI_Datatype datatype;
+    MPI_T_enum enumtype;
+    char name[256], description[256];
+
+    for (int v = 0; v < number_of_pvars; v++) {
+        index = -1;
+        MPI_T_pvar_get_num(&num);
+        // printf("Creating handle for pvar nr. %d\n", v);
+        // fflush(stdout);
+        for (i = 0; i < num; i++) {
+            name_len = desc_len = 256;
+            int rc = PMPI_T_pvar_get_info(i, name, &name_len, &verbosity,
+                                          &var_class, &datatype, &enumtype, description, &desc_len, &bind,
+                                          &readonly, &continuous, &atomic);
+            if (MPI_SUCCESS != rc) {
+                continue;
+            }
+            // printf("Comparing %d (%s) and %d (%s)\n", v, pvar_name, i, name);
+            // fflush(stdout);
+            if (strncmp(name, pvar_names[v], name_len + 1) == 0) {
+                index = i;
+                break;
+            }
+        }
+
+        /* Make sure we found the counters */
+        if (index == -1) {
+            fprintf(stderr, "ERROR: Couldn't find the appropriate SPC counter %s in the MPI_T pvars.\n", pvar_names[v]);
+            MPI_Abort(MPI_COMM_WORLD, -1);
+        }
+
+        // printf("Init handles %d\n", v);
+        // fflush(stdout);
+        MPI_T_pvar_handle handle;
+        /* Create the MPI_T sessions/handles for the counters and start the counters */
+        MPI_T_pvar_handle_alloc(session, index, NULL, &handle, &count);
+        MPI_T_pvar_start(session, handle);
+
+        // printf("Created handle for pvar nr. %d (%s)\n", v, name);
+        // fflush(stdout);
+        pvar_handles[v] = handle;
+    }
 }
 

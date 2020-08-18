@@ -121,7 +121,7 @@ endif()
 if(ENABLE_PAPI)
     # SET(PAPI_INCLUDE_DIR "/usr/local/include")
     # SET(PAPI_LIBRARIES "/usr/local/lib")
-    SET(PAPI_DIR "/opt/spack/spack_git/opt/spack/linux-debian10-skylake_avx512/gcc-8.3.0/papi-6.0.0-sfx6lx3wz4fdqhkgncydzq3dm4slgntr")
+    SET(PAPI_DIR $ENV{PAPI_DIR})
     FIND_PACKAGE(PAPI REQUIRED)
     INCLUDE_DIRECTORIES(${PAPI_INCLUDE_DIR})
 
