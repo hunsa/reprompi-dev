@@ -60,7 +60,7 @@ endif(ENABLE_PGMPI)
 ####################################
 
 
-SET(MY_COMPILE_FLAGS "")
+# SET(MY_COMPILE_FLAGS "")
 
 ######################################
 ############ Set timing flags ########
@@ -303,6 +303,7 @@ message("Common Libraries: ${COMMON_LIBRARIES}")
 TARGET_LINK_LIBRARIES(mpibenchmark ${COMMON_LIBRARIES} synclib)
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES LINKER_LANGUAGE CXX )
+# SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES LINK_FLAGS "-pg")
 
 if (ENABLE_PGMPI)
     if (PGMPI_FOUND)

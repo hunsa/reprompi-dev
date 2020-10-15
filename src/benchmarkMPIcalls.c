@@ -25,8 +25,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <dirent.h>
 #include <getopt.h>
 #include <time.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <errno.h>
 #include "mpi.h"
 
 #include "reprompi_bench/misc.h"
@@ -85,6 +89,15 @@ typedef struct pvar_record {
     long long value;
 } pvar_record;
 
+typedef struct process_record {
+    int rank;
+    char hostname[64];
+    long nrep;
+    long pid;
+    char process_name[256];
+    unsigned long time;
+} process_record;
+
 static const int OUTPUT_ROOT_PROC = 0;
 
 char *get_region_name(long rep, long nrep);
@@ -97,6 +110,20 @@ void get_handles_for_MPI_T_pvars(char **pvar_names, MPI_T_pvar_handle *pvar_hand
                                  MPI_T_pvar_session session);
 
 void print_pvars(int my_rank, int procs, const pvar_record *pvar_records, int number_of_pvar_records);
+
+int get_pids(long **pids);
+
+void save_process_prev_times(long num_pids, const long *pids, unsigned long *process_prev_times);
+
+int get_info_from_pid(long pid, int *name_length, char *name, unsigned long *time);
+
+void
+save_process_records(long nrep, int my_rank, int num_pids, long *pids, const unsigned long *process_prev_times,
+                     process_record *process_records);
+
+void
+print_process_records(int my_rank, int procs, const process_record *process_records, int number_of_process_records);
+
 
 static void print_initial_settings(const reprompib_options_t *opts, const reprompib_common_options_t *common_opts,
         //const reprompib_dictionary_t* dict,
@@ -266,6 +293,15 @@ int main(int argc, char *argv[]) {
     }
     // printf("Rank %d: handles initialized\n", my_rank);
 
+    // init pids
+    long *pids;
+    int num_pids = get_pids(&pids);
+
+    // for (int j = 0; j < num_pids; j++) {
+    //     printf("# rank_%d: %ld\n", my_rank, pids[j]);
+    // }
+    unsigned long process_prev_times[num_pids];
+
     // init LIKWID
     LIKWID_MARKER_INIT;
     LIKWID_MARKER_THREADINIT;
@@ -304,6 +340,10 @@ int main(int argc, char *argv[]) {
     // INIT pvar record array
     int number_of_pvar_records = (int) opts.n_rep * number_of_pvars;
     pvar_record *pvar_records = malloc(number_of_pvar_records * sizeof(pvar_record));
+
+    // INIT process record array
+    int number_of_process_records = (int) opts.n_rep * num_pids;
+    process_record *process_records = malloc(number_of_process_records * sizeof(process_record));
 
     // initialize caching strategies
     reprompib_init_caching_module(argc, argv, &caching_module);
@@ -352,6 +392,9 @@ int main(int argc, char *argv[]) {
 
         i = 0;
         while (1) {
+            //Remember process prev time
+            //save_process_prev_times(num_pids, pids, process_prev_times);
+
             //Reset pvar Counters
             for (int j = 0; j < number_of_pvars; j++) {
                 long long int value;
@@ -403,6 +446,9 @@ int main(int argc, char *argv[]) {
             //        number_of_pvar_records, i, opts.n_rep);
             // fflush(stdout);
 
+            // printf("# num_pids: %d\n", num_pids);
+            //save_process_records(i, my_rank, num_pids, pids, process_prev_times, process_records);
+
             free(regionTag);
             if (is_invalid == REPROMPI_INVALID_MEASUREMENT) {
                 // redo the measurement
@@ -430,6 +476,9 @@ int main(int argc, char *argv[]) {
 
         //print pvar data
         print_pvars(my_rank, procs, pvar_records, number_of_pvar_records);
+
+        //print process data
+        //print_process_records(my_rank, procs, process_records, number_of_process_records);
 
 
         clock_sync.finalize_sync();
@@ -528,6 +577,7 @@ void print_pvars(int my_rank, int procs, const pvar_record *pvar_records, int nu
     }
 }
 
+
 char *get_region_name(long rep, long nrep) {
     //printf("Number of jobs %ld\n", nrep);
     int maxDigits;
@@ -544,6 +594,7 @@ char *get_region_name(long rep, long nrep) {
     //printf("Started region %s\n", regionTag);
     return regionTag;
 }
+
 
 void handle_error(int retval) {
     printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
@@ -618,6 +669,197 @@ void get_handles_for_MPI_T_pvars(char **pvar_names, MPI_T_pvar_handle *pvar_hand
         // printf("Created handle for pvar nr. %d (%s)\n", v, name);
         // fflush(stdout);
         pvar_handles[v] = handle;
+    }
+}
+
+bool isNumeric(char *string) {
+    // Get value with failure detection.
+
+    char *next;
+    long val = strtol(string, &next, 10);
+
+    // Check for empty string and characters left after conversion.
+
+    if ((next == string) || (*next != '\0')) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+int get_pids(long **pids) {
+    *pids = NULL;
+    int pid_cnt = 0;
+    DIR *d;
+    struct dirent *dir;
+    d = opendir("/proc");
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            if (isNumeric(dir->d_name)) {
+                pid_cnt++;
+                *pids = realloc(*pids, sizeof(long) * pid_cnt);
+                char *ignore = NULL;
+                (*pids)[pid_cnt - 1] = strtol(dir->d_name, &ignore, 10);
+                //printf("# pid_%d: %ld\n", pid_cnt-1, (*pids)[pid_cnt - 1]);
+            }
+        }
+        closedir(d);
+    }
+    return pid_cnt;
+}
+
+void save_process_prev_times(long num_pids, const long *pids, unsigned long *process_prev_times) {
+    for (int j = 0; j < num_pids; j++) {
+        unsigned long time;
+        long pid = pids[j];
+        char name[256];
+        int name_length;
+        get_info_from_pid(pid, &name_length, name, &time);
+        process_prev_times[j] = time;
+    }
+}
+
+void save_process_records(long nrep, int my_rank, int num_pids, long *pids, const unsigned long *process_prev_times,
+                          process_record *process_records) {
+    for (int i = 0; i < num_pids; i++) {
+        // printf("# Saving pid_number: %d\n", i);
+        //printf("## PIDs: ");
+        //for (int j = 0; j < num_pids; j++) {
+        //printf("%ld, ", pids[j]);
+        //}
+        //printf("\n");
+        fflush(stdout);
+        long pid = pids[i];
+        //printf("## Saving pid: %ld\n", pid);
+        //fflush(stdout);
+        unsigned long time;
+        int name_length;
+        char name[256];
+        get_info_from_pid(pid, &name_length, name, &time);
+        //printf("## Name: %s\n", name);
+        //fflush(stdout);
+        time -= process_prev_times[i];
+
+        long index = num_pids * nrep + i;
+        process_records[index].time = time;
+        process_records[index].pid = pid;
+        process_records[index].rank = my_rank;
+        process_records[index].nrep = nrep;
+        strncpy(process_records[index].process_name, name, name_length + 1);
+        gethostname(process_records[index].hostname, 64);
+        // printf("## #%ld Rank_%d: %s (%ld): %lu\n", nrep, my_rank, process_records[index].process_name, process_records[index].pid, process_records[index].time);
+        fflush(stdout);
+    }
+}
+
+int get_info_from_pid(long pid, int *name_length, char *name, unsigned long *time) {
+    FILE *fp;
+    char stat_file_name[20];
+    snprintf(stat_file_name, 20, "/proc/%ld/stat", pid);
+    //printf("## stat_file: %s\n", stat_file_name);
+    //fflush(stdout);
+    //fp = fopen(stat_file_name, "r");
+    //if (fp == NULL) {
+    //    fprintf(stderr, "Couldn't open file %s, Error %d: %s\n", stat_file_name, errno, strerror(errno));
+    //    return errno;
+    //}
+    int buffer_size = 1024;
+    char buffer[buffer_size];
+    strncpy(buffer, "1 (systemd) S 0 1 1 0 -1 4194560 109962 2745609 95 1915 1334 6360 6260 5589 20 0 1 0 13 172765184 3135 18446744073709551615 1 1 0 0 0 0 671173123 4096 1260 0 0 0 17 0 0 0 215 0 0 0 0 0 0 0 0 0 0", buffer_size);
+    // fgets(buffer, buffer_size, fp);
+    // fclose(fp);
+    int first_parenthesis_open = -1;
+    int last_parenthesis_closed = -1;
+    for (int k = 0; k < buffer_size && buffer[k] != '\0'; k++) {
+        if (buffer[k] == ')') {
+            last_parenthesis_closed = k;
+        } else if (first_parenthesis_open < 0 && buffer[k] == '(') {
+            first_parenthesis_open = k;
+        }
+    }
+    *name_length = last_parenthesis_closed - first_parenthesis_open - 1;
+    char format[256];
+    sprintf(format,
+            "%%*ld (%%%d[^\n] ) %%c %%*d %%*d %%*d %%*d %%*d %%*u %%*lu %%*lu %%*lu %%*lu %%lu %%lu %%lu %%lu",
+            *name_length);
+    unsigned long utime, stime, cutime, cstime;
+    int num_scanned;
+    char state;
+    if ((num_scanned = sscanf(buffer, format, name, &state, &utime, &stime, &cutime, &cstime)) < 6) {
+        fprintf(stderr, "Error while reading proc stat file: %s (%d) (%d) (%s)\n", stat_file_name, num_scanned,
+                *name_length, name);
+        rewind(fp);
+        char c;
+        while ((c = (char) fgetc(fp)) != EOF) {
+            fprintf(stderr, "%c", c);
+        }
+        fprintf(stderr, "\n\n");
+        return -1;
+    } else {
+        *time = utime + stime + cutime + cstime;
+        // printf("# %s (%ld): %lu\n", name, pid, *time);
+        return 0;
+    }
+}
+
+void
+print_process_records(int my_rank, int procs, const process_record *process_records, int number_of_process_records) {
+    int root = 0;
+
+    // Init MPI Type
+    MPI_Datatype mpi_process_record;
+    int array_of_block_lengths[] = {1, 64, 1, 1, 256, 1};
+
+    MPI_Aint array_of_displacements[] = {
+            offsetof(process_record, rank),
+            offsetof(process_record, hostname),
+            offsetof(process_record, nrep),
+            offsetof(process_record, pid),
+            offsetof(process_record, process_name),
+            offsetof(process_record, time)
+    };
+    MPI_Datatype array_of_types[] = {MPI_INT, MPI_CHAR, MPI_LONG, MPI_LONG, MPI_CHAR, MPI_UNSIGNED_LONG};
+
+    MPI_Type_create_struct(6, array_of_block_lengths, array_of_displacements, array_of_types, &mpi_process_record);
+    MPI_Type_commit(&mpi_process_record);
+
+    // Gather sizes
+    int *numbers_of_process_records;
+    int *displs;
+    if (my_rank == root) {
+        numbers_of_process_records = malloc(sizeof(int) * procs);
+        displs = malloc(sizeof(int) * procs);
+    }
+    MPI_Gather(&number_of_process_records, 1, MPI_INT, numbers_of_process_records, 1, MPI_INT, root, MPI_COMM_WORLD);
+
+    process_record *process_receive_buffer;
+    int sum_process_records = 0;
+    if (my_rank == root) {
+        for (int i = 0; i < procs; i++) {
+            displs[i] = sum_process_records;
+            sum_process_records += numbers_of_process_records[i];
+        }
+        if (my_rank == root) {
+            process_receive_buffer = malloc(sum_process_records * sizeof(process_record));
+        }
+    }
+    MPI_Gatherv(process_records, number_of_process_records, mpi_process_record, process_receive_buffer,
+                numbers_of_process_records, displs, mpi_process_record, root, MPI_COMM_WORLD);
+    if (my_rank == root) {
+        printf("# Number of process_records: %d\n", number_of_process_records * procs);
+        printf("nrep,rank,global_pid,time\n");
+        for (int j = 0; j < sum_process_records; j++) {
+            if (process_receive_buffer[j].time != 0 && strncmp(process_receive_buffer[j].process_name, "mpibenchmark", 12) != 0) {
+                printf("%ld,%d,%s:%s(%ld),%lu\n",
+                       process_receive_buffer[j].nrep,
+                       process_receive_buffer[j].rank,
+                       process_receive_buffer[j].hostname,
+                       process_receive_buffer[j].process_name,
+                       process_receive_buffer[j].pid,
+                       process_receive_buffer[j].time);
+                fflush(stdout);
+            }
+        }
     }
 }
 
