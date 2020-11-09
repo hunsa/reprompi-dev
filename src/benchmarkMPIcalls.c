@@ -49,9 +49,11 @@
 #include "reprompi_bench/utils/keyvalue_store.h"
 #include "reprompi_bench/caching/caching.h"
 
+#include "modules/roth_tracing/roth_tracing_module.h"
+
 #ifdef PAPI
 
-#include "papi.h"
+#include <papi.h>
 
 #else
 
@@ -192,7 +194,7 @@ static void reprompib_parse_bench_options(int argc, char **argv) {
 
     const struct option bench_long_options[] = {
             {"help", required_argument, 0, 'h'},
-            {0, 0,                      0, 0}
+            {0,      0,                 0, 0}
     };
 
     while (1) {
@@ -345,6 +347,9 @@ int main(int argc, char *argv[]) {
     int number_of_process_records = (int) opts.n_rep * num_pids;
     process_record *process_records = malloc(number_of_process_records * sizeof(process_record));
 
+    // INIT microbenchmark array
+    init_tracer(opts.n_rep, (long) my_rank);
+
     // initialize caching strategies
     reprompib_init_caching_module(argc, argv, &caching_module);
 
@@ -414,10 +419,16 @@ int main(int argc, char *argv[]) {
             }
 
             proc_sync.start_sync();
+            roth_tracing_start_repetition(i);
 
+            roth_tracing_start_timer(REPROMPI_RUNTIME_OUTER);
             tstart_sec[i] = get_time();
+            roth_tracing_start_timer(REPROMPI_RUNTIME_INNER);
             collective_calls[job.call_index].collective_call(&coll_params);
+            roth_tracing_stop_timer(REPROMPI_RUNTIME_INNER);
             tend_sec[i] = get_time();
+            roth_tracing_stop_timer(REPROMPI_RUNTIME_OUTER);
+            roth_tracing_end_repetition();
 
             is_invalid = proc_sync.stop_sync();
 
@@ -429,6 +440,7 @@ int main(int argc, char *argv[]) {
 
             // End LIKWID region
             LIKWID_MARKER_STOP(regionTag);
+
 
             // Save pvar variables
             //printf("Rank %d: saving pvars\n", my_rank);
@@ -476,6 +488,8 @@ int main(int argc, char *argv[]) {
 
         //print pvar data
         print_pvars(my_rank, procs, pvar_records, number_of_pvar_records);
+
+        print_roth_tracing(my_rank, procs, opts.n_rep, OUTPUT_ROOT_PROC);
 
         //print process data
         //print_process_records(my_rank, procs, process_records, number_of_process_records);
@@ -542,7 +556,7 @@ int main(int argc, char *argv[]) {
 }
 
 void print_pvars(int my_rank, int procs, const pvar_record *pvar_records, int number_of_pvar_records) {
-    int root = 0;
+    int root = OUTPUT_ROOT_PROC;
     MPI_Datatype mpi_pvar_record;
     int array_of_block_lengths[] = {1, 1, 256, 1};
     MPI_Aint array_of_displacements[] = {
@@ -765,7 +779,9 @@ int get_info_from_pid(long pid, int *name_length, char *name, unsigned long *tim
     //}
     int buffer_size = 1024;
     char buffer[buffer_size];
-    strncpy(buffer, "1 (systemd) S 0 1 1 0 -1 4194560 109962 2745609 95 1915 1334 6360 6260 5589 20 0 1 0 13 172765184 3135 18446744073709551615 1 1 0 0 0 0 671173123 4096 1260 0 0 0 17 0 0 0 215 0 0 0 0 0 0 0 0 0 0", buffer_size);
+    strncpy(buffer,
+            "1 (systemd) S 0 1 1 0 -1 4194560 109962 2745609 95 1915 1334 6360 6260 5589 20 0 1 0 13 172765184 3135 18446744073709551615 1 1 0 0 0 0 671173123 4096 1260 0 0 0 17 0 0 0 215 0 0 0 0 0 0 0 0 0 0",
+            buffer_size);
     // fgets(buffer, buffer_size, fp);
     // fclose(fp);
     int first_parenthesis_open = -1;
@@ -804,7 +820,7 @@ int get_info_from_pid(long pid, int *name_length, char *name, unsigned long *tim
 
 void
 print_process_records(int my_rank, int procs, const process_record *process_records, int number_of_process_records) {
-    int root = 0;
+    int root = OUTPUT_ROOT_PROC;
 
     // Init MPI Type
     MPI_Datatype mpi_process_record;
@@ -849,7 +865,8 @@ print_process_records(int my_rank, int procs, const process_record *process_reco
         printf("# Number of process_records: %d\n", number_of_process_records * procs);
         printf("nrep,rank,global_pid,time\n");
         for (int j = 0; j < sum_process_records; j++) {
-            if (process_receive_buffer[j].time != 0 && strncmp(process_receive_buffer[j].process_name, "mpibenchmark", 12) != 0) {
+            if (process_receive_buffer[j].time != 0 &&
+                strncmp(process_receive_buffer[j].process_name, "mpibenchmark", 12) != 0) {
                 printf("%ld,%d,%s:%s(%ld),%lu\n",
                        process_receive_buffer[j].nrep,
                        process_receive_buffer[j].rank,

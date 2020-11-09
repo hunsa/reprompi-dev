@@ -7,7 +7,7 @@ project(reprompi)
 
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}")
+# set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}")
 
 
 set(INCLUDE_PLATFORM_CONFIG_FILE "${CMAKE_SOURCE_DIR}/platform_files/default.cmake"
@@ -43,6 +43,7 @@ set(OPTION_BUFFER_ALIGNMENT "" CACHE STRING "Alignment to use for buffer allocat
 option(OPTION_PRINT_MSIZES_BYTES "Print message sizes in the output instead of MPI call counts [default: counts]" off)
 option(LIKWID_PERFMON "Enables LIKWID" off)
 option(ENABLE_PAPI "Enables PAPI" off)
+option(ROTH_TRACING "Enables roth_tracing" off)
 
 ####################################
 ############ PGtune support ########
@@ -123,12 +124,24 @@ if(ENABLE_PAPI)
     # SET(PAPI_LIBRARIES "/usr/local/lib")
     SET(PAPI_DIR $ENV{PAPI_DIR})
     FIND_PACKAGE(PAPI REQUIRED)
-    INCLUDE_DIRECTORIES(${PAPI_INCLUDE_DIR})
+    INCLUDE_DIRECTORIES(${PAPI_INCLUDE_DIRS})
 
     SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DPAPI")
     SET(COMMON_LIBRARIES "${COMMON_LIBRARIES} ${PAPI_LIBRARY}")
 endif()
 
+if(ROTH_TRACING)
+    set(CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY ON)
+    FIND_PACKAGE(roth_tracing REQUIRED CONFIG PATHS /usr/local/lib/CMake/roth_tracing /home/staff/roth/local/lib/CMake/roth_tracing NO_DEFAULT_PATHS)
+    MESSAGE(STATUS "roth_tracing_DIR: ${roth_tracing_DIR}" )
+    MESSAGE(STATUS "roth_tracing_CONSIDERED_CONFIGS: ${roth_tracing_CONSIDERED_CONFIGS}" )
+    MESSAGE(STATUS "CMAKE_FIND_ROOT_PATH: ${CMAKE_FIND_ROOT_PATH}" )
+    MESSAGE(STATUS "ROTH_TRACING_INCLUDE_DIRS: ${ROTH_TRACING_INCLUDE_DIRS}" )
+    INCLUDE_DIRECTORIES(${ROTH_TRACING_INCLUDE_DIRS})
+    SET(COMMON_LIBRARIES "${COMMON_LIBRARIES} -lroth_tracing")
+    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DROTH_TRACING")
+    # SET(COMMON_LIBRARIES "${COMMON_LIBRARIES} -lroth_tracing")
+endif()
 
 ####################################
 ############ HWLOC support ########
@@ -287,6 +300,7 @@ ${SRC_DIR}/reprompi_bench/option_parser/parse_options.c
 ${COLL_OPS_SRC_FILES}
 # caches cleaning strategy
 ${CACHING_SRC_FILES}
+${SRC_DIR}/modules/roth_tracing/roth_tracing_module.c
 )
 
 #find_library (synclib NAMES synclib)
@@ -299,6 +313,7 @@ ${REPROMPIBENCH_FILES}
 
 message("My compile Flags: ${MY_COMPILE_FLAGS}")
 message("Common Libraries: ${COMMON_LIBRARIES}")
+
 
 TARGET_LINK_LIBRARIES(mpibenchmark ${COMMON_LIBRARIES} synclib)
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
