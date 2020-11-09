@@ -301,6 +301,7 @@ ${COLL_OPS_SRC_FILES}
 # caches cleaning strategy
 ${CACHING_SRC_FILES}
 ${SRC_DIR}/modules/roth_tracing/roth_tracing_module.c
+${SRC_DIR}/modules/papi/papi_module.c
 )
 
 #find_library (synclib NAMES synclib)

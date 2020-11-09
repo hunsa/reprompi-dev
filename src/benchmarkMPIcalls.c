@@ -51,19 +51,7 @@
 
 #include "modules/roth_tracing/roth_tracing_module.h"
 
-#ifdef PAPI
-
-#include <papi.h>
-
-#else
-
-#define PAPI_OK 0
-#define PAPI_strerror(retVal) ""
-#define PAPI_hl_region_begin(region) PAPI_OK
-#define PAPI_hl_region_end(region) PAPI_OK
-#define PAPI_hl_stop() PAPI_OK
-
-#endif
+#include "modules/papi/papi_module.h"
 
 #ifdef LIKWID_PERFMON
 
@@ -103,8 +91,6 @@ typedef struct process_record {
 static const int OUTPUT_ROOT_PROC = 0;
 
 char *get_region_name(long rep, long nrep);
-
-void handle_error(int retval);
 
 void get_all_MPI_T_pvars(char ***pvars, int *num);
 
@@ -609,11 +595,6 @@ char *get_region_name(long rep, long nrep) {
     return regionTag;
 }
 
-
-void handle_error(int retval) {
-    printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
-    exit(1);
-}
 
 void get_all_MPI_T_pvars(char ***pvars, int *num) {
     int i, name_len, desc_len, verbosity, bind, var_class, readonly, continuous, atomic, rc;
