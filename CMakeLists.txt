@@ -41,7 +41,7 @@ option(COMPILE_SANITY_CHECK_TESTS "Enable sanity check tests" on)
 option(COMPILE_SANITY_CHECK_CLOCK "Enable clock sanity checks" off)
 set(OPTION_BUFFER_ALIGNMENT "" CACHE STRING "Alignment to use for buffer allocation [default: no alignment(allocation with calloc)]")
 option(OPTION_PRINT_MSIZES_BYTES "Print message sizes in the output instead of MPI call counts [default: counts]" off)
-option(LIKWID_PERFMON "Enables LIKWID" off)
+option(LIKWID_PERFMON "Enables LIKWID" on)
 option(ENABLE_PAPI "Enables PAPI" off)
 option(ROTH_TRACING "Enables roth_tracing" off)
 
@@ -300,8 +300,10 @@ ${SRC_DIR}/reprompi_bench/option_parser/parse_options.c
 ${COLL_OPS_SRC_FILES}
 # caches cleaning strategy
 ${CACHING_SRC_FILES}
+${SRC_DIR}/modules/utils.c
 ${SRC_DIR}/modules/roth_tracing/roth_tracing_module.c
 ${SRC_DIR}/modules/papi/papi_module.c
+${SRC_DIR}/modules/likwid/likwid_module.c
 )
 
 #find_library (synclib NAMES synclib)

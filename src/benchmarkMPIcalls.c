@@ -49,24 +49,11 @@
 #include "reprompi_bench/utils/keyvalue_store.h"
 #include "reprompi_bench/caching/caching.h"
 
+#include <modules/utils.h>
 #include "modules/roth_tracing/roth_tracing_module.h"
-
 #include "modules/papi/papi_module.h"
+#include "modules/likwid/likwid_module.h"
 
-#ifdef LIKWID_PERFMON
-
-#include <likwid.h>
-
-#else
-#define LIKWID_MARKER_INIT
-#define LIKWID_MARKER_THREADINIT
-#define LIKWID_MARKER_SWITCH
-#define LIKWID_MARKER_REGISTER(regionTag)
-#define LIKWID_MARKER_START(regionTag)
-#define LIKWID_MARKER_STOP(regionTag)
-#define LIKWID_MARKER_CLOSE
-#define LIKWID_MARKER_GET(regionTag, nevents, events, time, count)
-#endif
 
 #define MY_MAX(x, y) (((x) > (y)) ? (x) : (y))
 
@@ -89,8 +76,6 @@ typedef struct process_record {
 } process_record;
 
 static const int OUTPUT_ROOT_PROC = 0;
-
-char *get_region_name(long rep, long nrep);
 
 void get_all_MPI_T_pvars(char ***pvars, int *num);
 
@@ -208,6 +193,7 @@ static void reprompib_parse_bench_options(int argc, char **argv) {
 }
 
 
+
 int main(int argc, char *argv[]) {
     //printf("# Started\n");
     int my_rank, procs;
@@ -319,11 +305,7 @@ int main(int argc, char *argv[]) {
     reprompib_parse_options(&opts, argc, argv);
 
     // INIT LIKWID Sections
-    for (i = 0; i < opts.n_rep; i++) {
-        char *region_name = get_region_name(i, opts.n_rep);
-        LIKWID_MARKER_REGISTER(region_name);
-        free(region_name);
-    }
+    initialize_likwid_regions(opts.n_rep);
 
     // INIT pvar record array
     int number_of_pvar_records = (int) opts.n_rep * number_of_pvars;
@@ -473,7 +455,7 @@ int main(int argc, char *argv[]) {
         reprompib_print_bench_output(job, tstart_sec, tend_sec, &opts, &common_opts, &print_info);
 
         //print pvar data
-        print_pvars(my_rank, procs, pvar_records, number_of_pvar_records);
+        // print_pvars(my_rank, procs, pvar_records, number_of_pvar_records);
 
         print_roth_tracing(my_rank, procs, opts.n_rep, OUTPUT_ROOT_PROC);
 
@@ -577,23 +559,6 @@ void print_pvars(int my_rank, int procs, const pvar_record *pvar_records, int nu
     }
 }
 
-
-char *get_region_name(long rep, long nrep) {
-    //printf("Number of jobs %ld\n", nrep);
-    int maxDigits;
-    if (nrep > 1) {
-        maxDigits = (int) log10((double) nrep - 1) + 1;
-    } else {
-        maxDigits = 1;
-    }
-    int tagLength = 6 + maxDigits;
-    //printf("Tag length %d\n", tagLength);
-    char *regionTag;
-    regionTag = malloc(sizeof(char) * tagLength);
-    snprintf(regionTag, tagLength, "nrep_%0*ld", maxDigits, rep);
-    //printf("Started region %s\n", regionTag);
-    return regionTag;
-}
 
 
 void get_all_MPI_T_pvars(char ***pvars, int *num) {
