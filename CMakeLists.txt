@@ -45,6 +45,7 @@ option(LIKWID_PERFMON "Enables LIKWID" on)
 option(ENABLE_PAPI "Enables PAPI" off)
 option(ROTH_TRACING "Enables roth_tracing" off)
 option(MPI_T_PVARS "Enables MPI_T performance variables" off)
+option(PROC_MODULE "Enables analysis of the /proc pseudo-filesystem" on)
 
 ####################################
 ############ PGtune support ########
@@ -140,12 +141,16 @@ if(ROTH_TRACING)
     MESSAGE(STATUS "ROTH_TRACING_INCLUDE_DIRS: ${ROTH_TRACING_INCLUDE_DIRS}" )
     INCLUDE_DIRECTORIES(${ROTH_TRACING_INCLUDE_DIRS})
     SET(COMMON_LIBRARIES "${COMMON_LIBRARIES} -lroth_tracing")
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DROTH_TRACING")
+    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DROTH_TRACING -DACTIVATE_ROTH_TRACING")
     # SET(COMMON_LIBRARIES "${COMMON_LIBRARIES} -lroth_tracing")
 endif()
 
 if(MPI_T_PVARS)
     SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DMPI_T_PVARS")
+endif()
+
+if(PROC_MODULE)
+    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DPROC_MODULE")
 endif()
 
 ####################################
@@ -310,6 +315,7 @@ ${SRC_DIR}/modules/roth_tracing/roth_tracing_module.c
 ${SRC_DIR}/modules/papi/papi_module.c
 ${SRC_DIR}/modules/likwid/likwid_module.c
 ${SRC_DIR}/modules/MPI_T_pvar/MPI_T_pvar_module.c
+${SRC_DIR}/modules/proc/proc_module.c
 )
 
 #find_library (synclib NAMES synclib)
