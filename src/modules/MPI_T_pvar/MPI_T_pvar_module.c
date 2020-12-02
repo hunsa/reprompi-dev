@@ -62,52 +62,50 @@ void init_handles_for_MPI_T_pvars() {
             fprintf(stderr, "ERROR: Couldn't find the appropriate SPC counter %s in the MPI_T pvars.\n", pvar_names[v]);
             MPI_Abort(MPI_COMM_WORLD, -1);
         }
-
-        // printf("Init handles %d\n", v);
+        // printf("Init handle %d, index: %d, name: %s\n", v, index, name);
         // fflush(stdout);
         MPI_T_pvar_handle handle;
         /* Create the MPI_T sessions/handles for the counters and start the counters */
         MPI_T_pvar_handle_alloc(session, index, NULL, &handle, &count);
         MPI_T_pvar_start(session, handle);
 
-        // printf("Created handle for pvar nr. %d (%s)\n", v, name);
+        // printf("Init handle %d, finished\n", v);
         // fflush(stdout);
         pvar_handles[v] = handle;
     }
 }
 
-
-void get_all_MPI_T_pvars(char ***pvars, int *num) {
+void get_all_MPI_T_pvars() {
     int i, name_len, desc_len, verbosity, bind, var_class, readonly, continuous, atomic, rc;
     MPI_Datatype datatype;
     MPI_T_enum enumtype;
     char name[256], description[256];
 
-    MPI_T_pvar_get_num(num);
-    *pvars = malloc(sizeof(char *) * *num);
+    MPI_T_pvar_get_num(&number_of_pvars);
+    pvar_names = malloc(sizeof(char *) * number_of_pvars);
     int v = 0;
-    for (i = 0; i < *num; i++) {
+    for (i = 0; i < number_of_pvars; i++) {
         name_len = desc_len = 256;
         rc = PMPI_T_pvar_get_info(i, name, &name_len, &verbosity,
                                   &var_class, &datatype, &enumtype, description, &desc_len, &bind,
                                   &readonly, &continuous, &atomic);
-        if (rc == MPI_SUCCESS) {
-            (*pvars)[v] = malloc(sizeof(char) * (name_len + 1));
-            strncpy((*pvars)[v], name, name_len + 1);
+        // PSM2 segfaults on jupiter (it doesn't have Omni-Path)
+        if (rc == MPI_SUCCESS && strncmp(name, "mtl_psm2", 8) != 0) {
+            (pvar_names)[v] = malloc(sizeof(char) * (name_len + 1));
+            strncpy((pvar_names)[v], name, name_len + 1);
             v++;
         }
     }
     // *pvars = realloc(*pvars, sizeof(char *) * v);
-    *num = v;
+    number_of_pvars = v;
 }
-
 
 void init_MPI_T_pvars(long nrep) {
     int provided;
     //printf("Init Thread\n");
     //fflush(stdout);
     MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
-    get_all_MPI_T_pvars(&pvar_names, &number_of_pvars);
+    get_all_MPI_T_pvars();
     // Uncomment this if you want to only measure the specified pvars and not all available
     /*char *pvar_names[] = {"runtime_spc_OMPI_SPC_BYTES_RECEIVED_USER",
                           "runtime_spc_OMPI_SPC_BYTES_RECEIVED_MPI",
