@@ -13,7 +13,7 @@ void print_roth_tracing(int my_rank, int procs, long nrep, int root);
 
 #else
 
-#define init_tracer(nrep, my_rank)
+#define init_tracer(nrep)
 #define roth_tracing_start_repetition(i)
 #define roth_tracing_start_timer(time_metric)
 #define roth_tracing_stop_timer(time_metric)

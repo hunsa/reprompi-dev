@@ -134,7 +134,7 @@ endif()
 
 if(ROTH_TRACING)
     set(CMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY ON)
-    FIND_PACKAGE(roth_tracing REQUIRED CONFIG PATHS /usr/local/lib/CMake/roth_tracing /home/staff/roth/local/lib/CMake/roth_tracing NO_DEFAULT_PATHS)
+    FIND_PACKAGE(roth_tracing REQUIRED CONFIG PATHS /usr/local/lib/CMake/roth_tracing $ENV{HOME}/local/lib/CMake/roth_tracing NO_DEFAULT_PATHS)
     MESSAGE(STATUS "roth_tracing_DIR: ${roth_tracing_DIR}" )
     MESSAGE(STATUS "roth_tracing_CONSIDERED_CONFIGS: ${roth_tracing_CONSIDERED_CONFIGS}" )
     MESSAGE(STATUS "CMAKE_FIND_ROOT_PATH: ${CMAKE_FIND_ROOT_PATH}" )

@@ -222,7 +222,7 @@ int main(int argc, char *argv[]) {
     init_proc_module(opts.n_rep);
 
     // INIT microbenchmark array
-    init_tracer(opts.n_rep, (long) my_rank);
+    init_tracer(opts.n_rep);
 
     // initialize caching strategies
     reprompib_init_caching_module(argc, argv, &caching_module);
