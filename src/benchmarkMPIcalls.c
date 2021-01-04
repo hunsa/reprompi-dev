@@ -26,6 +26,8 @@
 #include <stddef.h>
 #include <getopt.h>
 #include <time.h>
+#include <errno.h>
+#include <sys/resource.h>
 #include "mpi.h"
 
 #include "reprompi_bench/misc.h"
@@ -45,6 +47,7 @@
 #include "reprompi_bench/caching/caching.h"
 
 #include <modules/utils.h>
+#include <unistd.h>
 #include "modules/roth_tracing/roth_tracing_module.h"
 #include "modules/papi/papi_module.h"
 #include "modules/likwid/likwid_module.h"
@@ -150,6 +153,27 @@ static void reprompib_parse_bench_options(int argc, char **argv) {
     opterr = 1; // reset opterr to catch invalid options
 }
 
+/* msleep(): Sleep for the requested number of milliseconds. */
+int msleep(long msec)
+{
+    struct timespec ts;
+    int res;
+
+    if (msec < 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+
+    do {
+        res = nanosleep(&ts, &ts);
+    } while (res && errno == EINTR);
+
+    return res;
+}
 
 
 int main(int argc, char *argv[]) {
@@ -287,6 +311,11 @@ int main(int argc, char *argv[]) {
                 handle_error(retval);
             }
 
+            // wait for system tasks to be done
+            if (my_rank == 0) {
+                msleep(10);
+            }
+            setpriority(PRIO_PROCESS, getpid(), -20);
             proc_sync.start_sync();
             roth_tracing_start_repetition(i);
 
@@ -300,6 +329,7 @@ int main(int argc, char *argv[]) {
             roth_tracing_end_repetition();
 
             is_invalid = proc_sync.stop_sync();
+            setpriority(PRIO_PROCESS, getpid(), 20);
 
             // End PAPI region
             retval = PAPI_hl_region_end(regionTag);
@@ -348,7 +378,7 @@ int main(int argc, char *argv[]) {
         print_roth_tracing(my_rank, procs, opts.n_rep, OUTPUT_ROOT_PROC);
 
         //print process data
-        print_process_records(my_rank, OUTPUT_ROOT_PROC, procs);
+        print_process_records();
 
 
         clock_sync.finalize_sync();

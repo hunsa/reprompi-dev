@@ -45,7 +45,7 @@ option(LIKWID_PERFMON "Enables LIKWID" on)
 option(ENABLE_PAPI "Enables PAPI" off)
 option(ROTH_TRACING "Enables roth_tracing" off)
 option(MPI_T_PVARS "Enables MPI_T performance variables" off)
-option(PROC_MODULE "Enables analysis of the /proc pseudo-filesystem" on)
+option(PROC_MODULE "Enables analysis of the /proc pseudo-filesystem" off)
 
 ####################################
 ############ PGtune support ########

@@ -13,7 +13,7 @@ void save_process_prev_times();
 
 void save_process_records(long repetition_id, int my_rank);
 
-void print_process_records(int my_rank, int root, int procs);
+void print_process_records();
 
 #else
 
@@ -23,7 +23,7 @@ void print_process_records(int my_rank, int root, int procs);
 
 #define save_process_records(repetition_id, my_rank)
 
-#define print_process_records(my_rank, root, procs)
+#define print_process_records()
 
 #endif //PROC_MODULE
 
