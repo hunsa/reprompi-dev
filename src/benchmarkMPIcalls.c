@@ -344,7 +344,7 @@ int main(int argc, char *argv[]) {
             save_MPI_T_pvars(i, my_rank);
 
             // Save process info
-            save_process_records(i, my_rank);
+            save_process_records(i);
 
             free(regionTag);
             if (is_invalid == REPROMPI_INVALID_MEASUREMENT) {

@@ -11,7 +11,7 @@ void init_proc_module(long nrep);
 
 void save_process_prev_times();
 
-void save_process_records(long repetition_id, int my_rank);
+void save_process_records(long repetition_id);
 
 void print_process_records();
 
@@ -21,7 +21,7 @@ void print_process_records();
 
 #define save_process_prev_times()
 
-#define save_process_records(repetition_id, my_rank)
+#define save_process_records(repetition_id)
 
 #define print_process_records()
 

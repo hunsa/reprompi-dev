@@ -38,6 +38,10 @@ int node_rank;
 int NODE_ROOT = 0;
 int number_of_nodes;
 
+long number_of_repetitions;
+
+long last_repetition = -1;
+
 bool isNumeric(char *string) {
     // Get value with failure detection.
 
@@ -53,41 +57,13 @@ bool isNumeric(char *string) {
     }
 }
 
-void init_pids() {
-    num_pids = 0;
-    DIR *d;
-    struct dirent *dir;
-    d = opendir("/proc");
-    if (d) {
-        while ((dir = readdir(d)) != NULL) {
-            if (isNumeric(dir->d_name)) {
-                num_pids++;
-                pids = realloc(pids, sizeof(long) * num_pids);
-                char *ignore = NULL;
-                (pids)[num_pids - 1] = strtol(dir->d_name, &ignore, 10);
-                //printf("# pid_%d: %ld\n", pid_cnt-1, (*pids)[pid_cnt - 1]);
-            }
+bool is_tracked(long pid) {
+    for (int i = 0; i < num_pids; i++) {
+        if (pids[i] == pid) {
+            return true;
         }
-        closedir(d);
     }
-}
-
-void init_proc_module(long nrep) {
-    MPI_Comm shm_comm;
-    MPI_Comm_rank( MPI_COMM_WORLD, &global_rank);
-    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0,
-                        MPI_INFO_NULL, &shm_comm);
-    MPI_Comm_rank(shm_comm, &shm_rank);
-    MPI_Comm_split(MPI_COMM_WORLD, shm_rank, global_rank, &one_of_each_node_comm );
-    MPI_Comm_free( &shm_comm );
-    MPI_Comm_size( one_of_each_node_comm, &number_of_nodes );
-    MPI_Comm_rank( one_of_each_node_comm, &node_rank );
-    if (shm_rank == SHM_ROOT) {
-        init_pids();
-        process_prev_times = malloc(sizeof(unsigned long) * num_pids);
-        number_of_process_records = (int) nrep * num_pids;
-        process_records = malloc(number_of_process_records * sizeof(process_record));
-    }
+    return false;
 }
 
 int get_info_from_pid(long pid, int *name_length, char *name, unsigned long *time) {
@@ -101,7 +77,7 @@ int get_info_from_pid(long pid, int *name_length, char *name, unsigned long *tim
     //         buffer_size);
     fp = fopen(stat_file_name, "r");
     if (fp == NULL) {
-        fprintf(stderr, "Couldn't open file %s, Error %d: %s\n", stat_file_name, errno, strerror(errno));
+        // fprintf(stderr, "Couldn't open file %s, Error %d: %s\n", stat_file_name, errno, strerror(errno));
         return errno;
     }
 #pragma clang diagnostic push
@@ -143,6 +119,90 @@ int get_info_from_pid(long pid, int *name_length, char *name, unsigned long *tim
     }
 }
 
+void save_process_record(long repetition_id, int pid_index, bool set_time_zero) {
+    long pid = pids[pid_index];
+    //printf("## Saving pid: %ld\n", pid);
+    //fflush(stdout);
+    unsigned long time;
+    int name_length;
+    char name[256];
+    if (get_info_from_pid(pid, &name_length, name, &time) != 0) {
+        time = 0;
+        strncpy(name, "", 1);
+        name_length = 0;
+    }
+    //printf("## Name: %s\n", name);
+    //fflush(stdout)
+    if (time < process_prev_times[pid_index]) {
+        fprintf(stderr, "Warning @ %d: %s (%ld): time after: %lu < time previous %lu", global_rank, name, pid, time,
+                process_prev_times[pid_index]);
+        time = 0L;
+    } else {
+        time -= process_prev_times[pid_index];
+    }
+
+    if (set_time_zero) {
+        time = 0;
+    }
+    time = time * (1000000 / sysconf(_SC_CLK_TCK));
+    long index = number_of_repetitions * pid_index + repetition_id;
+    process_records[index].time = time;
+    process_records[index].pid = pid;
+    process_records[index].rank = global_rank;
+    process_records[index].nrep = repetition_id;
+    strncpy(process_records[index].process_name, name, name_length + 1);
+    gethostname(process_records[index].hostname, 64);
+    // printf("## #%ld Rank_%d: %s (%ld): %lu\n", repetition_id, my_rank, process_records[index].process_name, process_records[index].pid, process_records[index].time);
+    // fflush(stdout);
+}
+
+void add_untracked_pids() {
+    DIR *d;
+    struct dirent *dir;
+    d = opendir("/proc");
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            if (isNumeric(dir->d_name)) {
+                char *ignore = NULL;
+                long pid = strtol(dir->d_name, &ignore, 10);
+                if (!is_tracked(pid)) {
+                    num_pids++;
+                    pids = realloc(pids, num_pids * sizeof(long));
+                    process_prev_times = realloc(process_prev_times, num_pids * sizeof(unsigned long));
+                    number_of_process_records = (int) number_of_repetitions * num_pids;
+                    process_records = realloc(process_records, number_of_process_records * sizeof(process_record));
+                    pids[num_pids - 1] = pid;
+                    process_prev_times[num_pids - 1] = 0;
+                    for (int i = 0; i <= last_repetition; i++) {
+                        save_process_record(i, num_pids - 1, true);
+                    }
+                }
+                //printf("# pid_%d: %ld\n", pid_cnt-1, (*pids)[pid_cnt - 1]);
+            }
+        }
+        closedir(d);
+    }
+}
+
+void init_proc_module(long nrep) {
+    MPI_Comm shm_comm;
+    MPI_Comm_rank(MPI_COMM_WORLD, &global_rank);
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0,
+                        MPI_INFO_NULL, &shm_comm);
+    MPI_Comm_rank(shm_comm, &shm_rank);
+    MPI_Comm_split(MPI_COMM_WORLD, shm_rank, global_rank, &one_of_each_node_comm);
+    MPI_Comm_free(&shm_comm);
+    MPI_Comm_size(one_of_each_node_comm, &number_of_nodes);
+    MPI_Comm_rank(one_of_each_node_comm, &node_rank);
+    if (shm_rank == SHM_ROOT) {
+        num_pids = 0;
+        last_repetition = -1;
+        number_of_repetitions = nrep;
+        add_untracked_pids();
+    }
+}
+
+
 void save_process_prev_times() {
     if (shm_rank == SHM_ROOT) {
         for (int j = 0; j < num_pids; j++) {
@@ -150,43 +210,21 @@ void save_process_prev_times() {
             long pid = pids[j];
             char name[256];
             int name_length;
-            get_info_from_pid(pid, &name_length, name, &time);
+            if (get_info_from_pid(pid, &name_length, name, &time) != 0) {
+                time = 0;
+            }
             process_prev_times[j] = time;
         }
     }
 }
 
-void save_process_records(long repetition_id, int my_rank) {
+
+void save_process_records(long repetition_id) {
     if (shm_rank == SHM_ROOT) {
         for (int i = 0; i < num_pids; i++) {
-            // printf("# Saving pid_number: %d\n", i);
-            //printf("## PIDs: ");
-            //for (int j = 0; j < num_pids; j++) {
-            //printf("%ld, ", pids[j]);
-            //}
-            //printf("\n");
-            fflush(stdout);
-            long pid = pids[i];
-            //printf("## Saving pid: %ld\n", pid);
-            //fflush(stdout);
-            unsigned long time;
-            int name_length;
-            char name[256];
-            get_info_from_pid(pid, &name_length, name, &time);
-            //printf("## Name: %s\n", name);
-            //fflush(stdout);
-            time -= process_prev_times[i];
-
-            long index = num_pids * repetition_id + i;
-            process_records[index].time = time;
-            process_records[index].pid = pid;
-            process_records[index].rank = my_rank;
-            process_records[index].nrep = repetition_id;
-            strncpy(process_records[index].process_name, name, name_length + 1);
-            gethostname(process_records[index].hostname, 64);
-            // printf("## #%ld Rank_%d: %s (%ld): %lu\n", repetition_id, my_rank, process_records[index].process_name, process_records[index].pid, process_records[index].time);
-            fflush(stdout);
+            save_process_record(repetition_id, i, false);
         }
+        last_repetition = repetition_id;
     }
 }
 
