@@ -244,10 +244,10 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
       }
 
       // gather local measurement results
-      MPI_Gather(tstart_sec, chunk_nrep, MPI_DOUBLE, local_start_sec,
+      MPI_Gather(&(tstart_sec[chunk_id * OUTPUT_NITERATIONS_CHUNK]), chunk_nrep, MPI_DOUBLE, local_start_sec,
           chunk_nrep, MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
 
-      MPI_Gather(tend_sec, chunk_nrep, MPI_DOUBLE, local_end_sec, chunk_nrep,
+      MPI_Gather(&(tend_sec[chunk_id * OUTPUT_NITERATIONS_CHUNK]), chunk_nrep, MPI_DOUBLE, local_end_sec, chunk_nrep,
           MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
 
       // gather global times in case global clocks are used
@@ -261,10 +261,10 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
           tstart_sec[i] = print_info->clock_sync->get_global_time(tstart_sec[i]);
           tend_sec[i] = print_info->clock_sync->get_global_time(tend_sec[i]);
         }
-        MPI_Gather(tstart_sec, chunk_nrep, MPI_DOUBLE, global_start_sec,
+        MPI_Gather(&(tstart_sec[chunk_id * OUTPUT_NITERATIONS_CHUNK]), chunk_nrep, MPI_DOUBLE, global_start_sec,
             chunk_nrep, MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
 
-        MPI_Gather(tend_sec, chunk_nrep, MPI_DOUBLE, global_end_sec, chunk_nrep,
+        MPI_Gather(&(tend_sec[chunk_id * OUTPUT_NITERATIONS_CHUNK]), chunk_nrep, MPI_DOUBLE, global_end_sec, chunk_nrep,
             MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
       }
 
