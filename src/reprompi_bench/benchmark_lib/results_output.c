@@ -556,7 +556,7 @@ void print_summary(FILE* f,
             }
 
             if (strcmp(job_p->timertype, "all") != 0) {
-                fprintf(f, "%20s %4s %10ld %10ld ", job_p->timername, job_p->timertype, job_p->n_rep, nreps);
+                fprintf(f, "%20s %7s %10ld %10ld ", job_p->timername, job_p->timertype, job_p->n_rep, nreps);
             }
             else {
                 fprintf(f, "%20s %4d %10ld %10ld ", job_p->timername, proc, job_p->n_rep, nreps);

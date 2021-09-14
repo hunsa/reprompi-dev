@@ -24,22 +24,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
 #include "mpi.h"
 
 #include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/option_parser/parse_options.h"
-#include "reprompi_bench/option_parser/parse_extra_key_value_options.h"
 #include "reprompi_bench/output_management/bench_info_output.h"
-#include "reprompi_bench/utils/keyvalue_store.h"
 #include "results_output.h"
 #include "reproMPIbenchmark.h"
 
 static const int OUTPUT_ROOT_PROC = 0;
 static const int N_USER_VARS = 4;
-//static const int HASHTABLE_SIZE=100;
 
 static int first_print_call = 1;
 
