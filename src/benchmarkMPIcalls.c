@@ -182,7 +182,6 @@ int main(int argc, char* argv[]) {
     init_timer();
     start_time = time(NULL);
 
-
     // parse arguments and set-up benchmarking jobs
     print_command_line_args(argc, argv);
 

@@ -311,6 +311,7 @@ endif()
 
 if (COMPILE_BENCH_LIBRARY)
     ADD_SUBDIRECTORY(${SRC_DIR}/reprompi_bench/benchmark_lib)
+    ADD_SUBDIRECTORY(${SRC_DIR}/sanity_check/libtests)
 endif()
 
 
