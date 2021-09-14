@@ -185,13 +185,13 @@ void print_runtimes(FILE* f, const reprompib_job_t* job_p,
 
             // measurements with window-based synchronization
             if (sync_module->procsync == REPROMPI_PROCSYNC_WIN) {
-              fprintf(f, "%20s %4s %12d %8d %16.10f\n", job_p->timername, "all",
+              fprintf(f, "%20s %4s %12d %8d %16.10f\n", job_p->timername, job_p->timertype,
                     sync_errorcodes[i],i,
                     maxRuntimes_sec[i]);
             }
             else {
               // measurements with Barrier-based synchronization
-              fprintf(f, "%20s %4s %8d %16.10f\n", job_p->timername, "all",
+              fprintf(f, "%20s %4s %8d %16.10f\n", job_p->timername,  job_p->timertype,
                     i, maxRuntimes_sec[i]);
             }
         }
@@ -556,7 +556,7 @@ void print_summary(FILE* f,
             }
 
             if (strcmp(job_p->timertype, "all") != 0) {
-                fprintf(f, "%20s %4s %10ld %10ld ", job_p->timername, "all", job_p->n_rep, nreps);
+                fprintf(f, "%20s %4s %10ld %10ld ", job_p->timername, job_p->timertype, job_p->n_rep, nreps);
             }
             else {
                 fprintf(f, "%20s %4d %10ld %10ld ", job_p->timername, proc, job_p->n_rep, nreps);

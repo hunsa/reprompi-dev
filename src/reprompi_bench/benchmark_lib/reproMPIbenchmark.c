@@ -43,27 +43,10 @@ static const int N_USER_VARS = 4;
 
 static int first_print_call = 1;
 
-//static reprompib_dictionary_t params_dict;
 static reprompib_bench_print_info_t print_info;
 static reprompib_timing_method_t runtime_type;
 
-//void create_argv_copy(const int argc, char *argv[], char ***argv_copy) {
-//  int i;
-//  *argv_copy = (char **)malloc(argc * sizeof(char*));
-//  for(i=0; i<argc; i++) {
-//    (*argv_copy)[i] = strdup(argv[i]);
-//  }
-//}
-//
-//void free_argv_copy(const int argc, char ***argv_copy) {
-//  int i;
-//  for(i=0; i<argc; i++) {
-//    free((*argv_copy)[i]);
-//  }
-//  free(*argv_copy);
-//}
-
-int compute_argc(char *str) {
+static int compute_argc(char *str) {
   int i;
   int cnt = 0;
   int white = 0;
@@ -87,8 +70,7 @@ int compute_argc(char *str) {
   return cnt;
 }
 
-
-void check_env_params(int *argc, char ***argv) {
+static void check_env_params(int *argc, char ***argv) {
   char *env = getenv("REPROMPI_LIB_PARAMS");
   char *token;
   char **argvnew;
@@ -126,7 +108,7 @@ void check_env_params(int *argc, char ***argv) {
 
 }
 
-void print_initial_settings(long nrep, reprompib_bench_print_info_t *print_info) {
+static void print_initial_settings(long nrep, reprompib_bench_print_info_t *print_info) {
   int my_rank, np;
   FILE* f = stdout;
 
