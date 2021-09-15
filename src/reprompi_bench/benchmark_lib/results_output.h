@@ -31,6 +31,7 @@
 typedef struct {
     int verbose;
     int print_summary_methods;
+    char* output_file;
 } reprompib_lib_output_info_t;
 
 

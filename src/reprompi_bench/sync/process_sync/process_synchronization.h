@@ -38,6 +38,7 @@ typedef enum {
   REPROMPI_PROCSYNC_MPIBARRIER,
   REPROMPI_PROCSYNC_DISSEMBARRIER,
   REPROMPI_PROCSYNC_ROUNDTIMESYNC,
+  REPROMPI_PROCSYNC_NONE,
 } reprompi_procsync_t;
 
 // parameters needed to initialize a synchronization round
@@ -80,5 +81,6 @@ void register_window_module(reprompib_proc_sync_module_t *sync_mod);
 void register_dissem_barrier_module(reprompib_proc_sync_module_t *sync_mod);
 void register_mpibarrier_module(reprompib_proc_sync_module_t *sync_mod);
 void register_roundtimesync_module(reprompib_proc_sync_module_t *sync_mod);
+void register_procsync_none_module(reprompib_proc_sync_module_t *sync_mod);
 
 #endif /* REPROMPIB_SYNCHRONIZATION_H_ */

@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
    
@@ -155,6 +155,7 @@ ${SRC_DIR}/reprompi_bench/sync/time_measurement.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/barrier_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/window_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/round_time_sync.c
+${SRC_DIR}/reprompi_bench/sync/process_sync/proc_sync_none.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/round_sync_common.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/reprompi_collectives.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/process_synchronization.c
