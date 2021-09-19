@@ -37,7 +37,7 @@ set(FREQUENCY_MHZ 2300 CACHE STRING "CPU Frequency (needed for RDTSCP-based time
 option(COMPILE_BENCH_LIBRARY "Compile ReproMPI library [default: disabled]" off)
 option(COMPILE_BENCH_TESTS "Enable benchmark testing [default: disabled]" off)
 
-option(COMPILE_SANITY_CHECK_TESTS "Enable sanity check tests" on)
+option(COMPILE_SANITY_CHECK_TESTS "Enable sanity check tests" off)
 option(COMPILE_SANITY_CHECK_CLOCK "Enable clock sanity checks" off)
 set(OPTION_BUFFER_ALIGNMENT "" CACHE STRING "Alignment to use for buffer allocation [default: no alignment(allocation with calloc)]")
 option(OPTION_PRINT_MSIZES_BYTES "Print message sizes in the output instead of MPI call counts [default: counts]" off)
@@ -46,7 +46,7 @@ option(OPTION_PRINT_MSIZES_BYTES "Print message sizes in the output instead of M
 ############ PGtune support ########
 ####################################
 set(PGMPI_LIBRARY_DEFAULT_PATH "" CACHE STRING  "Specify the path of the PGMPI library")
-option(ENABLE_PGMPI "Use PGMPI" on)
+option(ENABLE_PGMPI "Use PGMPI" off)
 
 if (ENABLE_PGMPI)
     find_package(PGMPI)
