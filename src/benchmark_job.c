@@ -137,14 +137,14 @@ void generate_job_list(const reprompib_common_options_t *opts, const int predefi
     if (my_rank == INPUT_ROOT_PROC) {
       error = read_input_jobs(opts->input_file, jlist);
     }
-    MPI_Bcast(&error, 1, MPI_INT, INPUT_ROOT_PROC, MPI_COMM_WORLD);
+    PMPI_Bcast(&error, 1, MPI_INT, INPUT_ROOT_PROC, MPI_COMM_WORLD);
     if (error) {
       MPI_Finalize();
       exit(0);
     }
 
     // send the number of jobs to all processes
-    MPI_Bcast(&(jlist->n_jobs), 1, MPI_INT, INPUT_ROOT_PROC, MPI_COMM_WORLD);
+    PMPI_Bcast(&(jlist->n_jobs), 1, MPI_INT, INPUT_ROOT_PROC, MPI_COMM_WORLD);
 
     if (jlist->n_jobs > 0) {
       if (my_rank != INPUT_ROOT_PROC) { // processes other than the root need to allocate job lists
@@ -156,7 +156,7 @@ void generate_job_list(const reprompib_common_options_t *opts, const int predefi
       MPI_Type_commit (&job_info_dt);
 
       // broadcast the job list to all processes
-      MPI_Bcast(jlist->jobs, jlist->n_jobs, job_info_dt, INPUT_ROOT_PROC, MPI_COMM_WORLD);
+      PMPI_Bcast(jlist->jobs, jlist->n_jobs, job_info_dt, INPUT_ROOT_PROC, MPI_COMM_WORLD);
 
       // free datatype
       MPI_Type_free(&job_info_dt);
