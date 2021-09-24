@@ -51,7 +51,7 @@ int Allreduce_bitwise_commutative(const void *sendbuf, void *recvbuf, int count,
   int rank, size;
   int cyci, cyco; // cyclic (circulant) in, out ranks
   int c0, c1, n;
-  int c, cc; // simplification
+  int c; // simplification
   int bit;
   int b;
   int s; // checking: total number of blocks received
@@ -95,13 +95,13 @@ int Allreduce_bitwise_commutative(const void *sendbuf, void *recvbuf, int count,
       cyco = (rank-c1+size)%size;
       b = c1;
       outbuf = recvbuf;
-      cc = c+1;
+      //cc = c+1;
     } else {
       cyci = (rank+c0)%size;
       cyco = (rank-c0+size)%size;
       b = c0;
       outbuf = partbuf;
-      cc = c;
+      //cc = c;
     }
 
     //if (rank==0) fprintf(stderr,"bit %d c0 %d c1 %d b %d c %d cc %d\n",bit,c0,c1,b,c,cc);
