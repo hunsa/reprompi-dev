@@ -52,8 +52,10 @@ if (ENABLE_PGMPI)
     find_package(PGMPI)
     
     if(NOT PGMPI_FOUND)
-        message(STATUS "PGMPI not found. Skipping the generation of PGMPI-linked benchmark binaries." )
+        message(STATUS "PGMPI not found. Skipping the generation of PGMPI-linked benchmark binaries.")
     endif(NOT PGMPI_FOUND)
+else(ENABLE_PGMPI)
+    message(STATUS "PGMPI disabled.")
 endif(ENABLE_PGMPI)
 ####################################
 

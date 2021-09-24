@@ -130,7 +130,7 @@ static void roundtimesync_start_synchronization(void) {
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    MPI_Barrier(MPI_COMM_WORLD);
+    PMPI_Barrier(MPI_COMM_WORLD);
     if (my_rank == master_rank) {
       start_sync = get_time() + bcast_runtime * bcast_parameters.bcast_multiplier;
     }

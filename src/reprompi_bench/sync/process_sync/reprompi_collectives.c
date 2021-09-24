@@ -110,9 +110,9 @@ int Allreduce_bitwise_commutative(const void *sendbuf, void *recvbuf, int count,
         MPI_STATUS_IGNORE);
     s += b;
 
-    MPI_Reduce_local(tempbuf, recvbuf, count, datatype, op);
+    PMPI_Reduce_local(tempbuf, recvbuf, count, datatype, op);
     if (tempbuf != partbuf) {
-      MPI_Reduce_local(tempbuf, partbuf, count, datatype, op);
+      PMPI_Reduce_local(tempbuf, partbuf, count, datatype, op);
     }
     tempbuf = inbuf;
 

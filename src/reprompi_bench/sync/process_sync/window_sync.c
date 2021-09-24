@@ -151,7 +151,7 @@ static void window_init_sync_round(void) {
    // printf("start=%20.12f wait=%f win=%f\n", start_sync, parameters.wait_time_sec, parameters.window_size_sec);
 
   }
-  MPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
+  PMPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
 
 }
 
