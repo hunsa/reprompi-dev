@@ -222,7 +222,7 @@ void generate_job_list(const reprompib_common_options_t *opts, const int predefi
       }
 
     }
-    MPI_Bcast(jlist->job_indices, jlist->n_jobs, MPI_INT, OUTPUT_ROOT_PROC,
+    PMPI_Bcast(jlist->job_indices, jlist->n_jobs, MPI_INT, OUTPUT_ROOT_PROC,
     MPI_COMM_WORLD);
   }
 }
