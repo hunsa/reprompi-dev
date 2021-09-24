@@ -107,8 +107,11 @@ void reprompib_parse_timing_options(reprompib_timing_method_t* timing_method, in
         case REPROMPI_ARGS_RUNTIME_TYPE: /* runtime computation method */
             parse_runtime_type(optarg, timing_method);
             break;
-        case '?':
-            break;
+//        case '?':
+//            break;
+        default:
+          *timing_method = REPROMPI_RUNT_MAX_OVER_LOCAL_RUNTIME;
+          break;
         }
     }
 
