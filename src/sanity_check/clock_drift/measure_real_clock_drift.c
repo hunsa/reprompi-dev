@@ -131,12 +131,13 @@ int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char
 
     opterr = 0;
 
+
     while (1) {
 
         /* getopt_long stores the option index here. */
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "h", default_long_options,
+        c = getopt_long(argc, argv, "r:w:n:h", default_long_options,
                 &option_index);
 
         /* Detect the end of the options. */
