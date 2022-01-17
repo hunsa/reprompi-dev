@@ -297,6 +297,9 @@ if (ENABLE_PGMPI)
         SET_TARGET_PROPERTIES(mpibenchmark_pgmpituned PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
         SET_TARGET_PROPERTIES(mpibenchmark_pgmpituned PROPERTIES LINKER_LANGUAGE CXX )
     endif(PGMPI_FOUND)
+
+    add_subdirectory(${SRC_DIR}/pgcheck)
+
 endif (ENABLE_PGMPI)
     
     
