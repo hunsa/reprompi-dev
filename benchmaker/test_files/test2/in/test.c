@@ -75,10 +75,12 @@ int main(int argc, char *argv[])
                 //@ stop_sync
                 //@stop_measurement_loop
 
-                //@ print_runtime_array name=runtime_coll end_time=t2 start_time=t1 type=reduce op=max testname=callname count=count ncalls=j
+                //@ print_runtime_array name=runtime_coll start_time=t1 end_time=t2 type=reduce op=max testname=callname count=count ncalls=j
 
+                /*
                 //@  print_runtime_array name=total_runtime end_time=t3 start_time=t1 type=reduce testname=callname count=count ncalls=j
                 //@ print_runtime_array name=total_runtime1 end_time=t3 start_time=t1 type=all testname=callname count=count ncalls=j
+                */
 
                 free( send_buffer);
                 send_buffer = NULL;
