@@ -155,7 +155,7 @@ static void window_init_sync_round(void) {
 
 }
 
-static void window_start_synchronization(void)
+static void window_start_synchronization(MPI_Comm comm)
 {
     int is_first = 1;
     double global_time;
@@ -178,7 +178,7 @@ static void window_start_synchronization(void)
 }
 
 
-static int window_stop_synchronization(void)
+static int window_stop_synchronization(MPI_Comm comm)
 {
     double global_time;
    // global_time = hca_get_normalized_time(hca_get_adjusted_time());

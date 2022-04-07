@@ -191,7 +191,7 @@ def generate_start_measurement_loop(indent):
         %s = %s.n_rep;
         %s = 0;
         while(%s < %s) {
-          proc_sync.start_sync();
+          proc_sync.start_sync(MPI_COMM_WORLD);
 """ % ( NREP_VAR_NAME,
         PARSED_OPTS_VAR,
         NREP_INDEX_VAR_NAME,
@@ -206,7 +206,7 @@ def generate_stop_measurement_loop(indent):
     
     code = \
 """
-          is_invalid = proc_sync.stop_sync();
+          is_invalid = proc_sync.stop_sync(MPI_COMM_WORLD);
           if (is_invalid == REPROMPI_INVALID_MEASUREMENT) {
             // redo the measurement
             // we are still in the time frame

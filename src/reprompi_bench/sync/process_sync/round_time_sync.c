@@ -116,10 +116,10 @@ static void roundtimesync_init_sync_round(void) {
   invalid            = REPROMPI_CORRECT_MEASUREMENT;
 }
 
-static void roundtimesync_start_synchronization(void) {
+static void roundtimesync_start_synchronization(MPI_Comm comm) {
 
   if( barrier_sync_mode == 1 ) {
-    MPI_Barrier(MPI_COMM_WORLD);
+    PMPI_Barrier(comm);
 
   } else {
     int is_first = 1;
@@ -128,13 +128,13 @@ static void roundtimesync_start_synchronization(void) {
 
     invalid = REPROMPI_CORRECT_MEASUREMENT;
 
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    MPI_Comm_rank(comm, &my_rank);
 
-    PMPI_Barrier(MPI_COMM_WORLD);
+    PMPI_Barrier(comm);
     if (my_rank == master_rank) {
       start_sync = get_time() + bcast_runtime * bcast_parameters.bcast_multiplier;
     }
-    ReproMPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
+    ReproMPI_Bcast(&start_sync, 1, MPI_DOUBLE, master_rank, comm);
 
 #if ZF_LOG_LEVEL < ZF_LOG_WARN
     global_time = clock_sync_mod->get_global_time(get_time());
@@ -156,7 +156,7 @@ static void roundtimesync_start_synchronization(void) {
   }
 }
 
-static int roundtimesync_stop_synchronization(void) {
+static int roundtimesync_stop_synchronization(MPI_Comm comm) {
   int current_meas_flag = REPROMPI_CORRECT_MEASUREMENT;
 
   //if( barrier_sync_mode == 0 ) {
@@ -172,7 +172,7 @@ static int roundtimesync_stop_synchronization(void) {
     packet[0] = invalid;
     packet[1] = stop_flag;
 
-    ReproMPI_Allreduce(MPI_IN_PLACE, packet, 2, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+    ReproMPI_Allreduce(MPI_IN_PLACE, packet, 2, MPI_INT, MPI_MAX, comm);
 
     if (packet[1] == 1) {
       // we ran out of time, check measurement and exit

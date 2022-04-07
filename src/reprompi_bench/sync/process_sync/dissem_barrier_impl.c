@@ -21,21 +21,32 @@
 </license>
 */
 
-#ifndef REPROMPI_MISC_H__
-#define REPROMPI_MISC_H__
-#include <stdint.h>
-#include <math.h>
-#include <mpi.h>
+#include <stdlib.h>
+#include <stdio.h>
 
-double repro_min(double a, double b);
-double repro_max(double a, double b);
-void shuffle(int *array, size_t n);
+#include "dissem_barrier_impl.h"
+#include "reprompi_bench/misc.h"
 
-int reprompib_str_to_long(const char *str, long* result);
-void reprompib_print_error_and_exit(const char* error_str);
-void reprompib_print_warning(const char* warning_str);
+void dissemination_barrier(MPI_Comm comm) {
+  int my_rank, np, send_rank, recv_rank;
+  int i, nrounds;
+  MPI_Status status;
+  int send_value = 1;
+  int recv_value = 1;
 
+  MPI_Comm_rank(comm, &my_rank);
+  MPI_Comm_size(comm, &np);
 
+  nrounds = ceil(log2((double) np));
 
+  for (i = 0; i < nrounds; i++) {
+    send_rank = (my_rank + (1<<i)) % np;
+    recv_rank = (my_rank - (1 << i) + np) % np;
 
-#endif /* REPROMPI_MISC_H__ */
+    //printf("[%d] Sending from %d to %d; receive from %d\n", i, my_rank, send_rank, recv_rank);
+    MPI_Sendrecv(&send_value, 1, MPI_INT, send_rank, 0,
+                 &recv_value, 1, MPI_INT, recv_rank, 0,
+                 comm, &status);
+  }
+
+}

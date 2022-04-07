@@ -241,13 +241,13 @@ int main(int argc, char* argv[]) {
 
         i = 0;
         while(1) {
-          proc_sync.start_sync();
+          proc_sync.start_sync(MPI_COMM_WORLD);
 
           tstart_sec[i] = get_time();
           collective_calls[job.call_index].collective_call(&coll_params);
           tend_sec[i] = get_time();
 
-          is_invalid = proc_sync.stop_sync();
+          is_invalid = proc_sync.stop_sync(MPI_COMM_WORLD);
           if (is_invalid == REPROMPI_INVALID_MEASUREMENT) {
             // redo the measurement
             // we are still in the time frame

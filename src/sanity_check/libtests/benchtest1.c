@@ -60,11 +60,8 @@ int main(int argc, char *argv[]) {
 
     cur_nrep = reprompib_opts.n_rep;
     reprompib_nrep_index = 0;
-    while (1) {
-      proc_sync.start_sync();
-
-      //@ start_sync
-      proc_sync.start_sync();
+    while (reprompib_nrep_index < cur_nrep) {
+      proc_sync.start_sync(MPI_COMM_WORLD);
 
       //@ measure_timestamp t1
       t1[reprompib_nrep_index] = get_time();
@@ -74,11 +71,8 @@ int main(int argc, char *argv[]) {
       //@ measure_timestamp t2
       t2[reprompib_nrep_index] = get_time();
 
-      //@ stop_sync
-      proc_sync.stop_sync();
-
       //@stop_measurement_loop
-      is_invalid = proc_sync.stop_sync();
+      is_invalid = proc_sync.stop_sync(MPI_COMM_WORLD);
       if (is_invalid == REPROMPI_INVALID_MEASUREMENT) {
         // redo the measurement
         // we are still in the time frame

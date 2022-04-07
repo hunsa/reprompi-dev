@@ -37,7 +37,7 @@ static reprompi_caching_module_t* caching_modules;
 typedef struct reprompi_caching_strategy {
   char* name;
   reprompi_caching_type_t type;
-}reprompi_caching_strategy_t;
+} reprompi_caching_strategy_t;
 
 
 static char DEFAULT_CACHING_MOD_NAME[] = "None";

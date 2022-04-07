@@ -28,47 +28,24 @@
 
 #include "reprompi_bench/misc.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
+#include "barrier_sync_common.h"
 
-
-static void empty(void) {
-  // intentional
+static void double_mpibarrier_print_sync_parameters(FILE *f) {
+  fprintf(f, "#@procsync=Double_MPI_Barrier\n");
 }
 
-static void nosync(MPI_Comm comm) {
- // intentional
+static inline void double_mpibarrier_start_synchronization(MPI_Comm comm) {
+  MPI_Barrier(comm);
+  MPI_Barrier(comm);
 }
 
-static void procsync_none_init_module(int argc, char** argv, reprompib_sync_module_t* clock_sync) {
+void register_double_mpibarrier_module(reprompib_proc_sync_module_t *sync_mod) {
+  reprompi_register_common_barrier_functions(sync_mod);
+
+  sync_mod->name = "Double_MPI_Barrier";
+  sync_mod->procsync = REPROMPI_PROCSYNC_DOUBLE_MPIBARRIER;
+  sync_mod->start_sync = double_mpibarrier_start_synchronization;
+  sync_mod->print_sync_info = double_mpibarrier_print_sync_parameters;
 }
-
-static void procsync_none_init_synchronization(const reprompib_sync_params_t* init_params) {
-}
-
-static int procsync_none_stop_sync(MPI_Comm comm) {
-  return REPROMPI_CORRECT_MEASUREMENT;
-}
-
-static void procsync_none_print_sync_parameters(FILE* f) {
-    fprintf (f, "#@procsync=None\n");
-}
-
-void register_procsync_none_module(reprompib_proc_sync_module_t *sync_mod) {
-  sync_mod->name = "None";
-  sync_mod->procsync = REPROMPI_PROCSYNC_NONE;
-
-  sync_mod->init_module = procsync_none_init_module;
-  sync_mod->cleanup_module = empty;
-
-  sync_mod->init_sync = procsync_none_init_synchronization;
-  sync_mod->finalize_sync = empty;
-  sync_mod->init_sync_round = empty;
-  sync_mod->start_sync = nosync;
-  sync_mod->stop_sync  = procsync_none_stop_sync;
-
-  sync_mod->print_sync_info = procsync_none_print_sync_parameters;
-}
-
-
-
 
 

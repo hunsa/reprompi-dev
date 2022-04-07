@@ -86,18 +86,6 @@ if(FREQUENCY_MHZ)
 endif()
 
 
-###############################################
-############ Set synchronization flags ########
-###############################################
-#if(ENABLE_LOGP_SYNC)
-#    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_LOGP_SYNC")
-#endif()
-
-if(ENABLE_DOUBLE_BARRIER)
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_DOUBLE_BARRIER")
-endif()
-
-
 #################################
 ############ Other flags ########
 #################################
@@ -155,12 +143,16 @@ ${SRC_DIR}/reprompi_bench/sync/time_measurement.c
 #${SRC_DIR}/reprompi_bench/sync/clock_sync/jk_sync.c
 #${SRC_DIR}/reprompi_bench/sync/clock_sync/no_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/barrier_sync.c
-${SRC_DIR}/reprompi_bench/sync/process_sync/window_sync.c
-${SRC_DIR}/reprompi_bench/sync/process_sync/round_time_sync.c
+${SRC_DIR}/reprompi_bench/sync/process_sync/barrier_sync_common.c
+${SRC_DIR}/reprompi_bench/sync/process_sync/dissem_barrier_impl.c
+${SRC_DIR}/reprompi_bench/sync/process_sync/dissem_barrier_sync.c
+${SRC_DIR}/reprompi_bench/sync/process_sync/double_barrier_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/proc_sync_none.c
+${SRC_DIR}/reprompi_bench/sync/process_sync/round_time_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/round_sync_common.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/reprompi_collectives.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/process_synchronization.c
+${SRC_DIR}/reprompi_bench/sync/process_sync/window_sync.c
 #${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
 )
 

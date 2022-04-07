@@ -118,11 +118,6 @@ const collective_ops_t collective_calls[] = {
                 &initialize_data_pingpong,
                 &cleanup_data_pingpong
         },
-        [BBARRIER] = {
-                &execute_BBarrier,
-                &initialize_data_default,
-                &cleanup_data_default
-        },
         [EMPTY] = {
                 &execute_Empty,
                 &initialize_data_default,
@@ -149,7 +144,6 @@ static char* const mpi_calls_opts[] = {
         [PINGPONG_ISEND_RECV] = "Isend_Recv",
         [PINGPONG_ISEND_IRECV] = "Isend_Irecv",
         [PINGPONG_SEND_IRECV] = "Send_Irecv",
-        [BBARRIER] = "BBarrier",
         [EMPTY] = "Empty",
         NULL
 };
@@ -180,12 +174,6 @@ char* get_call_from_index(int index) {
         return "";
     }
     return strdup(mpi_calls_opts[index]);
-}
-
-
-
-inline void execute_BBarrier(collective_params_t* params) {
-    dissemination_barrier();
 }
 
 
