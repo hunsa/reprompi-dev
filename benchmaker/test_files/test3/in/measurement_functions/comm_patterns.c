@@ -38,14 +38,12 @@ void alltoall_pattern(int n_procs) {
 
             //@ start_measurement_loop
 
-            //@ start_sync
             //@ measure_timestamp t1
 
                 MPI_Alltoall( send_buffer, msize, MPI_BYTE, recv_buffer,
                         msize, MPI_BYTE, MPI_COMM_WORLD);
 
             //@ measure_timestamp t2
-            //@ stop_sync
             //@stop_measurement_loop
 
             //@ print_runtime_array name=runtime end_time=t2 start_time=t1 type=reduce op=max testtype=testtype count=i

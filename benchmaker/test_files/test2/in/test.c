@@ -39,7 +39,6 @@ int main(int argc, char *argv[])
     //@ initialize_timestamps t3
 
     //@ global datatype="MPI_BYTE"
-    //@ global arg1=argv[1]
     //@ global program_name="simple_test"
     for (i=0; i<n_calls; i++) {
         for (j=1; j< call_rep; j++ ) {
@@ -52,7 +51,6 @@ int main(int argc, char *argv[])
                 recv_buffer = malloc( n_procs * count);
 
                 //@ start_measurement_loop
-                //@ start_sync
 
                 //@ measure_timestamp t1
                 for (k=0; k< j; k++) {
@@ -72,15 +70,14 @@ int main(int argc, char *argv[])
                 }
                 //@ measure_timestamp t3
 
-                //@ stop_sync
                 //@stop_measurement_loop
 
                 //@ print_runtime_array name=runtime_coll start_time=t1 end_time=t2 type=reduce op=max testname=callname count=count ncalls=j
 
-                /*
-                //@  print_runtime_array name=total_runtime end_time=t3 start_time=t1 type=reduce testname=callname count=count ncalls=j
-                //@ print_runtime_array name=total_runtime1 end_time=t3 start_time=t1 type=all testname=callname count=count ncalls=j
-                */
+              /*
+              //@  print_runtime_array name=total_runtime end_time=t3 start_time=t1 type=reduce op=max testname=callname count=count ncalls=j
+              //@ print_runtime_array name=total_runtime1 end_time=t3 start_time=t1 type=all testname=callname count=count ncalls=j
+              */
 
                 free( send_buffer);
                 send_buffer = NULL;

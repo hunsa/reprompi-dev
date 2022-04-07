@@ -36,9 +36,11 @@
 
 static const int OUTPUT_ROOT_PROC = 0;
 static const int N_USER_VARS = 4;
+static const int HASHTABLE_SIZE=100;
 
 static int first_print_call = 1;
 
+static reprompib_dictionary_t params_dict;
 static reprompib_bench_print_info_t print_info;
 static reprompib_timing_method_t runtime_type;
 
@@ -104,6 +106,21 @@ static void check_env_params(int *argc, char ***argv) {
 
 }
 
+static void print_dict_key_value_pairs(FILE* f) {
+  char **keynames;
+  char *value;
+  int nkeys;
+
+  reprompib_get_keys_from_dict(&params_dict, &keynames, &nkeys);
+
+  for(int i=0; i<nkeys; i++) {
+    reprompib_get_value_from_dict(&params_dict, keynames[i], &value);
+    fprintf(f, "#@%s=%s\n", keynames[i], value);
+    free(keynames[i]);
+    free(value);
+  }
+}
+
 static void print_initial_settings(long nrep, reprompib_bench_print_info_t *print_info) {
   int my_rank, np;
   FILE* f = stdout;
@@ -114,6 +131,7 @@ static void print_initial_settings(long nrep, reprompib_bench_print_info_t *prin
   if (my_rank == OUTPUT_ROOT_PROC) {
     fprintf(f, "#@nrep=%ld\n", nrep);
     print_common_settings_to_file(f, print_info);
+    print_dict_key_value_pairs(f);
   }
 }
 
@@ -161,18 +179,18 @@ void reprompib_initialize_benchmark(int argc, char* argv[],
   init_timer();
 
   //initialize dictionary
-  //reprompib_init_dictionary(&params_dict, HASHTABLE_SIZE);
+  reprompib_init_dictionary(&params_dict, HASHTABLE_SIZE);
   check_env_params(&argc, &argv);
 
-//  for(int i=0; i<argc; i++) {
-//    printf("1: argv[%d]=%s\n", i, argv[i]);
-//  }
+  //  for(int i=0; i<argc; i++) {
+  //    printf("1: argv[%d]=%s\n", i, argv[i]);
+  //  }
 
   // parse arguments and set-up benchmarking jobs
   print_command_line_args(argc, argv);
 
-//  // parse extra parameters into the global dictionary
-//  reprompib_parse_extra_key_value_options(&params_dict, argc, argv);
+  // parse extra parameters into the global dictionary
+  // reprompib_parse_extra_key_value_options(&params_dict, argc, argv);
 
   // parse timing options
   reprompib_parse_timing_options(&runtime_type, argc, argv);
@@ -264,12 +282,11 @@ void reprompib_add_ivar_to_job(char* name, int v, reprompib_job_t* job_p) {
 }
 
 
-
-//int reprompib_add_parameter_to_bench(const char* key, const char* val) {
-//  int ret;
-//  ret = reprompib_add_element_to_dict(&params_dict, key, val);
-//  return ret;
-//}
+int reprompib_add_parameter_to_bench(const char* key, const char* val) {
+  int ret;
+  ret = reprompib_add_element_to_dict(&params_dict, key, val);
+  return ret;
+}
 
 void reprompib_cleanup_benchmark(
     reprompib_options_t* opts_p,
@@ -277,7 +294,7 @@ void reprompib_cleanup_benchmark(
     reprompib_proc_sync_module_t* sync_module) {
 
   reprompib_free_parameters(opts_p);
-  //reprompib_cleanup_dictionary(&params_dict);
+  reprompib_cleanup_dictionary(&params_dict);
 
   sync_module->finalize_sync();
   sync_module->cleanup_module();

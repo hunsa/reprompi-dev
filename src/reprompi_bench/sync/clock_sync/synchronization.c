@@ -112,6 +112,7 @@ void reprompib_init_sync_module(int argc, char** argv, reprompib_sync_module_t* 
   *sync_mod = sync_modules[index];
   sync_mod->init_module(argc, argv);
 
+  reprompib_cleanup_dictionary(params_dict);
   cleanup_sync_options(&sync_module_info);
 }
 

@@ -190,9 +190,13 @@ def generate_start_measurement_loop(indent):
 """
         %s = %s.n_rep;
         %s = 0;
-        while(1) {
+        while(%s < %s) {
           proc_sync.start_sync();
-""" % ( NREP_VAR_NAME, PARSED_OPTS_VAR, NREP_INDEX_VAR_NAME )
+""" % ( NREP_VAR_NAME,
+        PARSED_OPTS_VAR,
+        NREP_INDEX_VAR_NAME,
+        NREP_INDEX_VAR_NAME,
+        NREP_VAR_NAME)
 
     #return init_sync_code + format_code(code, indent)
     return init_sync_code + code

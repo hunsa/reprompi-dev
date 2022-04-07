@@ -12,3 +12,4 @@
 CMakeCache.txt
 CPackConfig.cmake
 CPackSourceConfig.cmake
+*.dylib

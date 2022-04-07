@@ -28,9 +28,7 @@ int main(int argc, char *argv[])
     //@ initialize_timestamps t1
     //@ initialize_timestamps t2
 
-    //@ global arg0=argv[0]
-    //@ global arg1=argv[1]
-    //@ global program_name="simple_test"
+    //@ global program_name="simple_test1"
     for (i=0; i<n_calls; i++) {
         for (count=0; count<max_count; count+=inc_count) {
 
@@ -40,7 +38,6 @@ int main(int argc, char *argv[])
             recv_buffer = malloc( n_procs * count);
 
             //@ start_measurement_loop
-            //@ start_sync
 
             //@ measure_timestamp t1
             if (strcmp(meas_functions[i], "MPI_Bcast") == 0) {
@@ -53,12 +50,12 @@ int main(int argc, char *argv[])
 
             //@ measure_timestamp t2
 
-            //@ stop_sync
             //@stop_measurement_loop
 
-            //@ print_runtime_array name=runtime_coll end_time=t2 start_time=t1 type=reduce op=max testname=callname count=count
+            //DISABLED@ print_runtime_array name=runtime_coll end_time=t2 start_time=t1 type=reduce op=max testname=callname count=count
+            //@ print_runtime_array name=total_runtime1 end_time=t2 start_time=t1 type=all testname=callname count=count
 
-            free( send_buffer);
+          free( send_buffer);
             send_buffer = NULL;
             free( recv_buffer);
             recv_buffer = NULL;

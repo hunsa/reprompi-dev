@@ -22,17 +22,24 @@ def copy_dir_structure(input_dir, output_dir, override=False):
     for f in flist:
         src = os.path.join(input_dir, f)
         dst = os.path.join(output_dir, f)
-        if os.path.exists(dst):
+
+        if os.path.isdir(src):
+            if not override:
+                print(f"skipping existing dir {dst}")
+                sys.exit("exiting. Use -f to force overridding files")
+            else:
+                if os.path.exists(dst):
+                    os.rmdir(dst)
+                shutil.copytree(src, dst)
+
+        elif os.path.isfile(src):
             if not override:
                 print(f"skipping existing file {dst}")
-                sys.exit("exiting use -f to force overridding files")
+                sys.exit("exiting. Use -f to force overridding files")
             else:
-                os.rmdir(dst)
-                print(f"copy {src} -> {dst}")
-                if os.path.isdir(src):
-                    shutil.copytree(src, dst)
-                else:
-                    shutil.copyfile(src, dst)
+                if os.path.exists(dst):
+                    os.unlink(dst)
+                shutil.copyfile(src, dst)
     print(f"copying of {input_dir} done\n")
 
 
