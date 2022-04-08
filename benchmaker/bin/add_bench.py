@@ -29,7 +29,7 @@ def copy_dir_structure(input_dir, output_dir, override=False):
                 sys.exit("exiting. Use -f to force overridding files")
             else:
                 if os.path.exists(dst):
-                    os.rmdir(dst)
+                    shutil.rmtree(dst)
                 shutil.copytree(src, dst)
 
         elif os.path.isfile(src):
