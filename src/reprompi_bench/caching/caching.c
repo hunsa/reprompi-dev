@@ -135,6 +135,10 @@ void reprompib_init_caching_module(int argc, char** argv, reprompi_caching_modul
 
   if (index < 0) {
     char err_msg[160];
+    if( caching_module_name == NULL ) {
+      // this should never happen
+      caching_module_name = "unexpected error";
+    }
     sprintf(err_msg, "Unknown caching module \"--%s=%s\"", CACHING_ARG, caching_module_name);
     reprompib_print_error_and_exit(err_msg);
   }
