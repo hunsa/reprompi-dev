@@ -11,7 +11,7 @@ MPIClock::~MPIClock() {
 }
 
 double MPIClock::get_time(void) {
-  return MPI_Wtime();
+  return PMPI_Wtime();
 }
 
 bool MPIClock::is_base_clock() {
