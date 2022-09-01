@@ -1,5 +1,7 @@
 FROM debian:bullseye
 
+# Docker file for ReproMPI (dev)
+
 LABEL maintainer="Sascha Hunold <sascha@hunoldscience.net>"
 
 RUN apt-get clean \
@@ -19,6 +21,12 @@ RUN apt-get clean \
     mpich \
     build-essential \
     tmux \
+    flex \
+    python3 \
+    autoconf \
+    automake \
+    libtool \
+    libev-dev \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
