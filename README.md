@@ -123,12 +123,16 @@ synchronize processes.
 To enable the dissemination barrier, the following flag has to be set
 before compiling the benchmark (e.g., using the =ccmake= command).
 
-> `ENABLE_BENCHMARK_BARRIER`
+```
+ENABLE_BENCHMARK_BARRIER
+```
 
 Both barrier-based synchronization methods can alternatively use a
 double barrier before each measurement.
 
-> `ENABLE_DOUBLE_BARRIER`
+```
+ENABLE_DOUBLE_BARRIER
+```
 
 
 ### Window-based Synchronization
