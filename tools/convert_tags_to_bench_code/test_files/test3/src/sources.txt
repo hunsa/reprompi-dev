@@ -1,3 +1,0 @@
-test.c
-measurement_functions/comm_patterns.c
-measurement_functions/comm_patterns.h

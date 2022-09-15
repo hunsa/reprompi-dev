@@ -36,49 +36,33 @@ int main(int argc, char *argv[])
     //@ initialize_bench
     //@ initialize_timestamps t1
     //@ initialize_timestamps t2
-    //@ initialize_timestamps t3
 
     //@ global datatype="MPI_BYTE"
-    //@ global arg1=argv[1]
-    //@ global program_name="simple_test"
+    //@ global program_name="triple_loop_test"
     for (i=0; i<n_calls; i++) {
         for (j=1; j< call_rep; j++ ) {
             for (count=0; count<max_count; count+=inc_count) {
 
                 //@ set callname=meas_functions[i]
-                //@ set callreps=to_string(j)
 
                 send_buffer = malloc( n_procs * count);
                 recv_buffer = malloc( n_procs * count);
 
                 //@ start_measurement_loop
-                //@ start_sync
 
                 //@ measure_timestamp t1
-                for (k=0; k< j; k++) {
-                    if (k == 1) {
-                        //@ measure_timestamp t2
-                    }
-                    if (strcmp(meas_functions[i], "MPI_Bcast") == 0) {
-                        MPI_Bcast(send_buffer, count, MPI_BYTE, 0, MPI_COMM_WORLD);
-                    }
-                    else {
-                        MPI_Alltoall( send_buffer, count, MPI_BYTE, recv_buffer,
-                                count, MPI_BYTE, MPI_COMM_WORLD);
-                    }
+                if (strcmp(meas_functions[i], "MPI_Bcast") == 0) {
+                    MPI_Bcast(send_buffer, count, MPI_BYTE, 0, MPI_COMM_WORLD);
                 }
-                if (k == 1) {
-                    //@ measure_timestamp t2
+                else {
+                    MPI_Alltoall( send_buffer, count, MPI_BYTE, recv_buffer,
+                            count, MPI_BYTE, MPI_COMM_WORLD);
                 }
-                //@ measure_timestamp t3
+                //@ measure_timestamp t2
 
-                //@ stop_sync
-                //@stop_measurement_loop
+                //@ stop_measurement_loop
 
-                //@ print_runtime_array name=runtime_coll end_time=t2 start_time=t1 type=reduce op=max testname=callname count=count ncalls=j
-
-                //@  print_runtime_array name=total_runtime end_time=t3 start_time=t1 type=reduce testname=callname count=count ncalls=j
-                //@ print_runtime_array name=total_runtime1 end_time=t3 start_time=t1 type=all testname=callname count=count ncalls=j
+                //@ print_runtime_array name=runtime_coll start_time=t1 end_time=t2 type=reduce op=max testname=callname count=count ncalls=j
 
                 free( send_buffer);
                 send_buffer = NULL;

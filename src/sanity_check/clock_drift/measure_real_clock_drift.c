@@ -119,7 +119,7 @@ void print_help(char* testname) {
 void init_parameters(reprompib_drift_test_opts_t* opts_p, char* name) {
   opts_p->n_rep    = 5;
   opts_p->nwaits  = 60;
-  opts_p->wait_ms = 500.0;
+  opts_p->wait_ms = 500;
   strcpy(opts_p->testname, name);
 }
 
@@ -131,12 +131,13 @@ int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char
 
     opterr = 0;
 
+
     while (1) {
 
         /* getopt_long stores the option index here. */
         int option_index = 0;
 
-        c = getopt_long(argc, argv, "h", default_long_options,
+        c = getopt_long(argc, argv, "r:w:n:h", default_long_options,
                 &option_index);
 
         /* Detect the end of the options. */
@@ -201,7 +202,7 @@ int main(int argc, char* argv[]) {
     FILE* f;
 
     double cur_offset;
-    res_str_t *clock_offsets;
+    res_str_t *clock_offsets = NULL;
 
     int nrows;
     struct timespec ts;
@@ -228,10 +229,8 @@ int main(int argc, char* argv[]) {
 
     Number_ping_pongs = opts.n_rep;
 
-    ts.tv_sec  = 0;
-    ts.tv_nsec = opts.wait_ms * 1E6;
-
-
+    ts.tv_sec  = (long) opts.wait_ms / 1000;
+    ts.tv_nsec = (long) (opts.wait_ms % 1000) * 1E6;
 
     /* warm up */
     {
@@ -306,7 +305,7 @@ int main(int argc, char* argv[]) {
 
 double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_rank) {
   // SKaMPI pingpongs
-  int i, other_global_id;
+  int i; //, other_global_id;
   double s_now, s_last, t_last, t_now;
   double td_min, td_max;
   double invalid_time = -1.0;
@@ -337,15 +336,15 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
   // check whether we have ping_pong_min_time in our hash
   // if so, take it and use it (can stop after min_n_ping_pong rounds)
   // if not, we set ping_pong_min_time to -1.0 (then we need to do n_ping_pongs rounds)
-  int rank1;
-  int rank2;
-  if( ref_rank < client_rank ) {
-    rank1 = ref_rank;
-    rank2 = client_rank;
-  } else {
-    rank1 = client_rank;
-    rank2 = ref_rank;
-  }
+  //  int rank1;
+  //  int rank2;
+  //  if( ref_rank < client_rank ) {
+  //    rank1 = ref_rank;
+  //    rank2 = client_rank;
+  //  } else {
+  //    rank1 = client_rank;
+  //    rank2 = ref_rank;
+  //  }
 
   ping_pong_min_time = -1.0;
 
@@ -363,7 +362,7 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
     td_max = t_last - s_last;
 
   } else {
-    other_global_id = ref_rank;
+    //other_global_id = ref_rank;
 
     MPI_Recv(&s_last, 1, MPI_DOUBLE, ref_rank, pp_tag, comm, &status);
     t_last = get_time();

@@ -41,7 +41,8 @@ static const sync_type_t proc_sync_options[] = {
         { "MPI_Barrier", REPROMPI_PROCSYNC_MPIBARRIER },
         { "dissem_barrier", REPROMPI_PROCSYNC_DISSEMBARRIER },
         { "roundtime", REPROMPI_PROCSYNC_ROUNDTIMESYNC },
-        { "None", REPROMPI_PROCSYNC_NONE }
+        { "None", REPROMPI_PROCSYNC_NONE },
+        { "Double_MPI_Barrier", REPROMPI_PROCSYNC_DOUBLE_MPIBARRIER }
 };
 static const int N_PROC_SYNC_TYPES = sizeof(proc_sync_options)/sizeof(sync_type_t);
 static const char PROC_SYNC_ARG[] = "proc-sync";
@@ -67,6 +68,20 @@ static int get_sync_module_index(const char* name) {
   return -1;
 }
 
+static void print_available_modules() {
+  int i, rank;
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  if( rank == 0 ) {
+    printf("\nAvailable options for %s are: ", PROC_SYNC_ARG);
+    for(i=0; i<N_PROC_SYNC_TYPES; i++) {
+      if( i > 0 ) printf(", ");
+      printf("%s", proc_sync_options[i].name);
+    }
+    printf("\n");
+  }
+}
 
 /**********************************************
  * Initialization/cleanup functions for the specified sync module
@@ -89,6 +104,7 @@ void reprompib_init_proc_sync_module(int argc, char** argv, reprompib_sync_modul
       name = "UNKNOWN";
     }
     sprintf(err, "No process synchronization module defined for the selected --proc-sync parameter \"%s\".", name);
+    print_available_modules();
     reprompib_print_error_and_exit(err);
   }
 
@@ -107,6 +123,7 @@ void reprompib_register_proc_sync_modules(void) {
   register_window_module(&(sync_modules[2]));
   register_roundtimesync_module(&(sync_modules[3]));
   register_procsync_none_module(&(sync_modules[4]));
+  register_double_mpibarrier_module(&(sync_modules[5]));
 }
 
 void reprompib_deregister_proc_sync_modules(void) {

@@ -21,21 +21,11 @@
 </license>
 */
 
-#ifndef REPROMPI_MISC_H__
-#define REPROMPI_MISC_H__
-#include <stdint.h>
-#include <math.h>
-#include <mpi.h>
+#ifndef REPROMPI_SRC_REPROMPI_BENCH_SYNC_PROCESS_SYNC_BARRIER_SYNC_COMMON_H
+#define REPROMPI_SRC_REPROMPI_BENCH_SYNC_PROCESS_SYNC_BARRIER_SYNC_COMMON_H
 
-double repro_min(double a, double b);
-double repro_max(double a, double b);
-void shuffle(int *array, size_t n);
+#include "reprompi_bench/sync/process_sync/process_synchronization.h"
 
-int reprompib_str_to_long(const char *str, long* result);
-void reprompib_print_error_and_exit(const char* error_str);
-void reprompib_print_warning(const char* warning_str);
+void reprompi_register_common_barrier_functions(reprompib_proc_sync_module_t *sync_mod);
 
-
-
-
-#endif /* REPROMPI_MISC_H__ */
+#endif //REPROMPI_SRC_REPROMPI_BENCH_SYNC_PROCESS_SYNC_BARRIER_SYNC_COMMON_H

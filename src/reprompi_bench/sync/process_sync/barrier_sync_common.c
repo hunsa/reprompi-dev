@@ -26,49 +26,42 @@
 #include <stdlib.h>
 #include "mpi.h"
 
-#include "reprompi_bench/misc.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
 
 
+static int* barrier_get_errorcodes(void) {
+  int my_rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+  if (my_rank == 0) {
+    fprintf(stderr, "WARNING: Measurement errorcodes are not defined for barrier-based synchronization.\n");
+  }
+
+  return NULL;
+}
+
+
+static void barrier_init_module(int argc, char** argv, reprompib_sync_module_t* clock_sync) {
+};
+
+static void barrier_init_synchronization(const reprompib_sync_params_t* init_params) {
+}
+
 static void empty(void) {
-  // intentional
-}
+};
 
-static void nosync(MPI_Comm comm) {
- // intentional
-}
-
-static void procsync_none_init_module(int argc, char** argv, reprompib_sync_module_t* clock_sync) {
-}
-
-static void procsync_none_init_synchronization(const reprompib_sync_params_t* init_params) {
-}
-
-static int procsync_none_stop_sync(MPI_Comm comm) {
+static int stop_sync(MPI_Comm comm) {
   return REPROMPI_CORRECT_MEASUREMENT;
-}
+};
 
-static void procsync_none_print_sync_parameters(FILE* f) {
-    fprintf (f, "#@procsync=None\n");
-}
 
-void register_procsync_none_module(reprompib_proc_sync_module_t *sync_mod) {
-  sync_mod->name = "None";
-  sync_mod->procsync = REPROMPI_PROCSYNC_NONE;
-
-  sync_mod->init_module = procsync_none_init_module;
+void reprompi_register_common_barrier_functions(reprompib_proc_sync_module_t *sync_mod) {
+  sync_mod->init_module = barrier_init_module;
   sync_mod->cleanup_module = empty;
 
-  sync_mod->init_sync = procsync_none_init_synchronization;
+  sync_mod->init_sync = barrier_init_synchronization;
+  sync_mod->stop_sync = stop_sync;
   sync_mod->finalize_sync = empty;
   sync_mod->init_sync_round = empty;
-  sync_mod->start_sync = nosync;
-  sync_mod->stop_sync  = procsync_none_stop_sync;
-
-  sync_mod->print_sync_info = procsync_none_print_sync_parameters;
+  sync_mod->get_errorcodes = barrier_get_errorcodes;
 }
-
-
-
-
-

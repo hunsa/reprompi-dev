@@ -37,7 +37,7 @@ static reprompi_caching_module_t* caching_modules;
 typedef struct reprompi_caching_strategy {
   char* name;
   reprompi_caching_type_t type;
-}reprompi_caching_strategy_t;
+} reprompi_caching_strategy_t;
 
 
 static char DEFAULT_CACHING_MOD_NAME[] = "None";
@@ -135,6 +135,10 @@ void reprompib_init_caching_module(int argc, char** argv, reprompi_caching_modul
 
   if (index < 0) {
     char err_msg[160];
+    if( caching_module_name == NULL ) {
+      // this should never happen
+      caching_module_name = "unexpected error";
+    }
     sprintf(err_msg, "Unknown caching module \"--%s=%s\"", CACHING_ARG, caching_module_name);
     reprompib_print_error_and_exit(err_msg);
   }

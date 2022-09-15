@@ -44,7 +44,6 @@ enum {
     PINGPONG_ISEND_RECV,
     PINGPONG_ISEND_IRECV,
     PINGPONG_SEND_IRECV,
-    BBARRIER,
     EMPTY,
     N_MPI_CALLS         // number of calls
 };

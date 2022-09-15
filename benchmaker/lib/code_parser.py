@@ -2,11 +2,38 @@ import sys
 import os
 import re
 import errno
-from __builtin__ import len
 from bench_functions_gen import *
 
 RUNTIME_COMPUTATION_METHODS = ["all", "reduce"]
 RUNTIME_COMPUTATION_REDUCTION_OPS = ["min", "max", "mean"]
+
+
+def parse_line(line):
+    tag = {}
+    m = re.search('(?P<indent>[\s\t]*)//@([\s\t]*)(?P<keyword>[a-zA-Z0-9_]+)(?P<info>.*)', line)
+    if (m != None):
+        keyword = m.group('keyword')
+        tag["keyword"] = keyword
+        data = {}
+        indent = m.group('indent')
+        if (indent != None):
+            tag['indent'] = len(indent)
+        else:
+            tag['indent'] = 0
+
+        info = m.group('info')
+        while (info and len(info) > 0):
+            m = re.search('(?P<key>[a-zA-Z0-9_]+)(=?)(?P<value>[^\s]*)(?P<info>.*)', info)
+            if (m != None):
+                key = m.group('key')
+                value = m.group('value')
+                data[key] = value
+                info = m.group('info')
+            else:
+                info = None
+        tag["data"] = data
+        #print tag
+    return tag
 
 class CodeParser:
 
@@ -16,7 +43,7 @@ class CodeParser:
                 "measure_timestamp" : generate_measure_timestamp,
                 "initialize_bench" : generate_init_bench,
                 "cleanup_bench" : generate_cleanup_bench,
-                "cleanup_sync" : generate_cleanup_sync,
+                #"cleanup_sync" : generate_cleanup_sync,
                 "print_runtime_array" : generate_print_output,
                 "start_measurement_loop" : generate_start_measurement_loop,
                 "stop_measurement_loop" : generate_stop_measurement_loop,
@@ -39,65 +66,31 @@ class CodeParser:
     #//@ start_sync
     #//@ measure_timestamp t1
 
-
-    def __init__(self, input_file, output_dir):
-        self.input_file = input_file
-        self.output_dir = output_dir
-
+    def __init__(self, file_name):
+        self.file_name = file_name
         self.annotations = {}
         self.ts_arrays = {}
         self.strings_array = {}
         self.output_config_list = {}
 
-
-
-    def parse_line(self, line):
-        tag = {}
-        m = re.search('(?P<indent>[\s\t]*)//@([\s\t]*)(?P<keyword>[a-zA-Z0-9_]+)(?P<info>.*)', line)
-        if (m != None):
-            keyword = m.group('keyword')
-            tag["keyword"] = keyword
-            data = {}
-            indent = m.group('indent')
-            if (indent != None):
-                tag['indent'] = len(indent)
-            else:
-                tag['indent'] = 0
-
-            info = m.group('info')
-            while (info and len(info) > 0):
-                m = re.search('(?P<key>[a-zA-Z0-9_]+)(=?)(?P<value>[^\s]*)(?P<info>.*)', info)
-                if (m != None):
-                    key = m.group('key')
-                    value = m.group('value')
-                    data[key] = value
-                    info = m.group('info')
-                else:
-                    info = None
-            tag["data"] = data
-            #print tag
-        return tag
-
-
     def parse_file(self):
         line_no = 1
         keywords = self.code_generators.keys()
-        self.annotations[self.input_file] = []
-        with open(self.input_file) as f:
+        self.annotations[self.file_name] = []
+        with open(self.file_name) as f:
             for line in f:
-                tag = self.parse_line(line)
+                tag = parse_line(line)
 
                 try:
                     if tag["keyword"] in keywords:
                         tag["line"] = line
                         tag["line_no"] = line_no
 
-                        self.annotations[self.input_file].append(tag)
+                        self.annotations[self.file_name].append(tag)
 
                 except: # no keyword found
                     pass
                 line_no = line_no + 1
-
 
     def process_data(self):
         for file_name, annotation_list in self.annotations.items():
@@ -112,13 +105,10 @@ class CodeParser:
                         if data[key] == "": # found key corresponding to the timer's name
                             self.ts_arrays[file_name].append(key)
 
-
                 if annotation['keyword'] == "set":
                     data = annotation['data']
                     for key in data.keys():
                         self.strings_array[file_name].append(key)
-
-
 
         self.output_config_list = {}
         for file_name, annotation_list in self.annotations.items():
@@ -177,103 +167,94 @@ class CodeParser:
                     else:
                         output_config["op"] = ""
 
-
-                    if not self.output_config_list.has_key(file_name):
+                    if file_name not in self.output_config_list:
                         self.output_config_list[file_name] = {}
 
                     self.output_config_list[file_name][annotation["line_no"]] = [ output_config ]
-                    #print output_config
-
-
+                    #print(output_config)
 
     def generate_output_file(self):
-
-        try:    # make sure the output directory exists
-            os.makedirs(self.output_dir)
-        except OSError as e:
-            if e.errno == errno.EEXIST and os.path.isdir(self.output_dir):
-                pass
-            else:
-                raise
-
-        filename = os.path.basename(self.input_file)
-        output_file = os.path.join(self.output_dir, filename)
 
         ann_index = 0
         current_annotation = None
 
+        self.parse_file()
         self.process_data()
+        generated_code = []
 
-        with open(output_file, "w") as outf:
-            line_no = 1
-            with open(self.input_file) as f:
-                for line in f:
-                    outf.write(line)
+        print(f"converting file {self.file_name}")
 
-                    if current_annotation == None and ann_index < len(self.annotations[self.input_file]):
-                        current_annotation = self.annotations[self.input_file][ann_index]
-                        ann_index = ann_index + 1
+        line_no = 1
+        with open(self.file_name) as f:
+            for line in f:
+                generated_code.append(line)
 
-                    # insert code
-                    if current_annotation != None and line_no == current_annotation["line_no"]:
-                        if current_annotation["keyword"] == "print_runtime_array":
-                            output_config_l = self.output_config_list[self.input_file][line_no]
-                            for output_config in output_config_l:
-                                if output_config["name"] == current_annotation['data']['name']:
-                                    code = self.code_generators[current_annotation["keyword"]](output_config,
-                                                                    current_annotation['indent'])
+                if current_annotation is None and ann_index < len(self.annotations[self.file_name]):
+                    current_annotation = self.annotations[self.file_name][ann_index]
+                    ann_index = ann_index + 1
 
+                # insert code
+                if current_annotation is not None and line_no == current_annotation["line_no"]:
+                    if current_annotation["keyword"] == "print_runtime_array":
+                        output_config_l = self.output_config_list[self.file_name][line_no]
+                        for output_config in output_config_l:
+                            if output_config["name"] == current_annotation['data']['name']:
+                                code = self.code_generators[current_annotation["keyword"]](output_config,
+                                                                current_annotation['indent'])
 
-                        elif current_annotation["keyword"] in ["initialize_timestamps",
-                                                               "measure_timestamp"
-                                                               ]:
-                            ts_name = ""
-                            for key in current_annotation["data"].keys():
-                                if current_annotation["data"][key] == "": # found key corresponding to the timer's name
-                                    ts_name = key
-                                    break
-                            if len(ts_name) > 0:
-                                code = self.code_generators[current_annotation["keyword"]](ts_name,
-                                                                                           current_annotation['indent'])
-                            else:
-                                sys.exit("Error: incorrect annotation - %s" % current_annotation["line"])
-
-                        elif current_annotation["keyword"] == "stop_measurement_loop":
-                            code = self.code_generators[current_annotation["keyword"]](current_annotation['indent'])
-
-                        elif current_annotation["keyword"] == "declare_variables":
-                            ann_list = self.annotations[self.input_file]
-
-                            main_file = False
-                            for a in ann_list:
-                                if a["keyword"] == "initialize_bench":
-                                    main_file = True
-                                    break
-
-                            code = self.code_generators[current_annotation["keyword"]](main_file, self.ts_arrays[self.input_file],
-                                                                                       self.strings_array[self.input_file],
+                    elif current_annotation["keyword"] in ["initialize_timestamps",
+                                                           "measure_timestamp"
+                                                           ]:
+                        ts_name = ""
+                        for key in current_annotation["data"].keys():
+                            if current_annotation["data"][key] == "": # found key corresponding to the timer's name
+                                ts_name = key
+                                break
+                        if len(ts_name) > 0:
+                            code = self.code_generators[current_annotation["keyword"]](ts_name,
                                                                                        current_annotation['indent'])
-
-                        elif current_annotation["keyword"] == "cleanup_variables":
-                            code = self.code_generators[current_annotation["keyword"]](self.ts_arrays[self.input_file],
-                                                                                       self.strings_array[self.input_file],
-                                                                                         current_annotation['indent'])
-
-                        elif current_annotation["keyword"] in ["global",
-                                                               "set"]:
-                            code = self.code_generators[current_annotation["keyword"]](current_annotation['data'],
-                                                                                         current_annotation['indent'])
-
-                        elif current_annotation["keyword"] == "start_measurement_loop":
-                            code = self.code_generators[current_annotation["keyword"]](current_annotation['indent'])
-
                         else:
-                            code = self.code_generators[current_annotation["keyword"]](current_annotation['indent'])
-                        outf.write(code)
-                        current_annotation = None
+                            sys.exit("Error: incorrect annotation - %s" % current_annotation["line"])
 
-                    line_no = line_no + 1
+                    elif current_annotation["keyword"] == "stop_measurement_loop":
+                        code = self.code_generators[current_annotation["keyword"]](current_annotation['indent'])
 
+                    elif current_annotation["keyword"] == "declare_variables":
+                        ann_list = self.annotations[self.file_name]
 
+                        main_file = False
+                        for a in ann_list:
+                            if a["keyword"] == "initialize_bench":
+                                main_file = True
+                                break
 
+                        code = self.code_generators[current_annotation["keyword"]](main_file,
+                                                                                   self.ts_arrays[self.file_name],
+                                                                                   self.strings_array[self.file_name],
+                                                                                   current_annotation['indent'])
 
+                    elif current_annotation["keyword"] == "cleanup_variables":
+                        code = self.code_generators[current_annotation["keyword"]](self.ts_arrays[self.file_name],
+                                                                                   self.strings_array[self.file_name],
+                                                                                     current_annotation['indent'])
+
+                    elif current_annotation["keyword"] in ["global",
+                                                           "set"]:
+                        code = self.code_generators[current_annotation["keyword"]](current_annotation['data'],
+                                                                                     current_annotation['indent'])
+
+                    elif current_annotation["keyword"] == "start_measurement_loop":
+                        code = self.code_generators[current_annotation["keyword"]](current_annotation['indent'])
+
+                    else:
+                        code = self.code_generators[current_annotation["keyword"]](current_annotation['indent'])
+
+                    #outf.write(code)
+                    generated_code.append(code)
+
+                    current_annotation = None
+
+                line_no = line_no + 1
+
+        #print(generated_code)
+        return generated_code

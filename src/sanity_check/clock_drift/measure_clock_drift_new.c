@@ -71,12 +71,7 @@ void print_help(char* testname) {
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     if (my_rank == root_proc) {
 
-        if (strstr(testname, "measure_clock_drift") != 0) {
-            printf("\nUSAGE: %s [options] [steps]\n", testname);
-        }
-        else {
-            printf("\nUSAGE: %s [options]\n", testname);
-        }
+        printf("\nUSAGE: %s [options]\n", testname);
 
         printf("options:\n");
         printf("%-40s %-40s\n", "-h", "print this help");
@@ -422,7 +417,7 @@ int main(int argc, char* argv[]) {
 
 double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_rank, reprompib_sync_module_t *clock_sync) {
   // SKaMPI pingpongs
-  int i, other_global_id;
+  int i; //, other_global_id;
   double s_now, s_last, t_last, t_now;
   double td_min, td_max;
   double invalid_time = -1.0;
@@ -453,15 +448,15 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
   // check whether we have ping_pong_min_time in our hash
   // if so, take it and use it (can stop after min_n_ping_pong rounds)
   // if not, we set ping_pong_min_time to -1.0 (then we need to do n_ping_pongs rounds)
-  int rank1;
-  int rank2;
-  if( ref_rank < client_rank ) {
-    rank1 = ref_rank;
-    rank2 = client_rank;
-  } else {
-    rank1 = client_rank;
-    rank2 = ref_rank;
-  }
+  //  int rank1;
+  //  int rank2;
+  //  if( ref_rank < client_rank ) {
+  //    rank1 = ref_rank;
+  //    rank2 = client_rank;
+  //  } else {
+  //    rank1 = client_rank;
+  //    rank2 = ref_rank;
+  //  }
 
   ping_pong_min_time = -1.0;
 
@@ -479,7 +474,7 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
     td_max = t_last - s_last;
 
   } else {
-    other_global_id = ref_rank;
+    //other_global_id = ref_rank;
 
     MPI_Recv(&s_last, 1, MPI_DOUBLE, ref_rank, pp_tag, comm, &status);
     t_last = clock_sync->get_global_time(get_time());

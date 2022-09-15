@@ -21,37 +21,32 @@
 </license>
 */
 
-#ifndef TESTBENCH_H_
-#define TESTBENCH_H_
+#include <stdlib.h>
+#include <stdio.h>
 
-enum tests {
-    TEST_SCATTER_AS_BCAST = 0,
-    TEST_ALLGATHER_AS_ALLREDUCE,
-    TEST_GATHER_AS_REDUCE,
-    TEST_ALLGATHER_GATHERBCAST,
-    TEST_BCAST_AS_SCATTERALLGATHER,
-    TEST_ALLREDUCE_AS_REDUCEBCAST
-};
+#include "dissem_barrier_impl.h"
+#include "reprompi_bench/misc.h"
 
-static const int N_TESTS = 6;
+void dissemination_barrier(MPI_Comm comm) {
+  int my_rank, np, send_rank, recv_rank;
+  int i, nrounds;
+  MPI_Status status;
+  int send_value = 1;
+  int recv_value = 1;
 
+  MPI_Comm_rank(comm, &my_rank);
+  MPI_Comm_size(comm, &np);
 
-//int test_scatter_as_bcast(int nprocs, test_params_t params);
+  nrounds = ceil(log2((double) np));
 
-/*
-int (*test_functions[])(int nprocs, test_params_t params) = {
-        [TEST_SCATTER_AS_BCAST] = &test_scatter_as_bcast,
-        [TEST_ALLGATHER_AS_ALLREDUCE] = &test_scatter_as_bcast,
-        [TEST_GATHER_AS_REDUCE] = &test_scatter_as_bcast,
-        [TEST_ALLGATHER_GATHERBCAST] = &test_scatter_as_bcast,
-        [TEST_BCAST_AS_SCATTERALLGATHER] = &test_scatter_as_bcast,
-        [TEST_ALLREDUCE_AS_REDUCEBCAST] = &test_scatter_as_bcast
-};
-*/
+  for (i = 0; i < nrounds; i++) {
+    send_rank = (my_rank + (1<<i)) % np;
+    recv_rank = (my_rank - (1 << i) + np) % np;
 
+    //printf("[%d] Sending from %d to %d; receive from %d\n", i, my_rank, send_rank, recv_rank);
+    MPI_Sendrecv(&send_value, 1, MPI_INT, send_rank, 0,
+                 &recv_value, 1, MPI_INT, recv_rank, 0,
+                 comm, &status);
+  }
 
-
-#endif /* TESTBENCH_H_ */
-
-
-
+}

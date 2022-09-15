@@ -26,81 +26,26 @@
 #include <stdlib.h>
 #include "mpi.h"
 
-#include "reprompi_bench/misc.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
-
-static int* barrier_get_errorcodes(void) {
-  int my_rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-
-  if (my_rank == 0) {
-    fprintf(stderr, "WARNING: Measurement errorcodes are not defined for barrier-based synchronization.\n");
-  }
-
-  return NULL;
-}
+#include "barrier_sync_common.h"
 
 
-static void barrier_init_module(int argc, char** argv, reprompib_sync_module_t* clock_sync) {
-};
-
-static void barrier_init_synchronization(const reprompib_sync_params_t* init_params) {
-}
-
-static void empty(void) {
-};
-
-static int stop_sync(void) {
-  return REPROMPI_CORRECT_MEASUREMENT;
-};
-
-
-static inline void mpibarrier_start_synchronization(void) {
-    MPI_Barrier(MPI_COMM_WORLD);
-}
-
-static void dissem_barrier_print_sync_parameters(FILE* f) {
-    fprintf(f, "#@procsync=dissem_barrier\n");
+static inline void mpibarrier_start_synchronization(MPI_Comm comm) {
+    MPI_Barrier(comm);
 }
 
 static void mpibarrier_print_sync_parameters(FILE* f) {
     fprintf (f, "#@procsync=MPI_Barrier\n");
 }
 
-static void register_common_barrier_functions(reprompib_proc_sync_module_t *sync_mod) {
-  sync_mod->init_module = barrier_init_module;
-  sync_mod->cleanup_module = empty;
-
-  sync_mod->init_sync = barrier_init_synchronization;
-  sync_mod->finalize_sync = empty;
-  sync_mod->init_sync_round = empty;
-  sync_mod->get_errorcodes = barrier_get_errorcodes;
-  }
-
-
 void register_mpibarrier_module(reprompib_proc_sync_module_t *sync_mod) {
+
+  reprompi_register_common_barrier_functions(sync_mod);
+
   sync_mod->name = "MPI_Barrier";
   sync_mod->procsync = REPROMPI_PROCSYNC_MPIBARRIER;
-
-  register_common_barrier_functions(sync_mod);
-
   sync_mod->start_sync = mpibarrier_start_synchronization;
-  sync_mod->stop_sync = stop_sync;
-
   sync_mod->print_sync_info = mpibarrier_print_sync_parameters;
-}
-
-
-void register_dissem_barrier_module(reprompib_proc_sync_module_t *sync_mod) {
-  sync_mod->name = "Dissem_Barrier";
-  sync_mod->procsync = REPROMPI_PROCSYNC_DISSEMBARRIER;
-
-  register_common_barrier_functions(sync_mod);
-
-  sync_mod->start_sync = dissemination_barrier;
-  sync_mod->stop_sync = stop_sync;
-
-  sync_mod->print_sync_info = dissem_barrier_print_sync_parameters;
 }
 
 

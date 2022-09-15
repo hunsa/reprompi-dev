@@ -72,7 +72,7 @@ inline double get_time(void) {
     wtime = (double)(ts.tv_nsec) / 1.0e+9 + ts.tv_sec;
     return wtime;
 #else
-    return MPI_Wtime();
+    return PMPI_Wtime();
 #endif
 }
 
