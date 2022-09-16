@@ -41,7 +41,7 @@ typedef struct sync_type {
   int type;
 } sync_type_t;
 
-extern reprompib_dictionary_t params_dict;
+//extern reprompib_dictionary_t params_dict;
 
 void parse_sync_options(int argc, char **argv, const char* argument_name, sync_module_info_t* opts_p);
 void cleanup_sync_options(sync_module_info_t* opts_p) ;
