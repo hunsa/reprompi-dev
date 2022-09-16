@@ -68,7 +68,7 @@ static int compute_argc(char *str) {
   return cnt;
 }
 
-static void check_env_params(int *argc, char ***argv) {
+void reprompi_check_and_override_lib_env_params(int *argc, char ***argv) {
   char *env = getenv("REPROMPI_LIB_PARAMS");
   char *token;
   char **argvnew;
@@ -180,7 +180,7 @@ void reprompib_initialize_benchmark(int argc, char* argv[],
 
   //initialize dictionary
   reprompib_init_dictionary(&params_dict, HASHTABLE_SIZE);
-  check_env_params(&argc, &argv);
+  reprompi_check_and_override_lib_env_params(&argc, &argv);
 
   //  for(int i=0; i<argc; i++) {
   //    printf("1: argv[%d]=%s\n", i, argv[i]);
