@@ -18,8 +18,6 @@ ${HWLOC_LIBRARIES}
 
 endif (HWLOC_INCLUDE_DIR)
 
-
-
 add_library(synclib
 ${CLOCKSYNC_SRC_FILES}
 )
