@@ -31,13 +31,19 @@
 
 #include "sync_module_helpers.h"
 
-reprompib_dictionary_t params_dict;
+static reprompib_dictionary_t params_dict;
+static const int HASHTABLE_SIZE=100;
+static int params_dict_initialized = 0;
 
 enum{
   REPROMPI_ARGS_SYNC_TYPE = 1
 };
 
 reprompib_dictionary_t* get_global_param_store() {
+  if( params_dict_initialized == 0 ) {
+    reprompib_init_dictionary(&params_dict, HASHTABLE_SIZE);
+    params_dict_initialized = 1;
+  }
   return &params_dict;
 }
 

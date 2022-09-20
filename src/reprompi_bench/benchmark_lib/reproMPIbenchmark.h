@@ -72,4 +72,7 @@ int reprompib_add_parameter_to_bench(const char* key, const char* val);
 
 #define MY_MAX(x, y) (((x) > (y)) ? (x) : (y))
 
+void reprompi_check_and_override_lib_env_params(int *argc, char ***argv);
+char **reprompi_make_argv_copy(int argc, char **argv);
+
 #endif /* REPROMPI_BENCHMARK_H_ */

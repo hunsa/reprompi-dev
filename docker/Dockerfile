@@ -1,4 +1,4 @@
-FROM debian:bullseye
+FROM debian:bookworm
 
 # Docker file for ReproMPI (dev)
 
@@ -29,5 +29,10 @@ RUN apt-get clean \
     libev-dev \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
+
+RUN addgroup --gid 1000  sascha
+RUN useradd -rm -d /home/sascha -s /bin/bash -g sascha -G sudo -u 1001 sascha
+USER sascha
+WORKDIR /home/sascha
 
 CMD ["bash"]

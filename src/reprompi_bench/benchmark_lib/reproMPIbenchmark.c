@@ -67,13 +67,39 @@ static int compute_argc(char *str) {
   }
   return cnt;
 }
+/* https://gist.github.com/bnoordhuis/1981730 */
+char **reprompi_make_argv_copy(int argc, char **argv)
+{
+  size_t strlen_sum;
+  char **argp;
+  char *data;
+  size_t len;
+  int i;
 
-static void check_env_params(int *argc, char ***argv) {
+  strlen_sum = 0;
+  for (i = 0; i < argc; i++) strlen_sum += strlen(argv[i]) + 1;
+
+  argp = malloc(sizeof(char *) * (argc + 1) + strlen_sum);
+  if (!argp) return NULL;
+  data = (char *) argp + sizeof(char *) * (argc + 1);
+
+  for (i = 0; i < argc; i++) {
+    argp[i] = data;
+    len = strlen(argv[i]) + 1;
+    memcpy(data, argv[i], len);
+    data += len;
+  }
+  argp[argc] = NULL;
+
+  return argp;
+}
+
+void reprompi_check_and_override_lib_env_params(int *argc, char ***argv) {
   char *env = getenv("REPROMPI_LIB_PARAMS");
-  char *token;
   char **argvnew;
 
   if( env != NULL ) {
+    char *token;
     //printf("env:%s\n", env);
     *argc = compute_argc(env) + 1;  // + 1 is for argv[0], which we'll copy
     //printf("argc: %d\n", *argc);
@@ -169,6 +195,11 @@ void reprompib_initialize_benchmark(int argc, char* argv[],
     reprompib_proc_sync_module_t* proc_sync) {
   int my_rank;
   reprompib_sync_params_t sync_params;
+  int c_argc;
+  char **c_argv;
+
+  c_argv = reprompi_make_argv_copy(argc, argv);
+  c_argc = argc;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
@@ -180,27 +211,27 @@ void reprompib_initialize_benchmark(int argc, char* argv[],
 
   //initialize dictionary
   reprompib_init_dictionary(&params_dict, HASHTABLE_SIZE);
-  check_env_params(&argc, &argv);
+  reprompi_check_and_override_lib_env_params(&c_argc, &c_argv);
 
   //  for(int i=0; i<argc; i++) {
   //    printf("1: argv[%d]=%s\n", i, argv[i]);
   //  }
 
   // parse arguments and set-up benchmarking jobs
-  print_command_line_args(argc, argv);
+  print_command_line_args(c_argc, c_argv);
 
   // parse extra parameters into the global dictionary
   // reprompib_parse_extra_key_value_options(&params_dict, argc, argv);
 
   // parse timing options
-  reprompib_parse_timing_options(&runtime_type, argc, argv);
+  reprompib_parse_timing_options(&runtime_type, c_argc, c_argv);
 
   // parse the benchmark-specific arguments (nreps, summary)
-  reprompib_parse_options(opts_p, argc, argv);
+  reprompib_parse_options(opts_p, c_argc, c_argv);
 
   // initialize synchronization module
-  reprompib_init_sync_module(argc, argv, clock_sync);
-  reprompib_init_proc_sync_module(argc, argv, clock_sync, proc_sync);
+  reprompib_init_sync_module(c_argc, c_argv, clock_sync);
+  reprompib_init_proc_sync_module(c_argc, c_argv, clock_sync, proc_sync);
 
   // initialize synchronization
   sync_params.nrep = opts_p->n_rep;

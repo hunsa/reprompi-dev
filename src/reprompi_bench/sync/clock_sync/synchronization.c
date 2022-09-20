@@ -45,8 +45,6 @@
 // Implemented synchronization modules
 static reprompib_sync_module_t* sync_modules;
 
-static const int HASHTABLE_SIZE=100;
-
 static const sync_type_t clock_sync_options[] = {
         { "HCA", REPROMPI_CLOCKSYNC_HCA},
         { "HCA2", REPROMPI_CLOCKSYNC_HCA2},
@@ -88,14 +86,12 @@ static int get_sync_module_index(const char* name) {
 void reprompib_init_sync_module(int argc, char** argv, reprompib_sync_module_t* sync_mod) {
   sync_module_info_t sync_module_info;
   int index;
-  reprompib_dictionary_t* params_dict;
-
-  params_dict = get_global_param_store();
 
   //initialize dictionary
-  reprompib_init_dictionary(params_dict, HASHTABLE_SIZE);
+  // reprompib_init_dictionary(params_dict, HASHTABLE_SIZE);
+
   // parse extra parameters into the global dictionary
-  reprompib_parse_extra_key_value_options(params_dict, argc, argv);
+  reprompib_parse_extra_key_value_options(get_global_param_store(), argc, argv);
 
   parse_sync_options(argc, argv, CLOCK_SYNC_ARG, &sync_module_info);
   if (sync_module_info.name == NULL) {
@@ -112,7 +108,7 @@ void reprompib_init_sync_module(int argc, char** argv, reprompib_sync_module_t* 
   *sync_mod = sync_modules[index];
   sync_mod->init_module(argc, argv);
 
-  reprompib_cleanup_dictionary(params_dict);
+  //reprompib_cleanup_dictionary(params_dict);
   cleanup_sync_options(&sync_module_info);
 }
 

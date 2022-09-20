@@ -208,3 +208,36 @@ all the previously detailed configuration parameters.
  ENABLE_WINDOWSYNC_SK             OFF      
  FREQUENCY_MHZ                    2300    
 ```
+
+## Clock Synchronization Algorithms
+
+### HCA [1]
+
+### HCA2 [1]
+
+### HCA3 [4]
+
+### Topo1 [4]
+
+### Topo2 [4]
+
+- two-level hierarchical clock-sync
+  - top level for sync between nodes
+  - bottom level on compute node
+- default
+  - top: HCA3
+  - bottom: ClockPropagation
+
+# References 
+
+1. Sascha Hunold, Alexandra Carpen-Amarie:
+   On the Impact of Synchronizing Clocks and Processes on Benchmarking MPI Collectives. EuroMPI 2015: 8:1-8:10
+2. Sascha Hunold, Alexandra Carpen-Amarie, Jesper Larsson Träff:
+   Reproducible MPI Micro-Benchmarking Isn't As Easy As You Think. EuroMPI/ASIA 2014: 69
+3. Sascha Hunold, Alexandra Carpen-Amarie:
+   Reproducible MPI Benchmarking is Still Not as Easy as You Think. IEEE Trans. Parallel Distributed Syst. 27(12): 3617-3630 (2016)
+4. Sascha Hunold, Alexandra Carpen-Amarie:
+   Hierarchical Clock Synchronization in MPI. CLUSTER 2018: 325-336
+5. Sascha Hunold, Alexandra Carpen-Amarie:
+   Autotuning MPI Collectives using Performance Guidelines. HPC Asia 2018: 64-74
+
