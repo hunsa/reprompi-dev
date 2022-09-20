@@ -67,8 +67,8 @@ static int compute_argc(char *str) {
   }
   return cnt;
 }
-
-static char **make_argv_copy(int argc, char **argv)
+/* https://gist.github.com/bnoordhuis/1981730 */
+char **reprompi_make_argv_copy(int argc, char **argv)
 {
   size_t strlen_sum;
   char **argp;
@@ -198,7 +198,7 @@ void reprompib_initialize_benchmark(int argc, char* argv[],
   int c_argc;
   char **c_argv;
 
-  c_argv = make_argv_copy(argc, argv);
+  c_argv = reprompi_make_argv_copy(argc, argv);
   c_argc = argc;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
