@@ -38,18 +38,18 @@ find_library (HWLOC_LIBRARY ${HWLOC_LIBRARY_NAME}
               )
 
 if (HWLOC_LIBRARY)
-    message(STATUS "HWLOC library path: ${HWLOC_LIBRARY}" )       
+    message(STATUS "HWLOC library path: ${HWLOC_LIBRARY}" )
+
+	include(FindPackageHandleStandardArgs)
+	# handle the QUIETLY and REQUIRED arguments and set HWLOC_FOUND to TRUE
+	# if all listed variables are TRUE
+	find_package_handle_standard_args(Hwloc DEFAULT_MSG
+			HWLOC_LIBRARY)
+
 else(HWLOC_LIBRARY)
     message(STATUS "HWLOC library path: not found" )
 endif()
 
-
-
-include(FindPackageHandleStandardArgs)
-# handle the QUIETLY and REQUIRED arguments and set HWLOC_FOUND to TRUE
-# if all listed variables are TRUE
-find_package_handle_standard_args(HWLOC DEFAULT_MSG
-                                  HWLOC_LIBRARY)
 
 mark_as_advanced(HWLOC_INCLUDE_DIR HWLOC_LIBRARY )
 set(HWLOC_INCLUDE_DIRS ${HWLOC_INCLUDE_DIR} )
