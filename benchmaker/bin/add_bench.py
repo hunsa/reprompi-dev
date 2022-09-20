@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     if options.input_dir is None:
         parser.print_help()
-        print("Error: Experiment directory not specified")
+        sys.exit("Error: Experiment directory not specified")
     input_dir = os.path.abspath(options.input_dir)
 
     if options.output_dir is None:

@@ -96,10 +96,10 @@ char **reprompi_make_argv_copy(int argc, char **argv)
 
 void reprompi_check_and_override_lib_env_params(int *argc, char ***argv) {
   char *env = getenv("REPROMPI_LIB_PARAMS");
-  char *token;
   char **argvnew;
 
   if( env != NULL ) {
+    char *token;
     //printf("env:%s\n", env);
     *argc = compute_argc(env) + 1;  // + 1 is for argv[0], which we'll copy
     //printf("argc: %d\n", *argc);
