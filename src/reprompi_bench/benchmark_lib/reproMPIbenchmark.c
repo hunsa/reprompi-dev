@@ -196,10 +196,10 @@ void reprompib_initialize_benchmark(int argc, char* argv[],
   int my_rank;
   reprompib_sync_params_t sync_params;
   int c_argc;
-  int **c_argv;
+  char **c_argv;
 
   c_argv = make_argv_copy(argc, argv);
-  c_argv = argc;
+  c_argc = argc;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
@@ -211,27 +211,27 @@ void reprompib_initialize_benchmark(int argc, char* argv[],
 
   //initialize dictionary
   reprompib_init_dictionary(&params_dict, HASHTABLE_SIZE);
-  reprompi_check_and_override_lib_env_params(&c_argv, &c_argv);
+  reprompi_check_and_override_lib_env_params(&c_argc, &c_argv);
 
   //  for(int i=0; i<argc; i++) {
   //    printf("1: argv[%d]=%s\n", i, argv[i]);
   //  }
 
   // parse arguments and set-up benchmarking jobs
-  print_command_line_args(c_argv, c_argv);
+  print_command_line_args(c_argc, c_argv);
 
   // parse extra parameters into the global dictionary
   // reprompib_parse_extra_key_value_options(&params_dict, argc, argv);
 
   // parse timing options
-  reprompib_parse_timing_options(&runtime_type, c_argv, c_argv);
+  reprompib_parse_timing_options(&runtime_type, c_argc, c_argv);
 
   // parse the benchmark-specific arguments (nreps, summary)
-  reprompib_parse_options(opts_p, c_argv, c_argv);
+  reprompib_parse_options(opts_p, c_argc, c_argv);
 
   // initialize synchronization module
-  reprompib_init_sync_module(c_argv, c_argv, clock_sync);
-  reprompib_init_proc_sync_module(c_argv, c_argv, clock_sync, proc_sync);
+  reprompib_init_sync_module(c_argc, c_argv, clock_sync);
+  reprompib_init_proc_sync_module(c_argc, c_argv, clock_sync, proc_sync);
 
   // initialize synchronization
   sync_params.nrep = opts_p->n_rep;
