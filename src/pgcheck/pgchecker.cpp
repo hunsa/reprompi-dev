@@ -125,6 +125,9 @@ void run_collective(int argc, char **argv) {
 
   start_time = time(NULL);
 
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+  MPI_Comm_rank(MPI_COMM_WORLD, &procs);
+
   // parse arguments and set-up benchmarking jobs
   print_command_line_args(argc, argv);
 
