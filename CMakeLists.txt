@@ -42,6 +42,10 @@ option(COMPILE_SANITY_CHECK_CLOCK "Enable clock sanity checks" off)
 set(OPTION_BUFFER_ALIGNMENT "" CACHE STRING "Alignment to use for buffer allocation [default: no alignment(allocation with calloc)]")
 option(OPTION_PRINT_MSIZES_BYTES "Print message sizes in the output instead of MPI call counts [default: counts]" off)
 
+option(OPTION_ENABLE_LOGGING   "Enable logging" off)
+option(OPTION_ENABLE_DEBUGGING "Enable debugging" off)
+
+
 ####################################
 ############ PGtune support ########
 ####################################
@@ -97,6 +101,13 @@ if(OPTION_PRINT_MSIZES_BYTES)
     SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DOPTION_PRINT_MSIZES_BYTES=${OPTION_PRINT_MSIZES_BYTES}")
 endif()
 
+if(OPTION_ENABLE_LOGGING)
+    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DUSE_LOGGING")
+endif()
+
+if(OPTION_ENABLE_DEBUGGING)
+    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -g")
+endif()
 
 ####################################
 ############ HWLOC support ########
@@ -312,6 +323,7 @@ if (COMPILE_BENCH_LIBRARY)
     ADD_SUBDIRECTORY(${SRC_DIR}/sanity_check/libtests)
 endif()
 
+ADD_SUBDIRECTORY(${SRC_DIR}/pgcheck)
 
 
 set(CPACK_PACKAGE_VERSION_MAJOR "1")

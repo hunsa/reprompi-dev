@@ -24,6 +24,10 @@
 #ifndef REPROMPIB_SYNCHRONIZATION_H_
 #define REPROMPIB_SYNCHRONIZATION_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
   REPROMPI_CLOCKSYNC_HCA = 0,
   REPROMPI_CLOCKSYNC_HCA2,
@@ -37,33 +41,34 @@ typedef enum {
   REPROMPI_CLOCKSYNC_NONE
 } reprompi_clocksync_t;
 
-
 typedef double (*sync_normtime_t)(double local_time);
-typedef void (*print_sync_info_t)(FILE* f);
-
+typedef void (*print_sync_info_t)(FILE *f);
 
 typedef struct reprompib_sync_module {
-    void (*init_module)(int argc, char** argv);
-    void (*cleanup_module)(void);
+  void (*init_module)(int argc, char **argv);
+  void (*cleanup_module)(void);
 
-    void (*init_sync)(void);
-    void (*finalize_sync)(void);
+  void (*init_sync)(void);
+  void (*finalize_sync)(void);
 
-    void (*sync_clocks)(void);
+  void (*sync_clocks)(void);
 
-    sync_normtime_t get_global_time;
-    print_sync_info_t print_sync_info;
+  sync_normtime_t get_global_time;
+  print_sync_info_t print_sync_info;
 
-    char* name;
-    // a module is uniquely identified by the clock sync. method and the process synchronization method
-    reprompi_clocksync_t clocksync;
+  char *name;
+  // a module is uniquely identified by the clock sync. method and the process synchronization method
+  reprompi_clocksync_t clocksync;
 } reprompib_sync_module_t;
-
 
 void reprompib_register_sync_modules(void);
 void reprompib_deregister_sync_modules(void);
 
-void reprompib_init_sync_module(int argc, char** argv, reprompib_sync_module_t* sync_mod);
+void reprompib_init_sync_module(int argc, char **argv, reprompib_sync_module_t *sync_mod);
 //void reprompib_cleanup_sync_module(reprompib_sync_module_t* sync_mod);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* REPROMPIB_SYNCHRONIZATION_H_ */

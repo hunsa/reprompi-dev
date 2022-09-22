@@ -48,7 +48,7 @@ void compute_runtimes_local_clocks(const double* tstart_sec, const double* tend_
     }
 
     // reduce local measurement results on the root
-    MPI_Reduce(local_runtimes, maxRuntimes_sec, current_nreps,
+    PMPI_Reduce(local_runtimes, maxRuntimes_sec, current_nreps,
             MPI_DOUBLE, MPI_MAX, root_proc, MPI_COMM_WORLD);
 
     free(local_runtimes);
@@ -84,8 +84,8 @@ void compute_runtimes_global_clocks(const double* tstart_sec, const double* tend
     }
 
     // gather results at the root process and compute runtimes
-    MPI_Reduce(norm_tstart_sec, start_sec, current_nreps, MPI_DOUBLE, MPI_MIN, root_proc, MPI_COMM_WORLD);
-    MPI_Reduce(norm_tend_sec, end_sec, current_nreps, MPI_DOUBLE, MPI_MAX, root_proc, MPI_COMM_WORLD);
+    PMPI_Reduce(norm_tstart_sec, start_sec, current_nreps, MPI_DOUBLE, MPI_MIN, root_proc, MPI_COMM_WORLD);
+    PMPI_Reduce(norm_tend_sec, end_sec, current_nreps, MPI_DOUBLE, MPI_MAX, root_proc, MPI_COMM_WORLD);
 
     if (my_rank == root_proc) {
         for (i = 0; i< current_nreps; i++) {
@@ -109,7 +109,7 @@ void collect_errorcodes(long current_start_index, long current_nreps, int root_p
     // gather error codes in the  [current_start_index, current_start_index + current_nreps) interval
     local_errorcodes = get_errorcodes() + current_start_index;
 
-    MPI_Reduce(local_errorcodes, sync_errorcodes, current_nreps,
+    PMPI_Reduce(local_errorcodes, sync_errorcodes, current_nreps,
             MPI_INT, MPI_MAX, root_proc, MPI_COMM_WORLD);
 }
 

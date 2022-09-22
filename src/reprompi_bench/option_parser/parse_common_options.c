@@ -167,20 +167,23 @@ static void parse_msize_interval(char* subopts, reprompib_common_options_t* opts
 }
 
 static void parse_msize_list(char* msizes, reprompib_common_options_t* opts_p) {
-    char* msizes_tok;
+    char* msizes_tok, *msizes_cpy;
     char* save_str;
     char* s;
     int index = 0;
 
+
     save_str = (char*) malloc(STRING_SIZE * sizeof(char));
     s = save_str;
+
+    msizes_cpy = strdup(msizes);
 
     /* Parse the list of message sizes */
     if (msizes != NULL) {
         index = 0;
         opts_p->msize_list = (size_t*) malloc(LEN_MSIZES_BATCH * sizeof(size_t));
 
-        msizes_tok = strtok_r(msizes, ",", &save_str);
+        msizes_tok = strtok_r(msizes_cpy, ",", &save_str);
         while (msizes_tok != NULL) {
 
             long msize;
@@ -211,6 +214,7 @@ static void parse_msize_list(char* msizes, reprompib_common_options_t* opts_p) {
         }
     }
 
+    free(msizes_cpy);
     free(s);
 }
 
@@ -313,9 +317,9 @@ static void parse_datatype(char* arg, reprompib_common_options_t* opts_p) {
 
 
 static void parse_pingpong_ranks(char* optarg, reprompib_common_options_t* opts_p) {
-    char* ranks_tok;
-    char* save_str;
-    char* s;
+    char *ranks_tok, *optarg_cpy;
+    char *save_str;
+    char *s;
     int index;
     int rank;
     char *endptr;
@@ -326,8 +330,10 @@ static void parse_pingpong_ranks(char* optarg, reprompib_common_options_t* opts_
     save_str = (char*) malloc(STRING_SIZE * sizeof(char));
     s = save_str;
 
+    optarg_cpy = strdup(optarg);
+
     /* Parse the list of ping-pong ranks */
-    ranks_tok = strtok_r(optarg, ",", &save_str);
+    ranks_tok = strtok_r(optarg_cpy, ",", &save_str);
     index = 0;
     while (ranks_tok != NULL) {
 
@@ -349,6 +355,7 @@ static void parse_pingpong_ranks(char* optarg, reprompib_common_options_t* opts_
       }
     }
 
+    free(optarg_cpy);
     free(s);
 
     if (index != 2) { // we need two ranks for the pingpong
@@ -449,7 +456,7 @@ void reprompib_parse_common_options(reprompib_common_options_t* opts_p, int argc
             }
         }
 
-        MPI_Bcast(&output_file_error, 1, MPI_LONG, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
+        PMPI_Bcast(&output_file_error, 1, MPI_LONG, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
         if (output_file_error != 0) {
             opts_p->output_file = NULL;
             reprompib_print_error_and_exit("Cannot open output file");

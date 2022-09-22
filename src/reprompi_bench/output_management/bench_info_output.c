@@ -150,14 +150,15 @@ void print_common_settings(const reprompib_bench_print_info_t* print_info,
        return;
     }
 
-    print_benchmark_common_settings_to_file(stdout, print_info, opts); //, dict);
     if (my_rank == OUTPUT_ROOT_PROC) {
-        if (opts->output_file != NULL) {
-            f = fopen(opts->output_file, "a");
-            print_benchmark_common_settings_to_file(f, print_info, opts); //, dict);
-            fflush(f);
-            fclose(f);
-        }
+      if (opts->output_file != NULL) {
+        f = fopen(opts->output_file, "a");
+      }
+      print_benchmark_common_settings_to_file(f, print_info, opts); //, dict);
+      if (f != stdout) {
+        fflush(f);
+        fclose(f);
+      }
     }
 
 }
@@ -172,18 +173,19 @@ void print_final_info(const reprompib_common_options_t* opts, const time_t start
     if (my_rank == OUTPUT_ROOT_PROC) {
         FILE* f;
         f = stdout;
+        if (opts->output_file != NULL) {
+          f = fopen(opts->output_file, "a");
+        }
+
         fprintf (f, "# Benchmark started at %s", asctime (localtime (&start_time)));
         fprintf (f, "# Execution time: %lds\n", (long int)(end_time-start_time));
 
-        if (opts->output_file != NULL) {
-            f = fopen(opts->output_file, "a");
-            fprintf (f, "# Benchmark started at %s", asctime (localtime (&start_time)));
-            fprintf (f, "# Execution time: %lds\n", (long int)(end_time-start_time));
-            fflush(f);
-            fclose(f);
-        }
-    }
+      if (f != stdout) {
+        fflush(f);
+        fclose(f);
+      }
 
+    }
 }
 
 

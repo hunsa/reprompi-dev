@@ -24,10 +24,18 @@
 #ifndef REPROMPIB_TIME_MEASUREMENT_H_
 #define REPROMPIB_TIME_MEASUREMENT_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void init_timer(void);
 
 double get_time(void);
 
-void print_time_parameters(FILE* f);
+void print_time_parameters(FILE *f);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* REPROMPIB_TIME_MEASUREMENT_H_ */

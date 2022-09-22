@@ -31,6 +31,10 @@
 #include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct bench_print_info {
   reprompib_sync_module_t* clock_sync;
   reprompib_proc_sync_module_t* proc_sync;
@@ -43,5 +47,9 @@ void print_common_settings(const reprompib_bench_print_info_t* print_info,
 void print_common_settings_to_file(FILE* f, const reprompib_bench_print_info_t* print_info);
 //,   const reprompib_dictionary_t* dict);
 void print_final_info(const reprompib_common_options_t* opts, const time_t start_time, const time_t end_time);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* REPROMPIB_BENCH_INFO_OUTPUT_H_ */

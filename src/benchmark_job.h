@@ -41,7 +41,15 @@ typedef struct {
 
 } job_list_t;
 
-void generate_job_list(const reprompib_common_options_t *opts, const int predefined_n_rep, job_list_t* jlist);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void generate_job_list(const reprompib_common_options_t *opts, const int predefined_n_rep, job_list_t *jlist);
 void cleanup_job_list(job_list_t jobs);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* BENCHMARK_JOB_H_ */

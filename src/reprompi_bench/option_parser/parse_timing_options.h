@@ -32,9 +32,17 @@ typedef enum reprompi_timing_method {
 } reprompib_timing_method_t;
 
 
-void reprompib_parse_timing_options(reprompib_timing_method_t* runtime_type, int argc, char** argv);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-const char* reprompib_get_timing_method_name(reprompib_timing_method_t t);
+void reprompib_parse_timing_options(reprompib_timing_method_t *runtime_type, int argc, char **argv);
+
+const char *reprompib_get_timing_method_name(reprompib_timing_method_t t);
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* REPROMPIB_PARSE_TIMING_OPTIONS_H_ */

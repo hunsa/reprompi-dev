@@ -30,6 +30,10 @@
 #include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/output_management/bench_info_output.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void print_results_header(const reprompib_bench_print_info_t* print_info,
     const reprompib_options_t* opts_p, const char* output_file_path, int verbose);
 
@@ -38,5 +42,9 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
 
 void print_summary(FILE* f, job_t job, double* tstart_sec, double* tend_sec,
     const reprompib_bench_print_info_t* print_info, const reprompib_options_t* opts_p);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* RESULTS_OUTPUT_H_ */

@@ -61,7 +61,7 @@ GlobalClock* SKaMPIClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
   }
 
   assert(np - 1 >= 0);
-  MPI_Bcast(&(tmp_tds[1]), np - 1, MPI_DOUBLE, 0, comm);
+  PMPI_Bcast(&(tmp_tds[1]), np - 1, MPI_DOUBLE, 0, comm);
 
   // update local time differences to all other processes
   // TODO: remove local time diffs to other procs

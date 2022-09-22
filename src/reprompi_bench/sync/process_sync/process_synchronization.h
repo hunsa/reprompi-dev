@@ -26,11 +26,15 @@
 
 #include "reprompi_bench/sync/clock_sync/synchronization.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum {
-    REPROMPI_INVALID_MEASUREMENT = 1,
-    REPROMPI_CORRECT_MEASUREMENT = 0,
-    REPROMPI_OUT_OF_TIME_VALID   = 2,
-    REPROMPI_OUT_OF_TIME_INVALID = 3
+  REPROMPI_INVALID_MEASUREMENT = 1,
+  REPROMPI_CORRECT_MEASUREMENT = 0,
+  REPROMPI_OUT_OF_TIME_VALID = 2,
+  REPROMPI_OUT_OF_TIME_INVALID = 3
 };
 
 typedef enum {
@@ -48,35 +52,35 @@ typedef struct reprompib_sync_params {
   int count;
 } reprompib_sync_params_t;
 
+typedef int *(*sync_errorcodes_t)(void);
 
+typedef struct reprompib_proc_sync_module {
+  void (*init_module)(int argc, char **argv, reprompib_sync_module_t *clock_sync);
+  void (*cleanup_module)(void);
 
-typedef int* (*sync_errorcodes_t)(void);
+  void (*init_sync)(const reprompib_sync_params_t *init_params);
+  void (*finalize_sync)(void);
 
-typedef struct reprompib_proc_sync_module{
-    void (*init_module)(int argc, char** argv, reprompib_sync_module_t* clock_sync);
-    void (*cleanup_module)(void);
+  void (*init_sync_round)(void);
+  void (*start_sync)(MPI_Comm comm);
+  int (*stop_sync)(MPI_Comm comm);
 
-    void (*init_sync)(const reprompib_sync_params_t* init_params);
-    void (*finalize_sync)(void);
+  print_sync_info_t print_sync_info;
+  sync_errorcodes_t get_errorcodes;
 
-    void (*init_sync_round)(void);
-    void (*start_sync)(MPI_Comm comm);
-    int (*stop_sync)(MPI_Comm comm);
-
-    print_sync_info_t print_sync_info;
-    sync_errorcodes_t get_errorcodes;
-
-    char* name;
-    // a module is uniquely identified by the process synchronization method
-    reprompi_procsync_t procsync;
+  char *name;
+  // a module is uniquely identified by the process synchronization method
+  reprompi_procsync_t procsync;
 } reprompib_proc_sync_module_t;
-
 
 void reprompib_register_proc_sync_modules(void);
 void reprompib_deregister_proc_sync_modules(void);
 
-void reprompib_init_proc_sync_module(int argc, char** argv, reprompib_sync_module_t* clock_sync, reprompib_proc_sync_module_t* sync_mod);
-void reprompib_cleanup_proc_sync_module(reprompib_proc_sync_module_t* sync_mod);
+void reprompib_init_proc_sync_module(int argc,
+                                     char **argv,
+                                     reprompib_sync_module_t *clock_sync,
+                                     reprompib_proc_sync_module_t *sync_mod);
+void reprompib_cleanup_proc_sync_module(reprompib_proc_sync_module_t *sync_mod);
 
 void register_window_module(reprompib_proc_sync_module_t *sync_mod);
 void register_dissem_barrier_module(reprompib_proc_sync_module_t *sync_mod);
@@ -84,5 +88,9 @@ void register_mpibarrier_module(reprompib_proc_sync_module_t *sync_mod);
 void register_roundtimesync_module(reprompib_proc_sync_module_t *sync_mod);
 void register_procsync_none_module(reprompib_proc_sync_module_t *sync_mod);
 void register_double_mpibarrier_module(reprompib_proc_sync_module_t *sync_mod);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* REPROMPIB_SYNCHRONIZATION_H_ */

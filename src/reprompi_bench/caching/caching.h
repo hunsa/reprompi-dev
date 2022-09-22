@@ -24,36 +24,41 @@
 #ifndef REPROMPIB_CACHING_H_
 #define REPROMPIB_CACHING_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum {
   REPROMPI_CLEAR_CACHE_NONE = 0,
   REPROMPI_CLEAR_CACHE_MEMSET,
 } reprompi_caching_type_t;
 
+typedef void (*reprompi_caching_print_info_t)(FILE *f);
 
-typedef void (*reprompi_caching_print_info_t)(FILE* f);
+typedef struct reprompib_caching_module {
+  void (*init_module)(int argc, char **argv);
+  void (*cleanup_module)(void);
 
-typedef struct reprompib_caching_module{
-    void (*init_module)(int argc, char** argv);
-    void (*cleanup_module)(void);
+  void (*clear_cache)(void);
 
-    void (*clear_cache)(void);
+  reprompi_caching_print_info_t print_info;
 
-    reprompi_caching_print_info_t print_info;
-
-    char* name;
-    // a module is uniquely identified by the caching method
-    reprompi_caching_type_t type;
+  char *name;
+  // a module is uniquely identified by the caching method
+  reprompi_caching_type_t type;
 } reprompi_caching_module_t;
-
 
 void reprompib_register_caching_modules(void);
 void reprompib_deregister_caching_modules(void);
 
-void reprompib_init_caching_module(int argc, char** argv, reprompi_caching_module_t* caching_strat);
-void reprompib_cleanup_caching_module(reprompi_caching_module_t* caching_strat);
+void reprompib_init_caching_module(int argc, char **argv, reprompi_caching_module_t *caching_strat);
+void reprompib_cleanup_caching_module(reprompi_caching_module_t *caching_strat);
 
 void register_warm_cache_module(reprompi_caching_module_t *caching_strat);
 void register_clear_cache_memset_module(reprompi_caching_module_t *caching_strat);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* REPROMPIB_CACHING_H_ */

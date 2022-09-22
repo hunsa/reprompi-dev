@@ -63,8 +63,8 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
     ZF_LOGV("%d: flattening clocks with nested_level=%d done", my_rank, reinterpret_cast<int*>(buf)[0]);
 
     // source clock
-    MPI_Bcast(&bytes_needed, 1, MPI_INT, 0, comm);
-    MPI_Bcast(buf, bytes_needed, MPI_BYTE, 0, comm);
+    PMPI_Bcast(&bytes_needed, 1, MPI_INT, 0, comm);
+    PMPI_Bcast(buf, bytes_needed, MPI_BYTE, 0, comm);
 
     // just use my own clock
     retClock = globalClock;
@@ -76,12 +76,12 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
     char *buf;
     Clock *last_clock;
 
-    MPI_Bcast(&bytes_to_receive, 1, MPI_INT, 0, comm);
+    PMPI_Bcast(&bytes_to_receive, 1, MPI_INT, 0, comm);
     //MPI_Recv(&bytes_to_receive, 1, MPI_INT, 0, 0, comm, &status);
     ZF_LOGV("%d: recv 1 DONE (%d)", my_rank, bytes_to_receive);
 
     buf = new char[bytes_to_receive];
-    MPI_Bcast(buf, bytes_to_receive, MPI_BYTE, 0, comm);
+    PMPI_Bcast(buf, bytes_to_receive, MPI_BYTE, 0, comm);
     //MPI_Recv(buf, bytes_to_receive, MPI_BYTE, 0, 0, comm, &status);
     ZF_LOGV("%d: recv 2 DONE", my_rank);
 
