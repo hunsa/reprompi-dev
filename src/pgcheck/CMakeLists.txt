@@ -25,6 +25,8 @@ INCLUDE_DIRECTORIES("${install_dir}/src/pgtunelib")
 
 add_executable(pgchecker
         pgchecker.cpp
+        pgcheck_helper.cpp
+        pgtunelib_interface.cpp
 
         ${SRC_DIR}/benchmark_job.c
         ${SRC_DIR}/reprompi_bench/misc.c

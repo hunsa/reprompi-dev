@@ -28,6 +28,11 @@
 
 #include "pgmpi_tune.h"
 
+#include "pgcheck_helper.h"
+#include "pgtunelib_interface.h"
+
+#include <string>
+
 #define MY_MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 static const int OUTPUT_ROOT_PROC = 0;
@@ -234,6 +239,11 @@ void run_collective(int argc, char **argv) {
 }
 
 int main(int argc, char *argv[]) {
+
+
+  auto pginfo_data = exec_command("./external/src/pgtunelib-build/bin/pgmpi_info");
+  std::cout << "DATA\n" << pginfo_data << "\nENDDATA" << std::endl;
+  auto pgtune_interface = PGTuneLibInterface(pginfo_data);
 
   MPI_Init(&argc, &argv);
 
