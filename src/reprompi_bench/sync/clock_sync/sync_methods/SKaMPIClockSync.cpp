@@ -29,9 +29,6 @@ GlobalClock* SKaMPIClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
   double* tmp_tds;
   ClockOffset* offset = NULL;
 
-  // TODO make this a parameter
-  int nexchanges = 100;
-
   MPI_Comm_rank(comm, &my_rank);
   MPI_Comm_size(comm, &np);
 

@@ -40,11 +40,7 @@ void create_intranode_communicator(MPI_Comm old_comm, MPI_Comm *new_comm) {
 }
 
 void create_intrasocket_communicator(MPI_Comm old_comm, int socket_id, MPI_Comm *new_comm) {
-  int my_rank, local_nprocs;
-  int local_rank;
-  char procname[MPI_MAX_PROCESSOR_NAME];
-  int len;
-
+  int my_rank;
   MPI_Comm_rank(old_comm, &my_rank);
   MPI_Comm_split(old_comm, socket_id, my_rank, new_comm);
 }

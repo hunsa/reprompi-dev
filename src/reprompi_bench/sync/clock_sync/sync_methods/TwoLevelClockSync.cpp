@@ -39,7 +39,6 @@ TwoLevelClockSync::~TwoLevelClockSync() {
 }
 
 void TwoLevelClockSync::initialized_communicators(MPI_Comm comm) {
-  int socket_id;
   int my_rank, np;
 
 

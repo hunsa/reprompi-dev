@@ -16,7 +16,7 @@ SKaMPIClockOffsetAlg::~SKaMPIClockOffsetAlg() {
 
 ClockOffset* SKaMPIClockOffsetAlg::measure_offset(MPI_Comm comm, int ref_rank, int client_rank, Clock& clock) {
   // SKaMPI pingpongs
-  int i, other_global_id;
+  int i; //, other_global_id;
   double s_now, s_last, t_last, t_now;
   double td_min, td_max;
   double invalid_time = -1.0;
@@ -79,7 +79,7 @@ ClockOffset* SKaMPIClockOffsetAlg::measure_offset(MPI_Comm comm, int ref_rank, i
     td_max = t_last - s_last;
 
   } else {
-    other_global_id = ref_rank;
+    //other_global_id = ref_rank;
 
     MPI_Recv(&s_last, 1, MPI_DOUBLE, ref_rank, pp_tag, comm, &status);
     t_last = clock.get_time();

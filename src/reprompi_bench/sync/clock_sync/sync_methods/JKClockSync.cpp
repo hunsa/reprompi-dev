@@ -28,11 +28,10 @@ JKClockSync::~JKClockSync() {
 
 
 GlobalClock* JKClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
-  int i, j, p;
-   int my_rank, np;
-   MPI_Status status;
-   int root_rank = 0;
-   double slope, intercept;
+  int j, p;
+  int my_rank, np;
+  int root_rank = 0;
+  double slope, intercept;
 
    slope = 0;
    intercept = 0;
@@ -41,7 +40,6 @@ GlobalClock* JKClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
    MPI_Comm_size(comm, &np);
 
    if (my_rank == root_rank) {
-       double tlocal, tremote;
 
        ZF_LOGV("jk:root m offset with %d procs", np);
        for (j = 0; j < this->n_fitpoints; j++) {
@@ -58,7 +56,6 @@ GlobalClock* JKClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
    } else {
      double *xfit, *yfit;
      double cov00, cov01, cov11, sumsq;
-     int fit;
 
      xfit = new double[this->n_fitpoints];
      yfit = new double[this->n_fitpoints];
@@ -74,7 +71,7 @@ GlobalClock* JKClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
      }
 
 
-     fit = gsl_fit_linear(xfit, 1, yfit, 1, this->n_fitpoints, &intercept, &slope, &cov00, &cov01, &cov11, &sumsq);
+     gsl_fit_linear(xfit, 1, yfit, 1, this->n_fitpoints, &intercept, &slope, &cov00, &cov01, &cov11, &sumsq);
 
      delete[] xfit;
      delete[] yfit;

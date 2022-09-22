@@ -47,18 +47,7 @@ GlobalClock* HCA3ClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
   int other_rank;
   LinModel lm;
   GlobalClock* my_clock;
-
-  MPI_Datatype dtype[2] = { MPI_DOUBLE, MPI_DOUBLE };
-  int blocklen[2] = { 1, 1 };
-  MPI_Aint disp[2] = { 0, sizeof(double) };
-  MPI_Datatype mpi_lm_t;
-  MPI_Status stat;
-
-  int *step_two_group_ranks;
-  int step_two_nb_ranks;
-  MPI_Group orig_group, step_two_group;
-  MPI_Comm step_two_comm;
-
+  
   MPI_Comm_rank(comm, &my_rank);
   MPI_Comm_size(comm, &nprocs);
 

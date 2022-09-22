@@ -8,7 +8,7 @@
 #include "log/zf_log.h"
 
 GlobalClockOffset::GlobalClockOffset(Clock& c, double tdiff) :
-    offset(tdiff), GlobalClock(c) {
+    GlobalClock(c), offset(tdiff) {
 }
 
 GlobalClockOffset::~GlobalClockOffset() {

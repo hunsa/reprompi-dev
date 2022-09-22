@@ -11,7 +11,7 @@
 
 
 GlobalClockLM::GlobalClockLM(Clock &c, double s, double i):
-  slope(s), intercept(i), GlobalClock(c) {
+    GlobalClock(c), slope(s), intercept(i)  {
 }
 
 GlobalClockLM::~GlobalClockLM() {
