@@ -31,6 +31,7 @@
 #include "pgcheck_helper.h"
 #include "pgtunelib_interface.h"
 
+#include <iostream>
 #include <string>
 
 #define MY_MAX(x, y) (((x) > (y)) ? (x) : (y))

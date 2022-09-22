@@ -1,27 +1,3 @@
-/*  PGMPITuneLib - Library for Autotuning MPI Collectives using Performance Guidelines
- *  
- *  Copyright 2017 Sascha Hunold, Alexandra Carpen-Amarie
- *      Research Group for Parallel Computing
- *      Faculty of Informatics
- *      Vienna University of Technology, Austria
- *  
- *  <license>
- *      This library is free software; you can redistribute it
- *      and/or modify it under the terms of the GNU Lesser General Public
- *      License as published by the Free Software Foundation; either
- *      version 2.1 of the License, or (at your option) any later version.
- *  
- *      This library is distributed in the hope that it will be useful,
- *      but WITHOUT ANY WARRANTY; without even the implied warranty of
- *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *      Lesser General Public License for more details.
- *  
- *      You should have received a copy of the GNU Lesser General Public
- *      License along with this library; if not, write to the Free
- *      Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- *      Boston, MA 02110-1301 USA
- *  </license>
- */
 #pragma once
 
 #ifndef _ZF_LOG_H_
@@ -450,9 +426,13 @@
 #endif
 
 #if defined(__printflike)
-	#define _ZF_LOG_PRINTFLIKE(a, b) __printflike(a, b)
+	#define _ZF_LOG_PRINTFLIKE(str_index, first_to_check) \
+		__printflike(str_index, first_to_check)
+#elif defined(__GNUC__)
+	#define _ZF_LOG_PRINTFLIKE(str_index, first_to_check) \
+		__attribute__((format(__printf__, str_index, first_to_check)))
 #else
-	#define _ZF_LOG_PRINTFLIKE(a, b)
+	#define _ZF_LOG_PRINTFLIKE(str_index, first_to_check)
 #endif
 
 #if (defined(_WIN32) || defined(_WIN64)) && !defined(__GNUC__)

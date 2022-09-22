@@ -1,27 +1,6 @@
-/*  PGMPITuneLib - Library for Autotuning MPI Collectives using Performance Guidelines
- *  
- *  Copyright 2017 Sascha Hunold, Alexandra Carpen-Amarie
- *      Research Group for Parallel Computing
- *      Faculty of Informatics
- *      Vienna University of Technology, Austria
- *  
- *  <license>
- *      This library is free software; you can redistribute it
- *      and/or modify it under the terms of the GNU Lesser General Public
- *      License as published by the Free Software Foundation; either
- *      version 2.1 of the License, or (at your option) any later version.
- *  
- *      This library is distributed in the hope that it will be useful,
- *      but WITHOUT ANY WARRANTY; without even the implied warranty of
- *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *      Lesser General Public License for more details.
- *  
- *      You should have received a copy of the GNU Lesser General Public
- *      License along with this library; if not, write to the Free
- *      Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- *      Boston, MA 02110-1301 USA
- *  </license>
- */
+#ifdef ZF_LOG_USE_CONFIG_HEADER
+	#include "zf_log_config.h"
+#endif
 
 /* When defined, Android log (android/log.h) will be used by default instead of
  * stderr (ignored on non-Android platforms). Date, time, pid and tid (context)
@@ -55,6 +34,12 @@
 #else
 	#define ZF_LOG_USE_NSLOG 0
 #endif
+
+#if defined(__APPLE__) && defined(__MACH__)
+#include <pthread.h>
+int pthread_mach_thread_np(pthread_t); // fix annoying 'implicit declaration' warning
+#endif
+
 /* When defined, OutputDebugString() will be used instead of stderr (ignored on
  * non-Windows platforms). Uses OutputDebugStringA() variant and feeds it with
  * UTF-8 data.
@@ -225,8 +210,6 @@
 		 PID, S(ZF_LOG_DEF_DELIMITER), TID, S(ZF_LOG_DEF_DELIMITER), \
 		 LEVEL, S(ZF_LOG_DEF_DELIMITER))
 #endif
-/* Example:
- */
 /* Specifies log message tag format. It includes tag prefix and tag. Custom
  * information can be added as well. Supported fields:
  * TAG(prefix_delimiter, tag_delimiter), S(str), F_INIT(statements),
@@ -278,6 +261,19 @@
 #define S(str) S(str)
 #define F_INIT(statements) F_INIT(statements)
 #define F_UINT(width, value) F_UINT(width, value)
+/* To use custom `vsnprintf()` function, define `ZF_LOG_CUSTOM_VSNPRINTF` to have its name. Example:
+ *   #define ZF_LOG_CUSTOM_VSNPRINTF my_vsnprintf
+ */
+#ifdef ZF_LOG_CUSTOM_VSNPRINTF
+	#define _ZF_LOG_VSNPRINTF ZF_LOG_CUSTOM_VSNPRINTF
+#endif
+/* To use custom `snprintf()` function, define `ZF_LOG_CUSTOM_SNPRINTF` to have its name. Example:
+ *   #define ZF_LOG_CUSTOM_SNPRINTF my_snprintf
+ * Note, that it only will be used when `ZF_LOG_OPTIMIZE_SIZE` is enabled.
+ */
+#ifdef ZF_LOG_CUSTOM_SNPRINTF
+	#define _ZF_LOG_SNPRINTF ZF_LOG_CUSTOM_SNPRINTF
+#endif
 /* Number of bytes to reserve for EOL in the log line buffer (must be >0).
  * Must be larger than or equal to length of ZF_LOG_EOL with terminating null.
  */
@@ -317,6 +313,8 @@
 	#include <sys/time.h>
 	#if defined(__linux__)
 		#include <linux/limits.h>
+	#elif defined(_AIX) || defined(__CYGWIN__)
+		#include <limits.h>
 	#else
 		#include <sys/syslimits.h>
 	#endif
@@ -329,7 +327,7 @@
 		#include <sys/syscall.h>
 	#endif
 #endif
-#if defined(__MACH__)
+#if defined(__MACH__) || defined(_AIX)
 	#include <pthread.h>
 #endif
 
@@ -495,23 +493,34 @@
 	#define memccpy _memccpy
 #endif
 
-#if (defined(_MSC_VER) && !defined(__INTEL_COMPILER)) || defined(__MINGW64__)
-	#define vsnprintf(s, sz, fmt, va) fake_vsnprintf(s, sz, fmt, va)
-	static int fake_vsnprintf(char *s, size_t sz, const char *fmt, va_list ap)
-	{
-		const int n = vsnprintf_s(s, sz, _TRUNCATE, fmt, ap);
-		return 0 < n? n: (int)sz + 1; /* no need in _vscprintf() for now */
-	}
-	#if ZF_LOG_OPTIMIZE_SIZE
-	#define snprintf(s, sz, ...) fake_snprintf(s, sz, __VA_ARGS__)
-	static int fake_snprintf(char *s, size_t sz, const char *fmt, ...)
-	{
-		va_list va;
-		va_start(va, fmt);
-		const int n = fake_vsnprintf(s, sz, fmt, va);
-		va_end(va);
-		return n;
-	}
+#ifndef _ZF_LOG_VSNPRINTF
+	#if (defined(_MSC_VER) && !defined(__INTEL_COMPILER)) || defined(__MINGW64__)
+		static int fake_vsnprintf(char *s, size_t sz, const char *fmt, va_list ap)
+		{
+			const int n = vsnprintf_s(s, sz, _TRUNCATE, fmt, ap);
+			return 0 < n? n: (int)sz + 1; /* no need in _vscprintf() for now */
+		}
+		#define _ZF_LOG_VSNPRINTF fake_vsnprintf
+	#else
+		#define _ZF_LOG_VSNPRINTF vsnprintf
+	#endif
+#endif
+
+#if ZF_LOG_OPTIMIZE_SIZE
+	#ifndef _ZF_LOG_SNPRINTF
+		#if (defined(_MSC_VER) && !defined(__INTEL_COMPILER)) || defined(__MINGW64__)
+			static int fake_snprintf(char *s, size_t sz, const char *fmt, ...)
+			{
+				va_list va;
+				va_start(va, fmt);
+				const int n = _ZF_LOG_VSNPRINTF(s, sz, fmt, va);
+				va_end(va);
+				return n;
+			}
+			#define _ZF_LOG_SNPRINTF fake_snprintf
+		#else
+			#define _ZF_LOG_SNPRINTF snprintf
+		#endif
 	#endif
 #endif
 
@@ -653,8 +662,9 @@ void zf_log_out_stderr_callback(const zf_log_message *const msg, void *arg)
 #if defined(_WIN32) || defined(_WIN64)
 	/* WriteFile() is atomic for local files opened with FILE_APPEND_DATA and
 	   without FILE_WRITE_DATA */
+	DWORD written;
 	WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg->buf,
-			  (DWORD)(msg->p - msg->buf + eol_len), 0, 0);
+			  (DWORD)(msg->p - msg->buf + eol_len), &written, 0);
 #else
 	/* write() is atomic for buffers less than or equal to PIPE_BUF. */
 	RETVAL_UNUSED(write(STDERR_FILENO, msg->buf,
@@ -746,7 +756,8 @@ static char lvl_char(const int lvl)
 #define TCACHE_FLUID (0x40000000 | 0x80000000)
 static unsigned g_tcache_mode = TCACHE_STALE;
 static struct timeval g_tcache_tv = {0, 0};
-static struct tm g_tcache_tm = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+static struct tm g_tcache_tm;
 
 static INLINE int tcache_get(const struct timeval *const tv, struct tm *const tm)
 {
@@ -793,7 +804,7 @@ static void time_callback(struct tm *const tm, unsigned *const msec)
 	SYSTEMTIME st;
 	GetLocalTime(&st);
 	tm->tm_year = st.wYear;
-	tm->tm_mon = st.wMonth;
+	tm->tm_mon = st.wMonth - 1;
 	tm->tm_mday = st.wDay;
 	tm->tm_wday = st.wDayOfWeek;
 	tm->tm_hour = st.wHour;
@@ -840,6 +851,11 @@ static void pid_callback(int *const pid, int *const tid)
 	*tid = syscall(SYS_gettid);
 	#elif defined(__MACH__)
 	*tid = (int)pthread_mach_thread_np(pthread_self());
+	#elif defined(_AIX)
+	pthread_t t = pthread_self();
+	struct __pthrdsinfo tinfo;
+	pthread_getthrds_np(&t, PTHRDSINFO_QUERY_TID, &tinfo, sizeof(tinfo), NULL, 0);
+	*tid = (int)tinfo.__pi_tid;
 	#else
 		#define Platform not supported
 	#endif
@@ -1087,9 +1103,9 @@ static void put_ctx(zf_log_message *const msg)
 
 	#if ZF_LOG_OPTIMIZE_SIZE
 	int n;
-	n = snprintf(msg->p, nprintf_size(msg),
-				 _PP_MAP(_ZF_LOG_MESSAGE_FORMAT_PRINTF_FMT, ZF_LOG_MESSAGE_CTX_FORMAT)
-                 _PP_MAP(_ZF_LOG_MESSAGE_FORMAT_PRINTF_VAL, ZF_LOG_MESSAGE_CTX_FORMAT));
+	n = _ZF_LOG_SNPRINTF(msg->p, nprintf_size(msg),
+						 _PP_MAP(_ZF_LOG_MESSAGE_FORMAT_PRINTF_FMT, ZF_LOG_MESSAGE_CTX_FORMAT)
+						 _PP_MAP(_ZF_LOG_MESSAGE_FORMAT_PRINTF_VAL, ZF_LOG_MESSAGE_CTX_FORMAT));
 	put_nprintf(msg, n);
 	#else
 	char buf[64];
@@ -1169,9 +1185,9 @@ static void put_src(zf_log_message *const msg, const src_location *const src)
 #else
 	#if ZF_LOG_OPTIMIZE_SIZE
 	int n;
-	n = snprintf(msg->p, nprintf_size(msg),
-				 _PP_MAP(_ZF_LOG_MESSAGE_FORMAT_PRINTF_FMT, ZF_LOG_MESSAGE_SRC_FORMAT)
-                 _PP_MAP(_ZF_LOG_MESSAGE_FORMAT_PRINTF_VAL, ZF_LOG_MESSAGE_SRC_FORMAT));
+	n = _ZF_LOG_SNPRINTF(msg->p, nprintf_size(msg),
+						 _PP_MAP(_ZF_LOG_MESSAGE_FORMAT_PRINTF_FMT, ZF_LOG_MESSAGE_SRC_FORMAT)
+						 _PP_MAP(_ZF_LOG_MESSAGE_FORMAT_PRINTF_VAL, ZF_LOG_MESSAGE_SRC_FORMAT));
 	put_nprintf(msg, n);
 	#else
 	_PP_MAP(_ZF_LOG_MESSAGE_FORMAT_PUT, ZF_LOG_MESSAGE_SRC_FORMAT)
@@ -1184,7 +1200,7 @@ static void put_msg(zf_log_message *const msg,
 {
 	int n;
 	msg->msg_b = msg->p;
-	n = vsnprintf(msg->p, nprintf_size(msg), fmt, va);
+	n = _ZF_LOG_VSNPRINTF(msg->p, nprintf_size(msg), fmt, va);
 	put_nprintf(msg, n);
 }
 
