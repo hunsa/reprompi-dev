@@ -47,7 +47,7 @@ GlobalClock* HCA3ClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
   int other_rank;
   LinModel lm;
   GlobalClock* my_clock;
-  
+
   MPI_Comm_rank(comm, &my_rank);
   MPI_Comm_size(comm, &nprocs);
 

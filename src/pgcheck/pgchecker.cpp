@@ -270,7 +270,7 @@ int main(int argc, char *argv[]) {
   strcpy(my_argv[0], argv[0]);
   strcpy(my_argv[1], "--msizes-list=4,8");
   strcpy(my_argv[2], "--calls-list=MPI_Allreduce");
-  strcpy(my_argv[3], "--nrep=100");
+  strcpy(my_argv[3], "--nrep=10");
   strcpy(my_argv[4], "--output-file=foo.txt");
   strcpy(my_argv[5], "--module=allreduce=alg:default");
 
