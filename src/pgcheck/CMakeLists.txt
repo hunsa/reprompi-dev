@@ -29,6 +29,7 @@ add_executable(pgchecker
         pgtunelib_interface.cpp
 
         ${SRC_DIR}/benchmark_job.c
+        ${SRC_DIR}/benchmarkCollective.c
         ${SRC_DIR}/reprompi_bench/misc.c
         ${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
         # synchronization methods

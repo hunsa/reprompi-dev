@@ -254,6 +254,7 @@ ${SRC_DIR}/log/zf_log.c
 
 set(REPROMPIBENCH_FILES
 ${SRC_DIR}/benchmarkMPIcalls.c
+${SRC_DIR}/benchmarkCollective.c
 ${SRC_DIR}/benchmark_job.c
 ${SRC_DIR}/reprompi_bench/misc.c
 ${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
