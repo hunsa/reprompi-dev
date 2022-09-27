@@ -31,6 +31,7 @@
 
 #include "pgcheck_helper.h"
 #include "pgtunelib_interface.h"
+#include "pgdata.h"
 
 #include <iostream>
 #include <string>
@@ -71,6 +72,11 @@ int main(int argc, char *argv[]) {
 
       pgtune_override_argv_parameter(my_argc, my_argv);
       run_collective(my_argc, my_argv);
+      auto reprompi_output = exec_command("cat foo.txt");
+      PGData data(reprompi_output);
+//      for(auto& col : data.get_columns_names()) {
+//        std::cout << col << std::endl;
+//      }
     }
   }
 

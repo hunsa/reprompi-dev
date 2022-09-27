@@ -27,6 +27,7 @@ add_executable(pgchecker
         pgchecker.cpp
         pgcheck_helper.cpp
         pgtunelib_interface.cpp
+        pgdata.cpp
 
         ${SRC_DIR}/benchmark_job.c
         ${SRC_DIR}/benchmarkCollective.c
