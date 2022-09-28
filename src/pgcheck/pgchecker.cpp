@@ -32,6 +32,7 @@
 #include "pgcheck_helper.h"
 #include "pgtunelib_interface.h"
 #include "pgdata.h"
+#include "pgdata_comparer.h"
 
 #include <iostream>
 #include <string>
@@ -58,6 +59,7 @@ int main(int argc, char *argv[]) {
   auto pgtune_interface = PGTuneLibInterface(pginfo_data);
 
   for( auto& mpi_coll : pgtune_interface.get_available_mpi_collectives()) {
+    PGDataComparer pgd_comparer(mpi_coll);
     std::cout << mpi_coll << std::endl;
     auto mod_name = pgtune_interface.get_module_name_for_mpi_collectives(mpi_coll);
     for( auto& alg_version : pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll) ) {
@@ -72,12 +74,16 @@ int main(int argc, char *argv[]) {
 
       pgtune_override_argv_parameter(my_argc, my_argv);
       run_collective(my_argc, my_argv);
-      auto reprompi_output = exec_command("cat foo.txt");
-      PGData data(reprompi_output);
-//      for(auto& col : data.get_columns_names()) {
-//        std::cout << col << std::endl;
-//      }
+//      auto reprompi_output = exec_command("cat foo.txt");
+//      std::cout << reprompi_output << std::endl;
+
+      PGData data(mpi_coll, alg_version);
+      data.read_csv_from_file("foo.txt");
+      pgd_comparer.add_dataframe(mpi_coll, data);
     }
+
+    auto pgres = pgd_comparer.get_results();
+    std::cout << pgres << std::endl;
   }
 
 //  for(int i=0; i<argc; i++) {
