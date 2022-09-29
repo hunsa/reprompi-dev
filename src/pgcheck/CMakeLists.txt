@@ -10,12 +10,29 @@ else()
     message(STATUS "Logging for pgtunelib disabled")
 endif()
 
-ExternalProject_Add(pgtunelib
-        GIT_REPOSITORY git@hellogitty.par.tuwien.ac.at:hunold/pgtune_lib.git
-        GIT_TAG pgcheck
-        CMAKE_ARGS ${PGTUNE_CMAKE_ARGS}
-        PREFIX ${CMAKE_SOURCE_DIR}/external/
-        )
+
+set(OFFLINE_BUILD_MODE off CACHE BOOL "download a fresh copy of all dependencies")
+
+if (OFFLINE_BUILD_MODE)
+    message(STATUS "disable git pull")
+    ExternalProject_Add(pgtunelib
+            GIT_REPOSITORY git@hellogitty.par.tuwien.ac.at:hunold/pgtune_lib.git
+            GIT_TAG pgcheck
+            CMAKE_ARGS ${PGTUNE_CMAKE_ARGS}
+            PREFIX ${CMAKE_SOURCE_DIR}/external/
+            DOWNLOAD_COMMAND ""
+            UPDATE_DISCONNECTED 1
+    )
+else()
+    message(STATUS "enable git pull")
+    ExternalProject_Add(pgtunelib
+            GIT_REPOSITORY git@hellogitty.par.tuwien.ac.at:hunold/pgtune_lib.git
+            GIT_TAG pgcheck
+            CMAKE_ARGS ${PGTUNE_CMAKE_ARGS}
+            PREFIX ${CMAKE_SOURCE_DIR}/external/
+    )
+endif()
+
 
 ExternalProject_Get_Property(pgtunelib install_dir)
 set(PGTUNE_LIB_DIR ${install_dir}/src/pgtunelib-build/lib)

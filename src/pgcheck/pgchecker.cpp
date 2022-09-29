@@ -77,42 +77,14 @@ int main(int argc, char *argv[]) {
 //      auto reprompi_output = exec_command("cat foo.txt");
 //      std::cout << reprompi_output << std::endl;
 
-      PGData data(mpi_coll, alg_version);
-      data.read_csv_from_file("foo.txt");
-      pgd_comparer.add_dataframe(mpi_coll, data);
+      auto *data = new PGData(mpi_coll, alg_version);
+      data->read_csv_from_file("foo.txt");
+      pgd_comparer.add_dataframe(alg_version, data);
     }
 
     auto pgres = pgd_comparer.get_results();
     std::cout << pgres << std::endl;
   }
-
-//  for(int i=0; i<argc; i++) {
-//    std::cout << i << ":" << argv[i] << std::endl;
-//  }
-
-//  int nb_args = 5;
-//  int my_argc = nb_args+1;
-//  char **my_argv;
-//
-//  my_argv = (char**)malloc(my_argc * sizeof(char*));
-//  for(int i=0; i<my_argc; i++) {
-//    my_argv[i] = (char*)malloc(50*sizeof(char));
-//  }
-//  strcpy(my_argv[0], argv[0]);
-//  strcpy(my_argv[1], "--msizes-list=4,8");
-//  strcpy(my_argv[2], "--calls-list=MPI_Allreduce");
-//  strcpy(my_argv[3], "--nrep=10");
-//  strcpy(my_argv[4], "--output-file=foo.txt");
-//  strcpy(my_argv[5], "--module=allreduce=alg:default");
-//
-//  pgtune_override_argv_parameter(my_argc, my_argv);
-//  run_collective(my_argc, my_argv);
-//
-//  strcpy(my_argv[4], "--output-file=foo2.txt");
-//  strcpy(my_argv[5], "--module=allreduce=alg:allreduce_as_reduce_bcast");
-//
-//  pgtune_override_argv_parameter(my_argc, my_argv);
-//  run_collective(my_argc, my_argv);
 
   reprompib_deregister_sync_modules();
   reprompib_deregister_proc_sync_modules();

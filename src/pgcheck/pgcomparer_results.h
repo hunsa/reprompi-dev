@@ -10,12 +10,12 @@ class PGCompareResults {
 private:
   std::string mpi_name;
   std::vector<std::string> col_names;
-  std::unordered_map<std::string, std::vector<std::string>> col_values;
+  std::unordered_map<std::string, std::vector<std::string>> col_value_map;
 
 public:
   PGCompareResults(std::string mpi_name, std::vector<std::string> col_names);
   friend std::ostream& operator<< (std::ostream& out, const PGCompareResults& pgres);
-  void add_row(std::unordered_map<std::string,std::string> row_map);
+  void add_row(std::unordered_map<std::string,std::string>& row_map);
 };
 
 

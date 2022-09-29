@@ -69,7 +69,7 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
     // just use my own clock
     retClock = globalClock;
 
-    delete buf;
+    delete[] buf;
   } else {
     int bytes_to_receive = 0;
     char *buf;
@@ -133,7 +133,7 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
 
 //    retClock = globalClock->copyClock(c, comm, 0, my_rank);
 
-    delete buf;
+    delete[] buf;
   }
 
   ZF_LOGV("%d: sync clocks propagation END", my_rank);

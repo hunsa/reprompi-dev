@@ -39,13 +39,13 @@ GlobalClock* HCAClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
   int i, j, p;
 
   int master_rank = 0;
-  double *rtts_s;
-  int n_pingpongs = 1000;
+//  double *rtts_s;
+//  int n_pingpongs = 1000;
   int max_power_two, nrounds_step1;
   LinModel *linear_models, *tmp_linear_models;
   int running_power;
   int other_rank;
-  double current_rtt;
+//  double current_rtt;
   int nb_lm_to_comm;
   LinModel lm;
 

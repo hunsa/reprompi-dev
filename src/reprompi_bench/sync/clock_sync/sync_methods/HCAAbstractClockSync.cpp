@@ -93,7 +93,7 @@ LinModel HCAAbstractClockSync::learn_model(MPI_Comm comm, Clock &c, const int ro
   } else if (my_rank == other_rank) {
     double *xfit, *yfit;
     // double cov00, cov01, cov11, sumsq;
-    int fit;
+    // int fit;
     LinearModelFitter *fitter = new LinearModelFitterStandard();
 
     xfit = new double[n_fitpoints];
@@ -111,7 +111,8 @@ LinModel HCAAbstractClockSync::learn_model(MPI_Comm comm, Clock &c, const int ro
     }
 
 //    fit = gsl_fit_linear(xfit, 1, yfit, 1, n_fitpoints, &lm.intercept, &lm.slope, &cov00, &cov01, &cov11, &sumsq);
-    fit = fitter->fit_linear_model(xfit, yfit, n_fitpoints, &lm.slope, &lm.intercept);
+    // fit =
+    fitter->fit_linear_model(xfit, yfit, n_fitpoints, &lm.slope, &lm.intercept);
 
     delete[] xfit;
     delete[] yfit;
