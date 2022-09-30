@@ -3,13 +3,22 @@ include(ExternalProject)
 
 SET(PGTUNE_CMAKE_ARGS "")
 
+find_package(GSL REQUIRED)
+if (GSL_INCLUDE_DIR)
+    message (STATUS "GSL INCLUDES: ${GSL_INCLUDE_DIR}")
+else(GSL_INCLUDE_DIR)
+    message (FATAL_ERROR "GSL libraries not found.")
+endif(GSL_INCLUDE_DIR)
+
+INCLUDE_DIRECTORIES(${GSL_INCLUDE_DIR} "src")
+set(COMMON_LIBRARIES ${GSL_LIBRARIES} )
+
 if(OPTION_ENABLE_LOGGING)
     SET(PGTUNE_CMAKE_ARGS "-DOPTION_ENABLE_LOGGING=ON ${PGTUNE_OPTIONS}")
     message(STATUS "Logging for pgtunelib enabled, cmake args: ${PGTUNE_CMAKE_ARGS}")
 else()
     message(STATUS "Logging for pgtunelib disabled")
 endif()
-
 
 set(OFFLINE_BUILD_MODE off CACHE BOOL "download a fresh copy of all dependencies")
 
