@@ -173,7 +173,6 @@ void run_collective(int argc, char **argv) {
   }
   generate_job_list(&common_opts, opts.n_rep, &jlist);
 
-
   init_collective_basic_info(common_opts, procs, &coll_basic_info);
   // execute the benchmark jobs
   for (jindex = 0; jindex < jlist.n_jobs; jindex++) {
@@ -196,7 +195,6 @@ void run_collective(int argc, char **argv) {
     print_info.proc_sync  = &proc_sync;
     print_info.timing_method = runtime_type;
     if (jindex == 0) {
-      //print_initial_settings(&opts, &common_opts, &params_dict, &print_info);
       print_initial_settings(&opts, &common_opts, &print_info);
       print_results_header(&print_info, &opts, common_opts.output_file, opts.verbose);
     }
@@ -253,10 +251,8 @@ void run_collective(int argc, char **argv) {
   cleanup_job_list(jlist);
   reprompib_free_common_parameters(&common_opts);
   reprompib_free_parameters(&opts);
-//    reprompib_cleanup_dictionary(&params_dict);
+
   clock_sync.cleanup_module();
   proc_sync.cleanup_module();
-
   caching_module.cleanup_module();
-
 }

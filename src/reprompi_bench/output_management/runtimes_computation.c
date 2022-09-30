@@ -131,7 +131,6 @@ void compute_runtimes(int nrep, double* tstart_sec, double* tend_sec, int root_p
   sync_errorcodes = NULL;
   if (my_rank == root_proc) {
     maxRuntimes_sec = (double*) calloc(nrep, sizeof(double));
-
     if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {
       sync_errorcodes = (int*) calloc(nrep, sizeof(int));
       for (i = 0; i < nrep; i++) {

@@ -49,6 +49,13 @@ set(PGTUNE_INC_DIR ${install_dir}/src/pgtunelib-build/include)
 LINK_DIRECTORIES(${PGTUNE_LIB_DIR})
 INCLUDE_DIRECTORIES("${install_dir}/src/pgtunelib")
 
+execute_process(COMMAND ./external/src/pgtunelib-build/bin/pgmpi_info OUTPUT_VARIABLE PGMPI_INFO_OUTPUT)
+#string(STRIP ${PGMPI_INFO_OUTPUT} PGMPI_INFO_OUTPUT)
+#message(STATUS "MY_VAR=${GRPC_CPP_PLUGIN}")
+#file(WRITE "datestamp" "${outVar}")
+file(CONFIGURE OUTPUT "${install_dir}/src/pgtunelib-build/pgmpi_conf.csv"
+     CONTENT "${PGMPI_INFO_OUTPUT}")
+
 add_executable(pgchecker
         pgchecker.cpp
         pgcheck_helper.cpp
