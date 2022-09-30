@@ -7,6 +7,6 @@
 
 #include <string>
 
-std::string exec_command(const char* cmd);
+std::string exec_command(const std::string &command);
 
 #endif //REPROMPI_SRC_PGCHECK_PGCHECK_HELPER_H

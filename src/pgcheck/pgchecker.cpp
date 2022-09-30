@@ -38,8 +38,10 @@
 #include <string>
 
 int main(int argc, char *argv[]) {
+  int rank;
 
   MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   reprompib_register_sync_modules();
   reprompib_register_proc_sync_modules();
@@ -54,37 +56,43 @@ int main(int argc, char *argv[]) {
     my_argv[i] = (char*)malloc(100*sizeof(char));
   }
 
-  auto pginfo_data = exec_command("./external/src/pgtunelib-build/bin/pgmpi_info");
-  //std::cout << "DATA\n" << pginfo_data << "\nENDDATA" << std::endl;
-  auto pgtune_interface = PGTuneLibInterface(pginfo_data);
+  //auto pginfo_data = exec_command("./external/src/pgtunelib-build/bin/pgmpi_info");
+  auto pginfo_data = exec_command("ls");
+//  //std::cout << "DATA\n" << pginfo_data << "\nENDDATA" << std::endl;
+//  auto pgtune_interface = PGTuneLibInterface(pginfo_data);
 
-  for( auto& mpi_coll : pgtune_interface.get_available_mpi_collectives()) {
-    PGDataComparer pgd_comparer(mpi_coll);
-    std::cout << mpi_coll << std::endl;
-    auto mod_name = pgtune_interface.get_module_name_for_mpi_collectives(mpi_coll);
-    for( auto& alg_version : pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll) ) {
-      std::cout << mod_name << ":" << alg_version << std::endl;
+//  for( auto& mpi_coll : pgtune_interface.get_available_mpi_collectives()) {
+//    PGDataComparer pgd_comparer(mpi_coll);
+//    std::cout << mpi_coll << std::endl;
+//    auto mod_name = pgtune_interface.get_module_name_for_mpi_collectives(mpi_coll);
+//    for( auto& alg_version : pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll) ) {
+//      std::cout << mod_name << ":" << alg_version << std::endl;
+//
+//      strcpy(my_argv[0], argv[0]);
+//      strcpy(my_argv[1], "--msizes-list=4,8");
+//      strcpy(my_argv[2], ("--calls-list=" + mpi_coll).c_str());
+//      strcpy(my_argv[3], "--nrep=10");
+//      strcpy(my_argv[4], "--output-file=foo.txt");
+//      strcpy(my_argv[5], ("--module=" + mod_name + "=" + "alg:" + alg_version).c_str());
 
-      strcpy(my_argv[0], argv[0]);
-      strcpy(my_argv[1], "--msizes-list=4,8");
-      strcpy(my_argv[2], ("--calls-list=" + mpi_coll).c_str());
-      strcpy(my_argv[3], "--nrep=10");
-      strcpy(my_argv[4], "--output-file=foo.txt");
-      strcpy(my_argv[5], ("--module=" + mod_name + "=" + "alg:" + alg_version).c_str());
+//      pgtune_override_argv_parameter(my_argc, my_argv);
+//      run_collective(my_argc, my_argv);
 
-      pgtune_override_argv_parameter(my_argc, my_argv);
-      run_collective(my_argc, my_argv);
-//      auto reprompi_output = exec_command("cat foo.txt");
-//      std::cout << reprompi_output << std::endl;
+//      std::cout << rank << ": reading data" << std::endl;
+//      if(rank == 0) {
+//        auto *data = new PGData(mpi_coll, alg_version);
+//        data->read_csv_from_file("foo.txt");
+//        pgd_comparer.add_dataframe(alg_version, data);
+//      }
+//    }
 
-      auto *data = new PGData(mpi_coll, alg_version);
-      data->read_csv_from_file("foo.txt");
-      pgd_comparer.add_dataframe(alg_version, data);
-    }
+//    if(rank == 0) {
+//      auto pgres = pgd_comparer.get_results();
+//      std::cout << pgres << std::endl;
+//    }
 
-    auto pgres = pgd_comparer.get_results();
-    std::cout << pgres << std::endl;
-  }
+//    break;
+//  }
 
   reprompib_deregister_sync_modules();
   reprompib_deregister_proc_sync_modules();

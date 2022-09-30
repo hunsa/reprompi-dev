@@ -3,29 +3,34 @@
 //
 
 #include <cstdio>
-//#include <iostream>
-#include <memory>
-#include <stdexcept>
-//#include <string>
+#include <iostream>
 #include <array>
 
 /**
  * not my code
- * https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-the-output-of-the-command-within-c-using-po
+ * https://raymii.org/s/articles/Execute_a_command_and_get_both_output_and_exit_code.html
  * @param cmd
  * @return
  */
 
-std::string exec_command(const char* cmd) {
-  std::array<char, 128> buffer;
+std::string exec_command(const std::string &command) {
+  std::array<char, 1048576> buffer {};
   std::string result;
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-  if (!pipe) {
+
+  FILE *pipe = popen(command.c_str(), "r");
+  if (pipe == nullptr) {
     throw std::runtime_error("popen() failed!");
   }
-  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-    result += buffer.data();
+  try {
+    std::size_t bytesread;
+    while ((bytesread = std::fread(buffer.data(), sizeof(buffer.at(0)), sizeof(buffer), pipe)) != 0) {
+      result += std::string(buffer.data(), bytesread);
+    }
+  } catch (...) {
+    pclose(pipe);
+    throw;
   }
+  pclose(pipe);
   return result;
 }
 
