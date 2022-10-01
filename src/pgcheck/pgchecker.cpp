@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
     my_argv[i] = (char*)malloc(100*sizeof(char));
   }
 
-//  auto pginfo_data = exec_command("./external/src/pgtunelib-build/bin/pgmpi_info");
+  //auto pginfo_data = exec_command("./external/src/pgtunelib-build/bin/pgmpi_info");
 
   auto csv_conf = "./external/src/pgtunelib-build/pgmpi_conf.csv";
   std::ifstream ifs(csv_conf);
@@ -65,6 +65,7 @@ int main(int argc, char *argv[]) {
     if( rank == 0 ) {
       std::cerr << "Cannot find " << csv_conf << std::endl;
     }
+    exit(-1);
   }
 
   std::string pginfo_data( (std::istreambuf_iterator<char>(ifs) ),
@@ -75,19 +76,21 @@ int main(int argc, char *argv[]) {
 
   for( auto& mpi_coll : pgtune_interface.get_available_mpi_collectives()) {
     PGDataComparer pgd_comparer(mpi_coll);
-    std::cout << mpi_coll << std::endl;
+    if( rank == 0 ) {
+      std::cout << mpi_coll << std::endl;
+    }
     auto mod_name = pgtune_interface.get_module_name_for_mpi_collectives(mpi_coll);
     for( auto& alg_version : pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll) ) {
-      std::cout << mod_name << ":" << alg_version << std::endl;
-
+      if( rank == 0 ) {
+        std::cout << mod_name << ":" << alg_version << std::endl;
+      }
       strcpy(my_argv[0], argv[0]);
       strcpy(my_argv[1], "--msizes-list=4,8");
-      //strcpy(my_argv[1], "--msizes-list=4");
       strcpy(my_argv[2], ("--calls-list=" + mpi_coll).c_str());
       strcpy(my_argv[3], "--nrep=10");
       strcpy(my_argv[4], "--output-file=foo.txt");
-      //strcpy(my_argv[5], ("--module=" + mod_name + "=" + "alg:" + alg_version).c_str());
-      strcpy(my_argv[5], ("--module=" + mod_name + "=" + "alg:default").c_str());
+      strcpy(my_argv[5], ("--module=" + mod_name + "=" + "alg:" + alg_version).c_str());
+      //strcpy(my_argv[5], ("--module=" + mod_name + "=" + "alg:default").c_str());
 
       pgtune_override_argv_parameter(my_argc, my_argv);
       run_collective(my_argc, my_argv);
@@ -104,7 +107,7 @@ int main(int argc, char *argv[]) {
       auto pgres = pgd_comparer.get_results();
       std::cout << pgres << std::endl;
     }
-
+    break;
   }
 
   reprompib_deregister_sync_modules();

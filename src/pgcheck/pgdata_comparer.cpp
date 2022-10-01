@@ -38,7 +38,5 @@ PGCompareResults PGDataComparer::get_results() {
     }
   }
 
-  std::cout << res << std::endl;
-
   return res;
 }

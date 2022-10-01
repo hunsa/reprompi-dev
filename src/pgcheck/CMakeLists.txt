@@ -52,6 +52,11 @@ INCLUDE_DIRECTORIES("${install_dir}/src/pgtunelib")
 #execute_process(COMMAND ./external/src/pgtunelib-build/bin/pgmpi_info OUTPUT_VARIABLE PGMPI_INFO_OUTPUT)
 #file(CONFIGURE OUTPUT "${install_dir}/src/pgtunelib-build/pgmpi_conf.csv"
 #     CONTENT "${PGMPI_INFO_OUTPUT}")
+set(PGTUNE_CONFIG_CSV ${install_dir}/src/pgtunelib-build/pgmpi_conf.csv)
+add_custom_target(config
+        COMMAND  bash -c "exec ${install_dir}/src/pgtunelib-build/bin/pgmpi_info > ${PGTUNE_CONFIG_CSV}"
+        VERBATIM
+)
 
 add_executable(pgchecker
         pgchecker.cpp
