@@ -174,6 +174,7 @@ void run_collective(int argc, char **argv) {
   generate_job_list(&common_opts, opts.n_rep, &jlist);
 
   init_collective_basic_info(common_opts, procs, &coll_basic_info);
+
   // execute the benchmark jobs
   for (jindex = 0; jindex < jlist.n_jobs; jindex++) {
     job_t job;
@@ -189,7 +190,6 @@ void run_collective(int argc, char **argv) {
     sync_params.count = job.count;
     proc_sync.init_sync(&sync_params);
     clock_sync.init_sync();
-
 
     print_info.clock_sync = &clock_sync;
     print_info.proc_sync  = &proc_sync;
@@ -243,8 +243,7 @@ void run_collective(int argc, char **argv) {
 
     collective_calls[job.call_index].cleanup_data(&coll_params);
   }
-
-
+  
   end_time = time(NULL);
   print_final_info(&common_opts, start_time, end_time);
 

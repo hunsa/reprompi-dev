@@ -86,7 +86,8 @@ int main(int argc, char *argv[]) {
       strcpy(my_argv[2], ("--calls-list=" + mpi_coll).c_str());
       strcpy(my_argv[3], "--nrep=10");
       strcpy(my_argv[4], "--output-file=foo.txt");
-      strcpy(my_argv[5], ("--module=" + mod_name + "=" + "alg:" + alg_version).c_str());
+      //strcpy(my_argv[5], ("--module=" + mod_name + "=" + "alg:" + alg_version).c_str());
+      strcpy(my_argv[5], ("--module=" + mod_name + "=" + "alg:default").c_str());
 
       pgtune_override_argv_parameter(my_argc, my_argv);
       run_collective(my_argc, my_argv);

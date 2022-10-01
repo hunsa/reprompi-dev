@@ -27,7 +27,7 @@ if (OFFLINE_BUILD_MODE)
     ExternalProject_Add(pgtunelib
             GIT_REPOSITORY git@ophelia.par.tuwien.ac.at:hunold/pgtune_lib.git
             GIT_TAG pgcheck
-            CMAKE_ARGS ${PGTUNE_CMAKE_ARGS}
+            CMAKE_ARGS ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
             PREFIX ${CMAKE_SOURCE_DIR}/external/
             DOWNLOAD_COMMAND ""
             UPDATE_DISCONNECTED 1
@@ -37,7 +37,7 @@ else()
     ExternalProject_Add(pgtunelib
             GIT_REPOSITORY git@ophelia.par.tuwien.ac.at:hunold/pgtune_lib.git
             GIT_TAG pgcheck
-            CMAKE_ARGS ${PGTUNE_CMAKE_ARGS}
+            CMAKE_ARGS ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
             PREFIX ${CMAKE_SOURCE_DIR}/external/
     )
 endif()
@@ -49,12 +49,9 @@ set(PGTUNE_INC_DIR ${install_dir}/src/pgtunelib-build/include)
 LINK_DIRECTORIES(${PGTUNE_LIB_DIR})
 INCLUDE_DIRECTORIES("${install_dir}/src/pgtunelib")
 
-execute_process(COMMAND ./external/src/pgtunelib-build/bin/pgmpi_info OUTPUT_VARIABLE PGMPI_INFO_OUTPUT)
-#string(STRIP ${PGMPI_INFO_OUTPUT} PGMPI_INFO_OUTPUT)
-#message(STATUS "MY_VAR=${GRPC_CPP_PLUGIN}")
-#file(WRITE "datestamp" "${outVar}")
-file(CONFIGURE OUTPUT "${install_dir}/src/pgtunelib-build/pgmpi_conf.csv"
-     CONTENT "${PGMPI_INFO_OUTPUT}")
+#execute_process(COMMAND ./external/src/pgtunelib-build/bin/pgmpi_info OUTPUT_VARIABLE PGMPI_INFO_OUTPUT)
+#file(CONFIGURE OUTPUT "${install_dir}/src/pgtunelib-build/pgmpi_conf.csv"
+#     CONTENT "${PGMPI_INFO_OUTPUT}")
 
 add_executable(pgchecker
         pgchecker.cpp
