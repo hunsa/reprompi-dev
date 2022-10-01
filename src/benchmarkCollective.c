@@ -143,7 +143,7 @@ void run_collective(int argc, char **argv) {
   int is_invalid;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-  MPI_Comm_rank(MPI_COMM_WORLD, &procs);
+  MPI_Comm_size(MPI_COMM_WORLD, &procs);
 
   start_time = time(NULL);
 
@@ -243,7 +243,7 @@ void run_collective(int argc, char **argv) {
 
     collective_calls[job.call_index].cleanup_data(&coll_params);
   }
-  
+
   end_time = time(NULL);
   print_final_info(&common_opts, start_time, end_time);
 

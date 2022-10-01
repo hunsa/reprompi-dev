@@ -222,6 +222,7 @@ void initialize_common_data(const basic_collective_params_t info,
 
     MPI_Comm_rank(MPI_COMM_WORLD, &params->rank);
     params->nprocs = info.nprocs;
+    assert(params->nprocs > 0);
 
     params->root = info.root;
 
