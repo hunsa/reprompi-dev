@@ -91,21 +91,20 @@ int main(int argc, char *argv[]) {
 
       pgtune_override_argv_parameter(my_argc, my_argv);
       run_collective(my_argc, my_argv);
-//
+
 //      std::cout << rank << ": reading data" << std::endl;
-//      if(rank == 0) {
-//        auto *data = new PGData(mpi_coll, alg_version);
-//        data->read_csv_from_file("foo.txt");
-//        pgd_comparer.add_dataframe(alg_version, data);
-//      }
+      if(rank == 0) {
+        auto *data = new PGData(mpi_coll, alg_version);
+        data->read_csv_from_file("foo.txt");
+        pgd_comparer.add_dataframe(alg_version, data);
+      }
     }
 
-//    if(rank == 0) {
-//      auto pgres = pgd_comparer.get_results();
-//      std::cout << pgres << std::endl;
-//    }
+    if(rank == 0) {
+      auto pgres = pgd_comparer.get_results();
+      std::cout << pgres << std::endl;
+    }
 
-    break;
   }
 
   reprompib_deregister_sync_modules();
