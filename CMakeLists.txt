@@ -44,7 +44,7 @@ option(OPTION_PRINT_MSIZES_BYTES "Print message sizes in the output instead of M
 
 option(OPTION_ENABLE_LOGGING   "Enable logging" off)
 option(OPTION_ENABLE_DEBUGGING "Enable debugging" off)
-
+option(OPTION_ENABLE_PGCHECKER "Enable performance guidelines checking" off)
 
 ####################################
 ############ PGtune support ########
@@ -302,8 +302,6 @@ if (ENABLE_PGMPI)
         SET_TARGET_PROPERTIES(mpibenchmark_pgmpituned PROPERTIES LINKER_LANGUAGE CXX )
     endif(PGMPI_FOUND)
 
-    add_subdirectory(${SRC_DIR}/pgcheck)
-
 endif (ENABLE_PGMPI)
     
     
@@ -324,10 +322,15 @@ if (COMPILE_BENCH_LIBRARY)
     ADD_SUBDIRECTORY(${SRC_DIR}/sanity_check/libtests)
 endif()
 
-ADD_SUBDIRECTORY(${SRC_DIR}/pgcheck)
+if(OPTION_ENABLE_PGCHECKER)
+    message(STATUS "Enabled: performance guidelines checker." )
+    ADD_SUBDIRECTORY(${SRC_DIR}/pgcheck)
+else()
+    message(STATUS "Disabled: performance guidelines checker." )
+endif()
 
 
-set(CPACK_PACKAGE_VERSION_MAJOR "1")
+set(CPACK_PACKAGE_VERSION_MAJOR "2")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
 set(CPACK_PACKAGE_VERSION_PATCH "1")
 set(CPACK_SOURCE_GENERATOR "TBZ2")

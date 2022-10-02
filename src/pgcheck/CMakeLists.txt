@@ -65,6 +65,9 @@ add_executable(pgchecker
         pgdata.cpp
         pgdata_comparer.cpp
         pgcomparer_results.cpp
+        pgcheck_input.cpp
+        utils/string_utils.cpp
+        utils/argv_manager.cpp
 
         ${SRC_DIR}/benchmark_job.c
         ${SRC_DIR}/benchmarkCollective.c
