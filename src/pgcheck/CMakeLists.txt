@@ -1,4 +1,6 @@
 
+cmake_minimum_required(VERSION 3.22)
+
 include(ExternalProject)
 
 SET(PGTUNE_CMAKE_ARGS "")
@@ -27,6 +29,7 @@ if (OFFLINE_BUILD_MODE)
     ExternalProject_Add(pgtunelib
             GIT_REPOSITORY git@ophelia.par.tuwien.ac.at:hunold/pgtune_lib.git
             GIT_TAG pgcheck
+            GIT_SUBMODULES submodules/mpi-lane-collectives
             CMAKE_ARGS ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
             PREFIX ${CMAKE_SOURCE_DIR}/external/
             DOWNLOAD_COMMAND ""
@@ -37,6 +40,7 @@ else()
     ExternalProject_Add(pgtunelib
             GIT_REPOSITORY git@ophelia.par.tuwien.ac.at:hunold/pgtune_lib.git
             GIT_TAG pgcheck
+            GIT_SUBMODULES submodules/mpi-lane-collectives
             CMAKE_ARGS ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
             PREFIX ${CMAKE_SOURCE_DIR}/external/
     )
