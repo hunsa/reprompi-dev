@@ -25,7 +25,9 @@
 #include "collective_ops/collectives.h"
 #include "reprompi_bench/utils/keyvalue_store.h"
 #include "reprompi_bench/caching/caching.h"
+#include "reprompi_bench/sync/clock_sync/utils/communicator_utils.h"
 #include "benchmarkCollective.h"
+
 
 #include "pgmpi_tune.h"
 
@@ -66,9 +68,16 @@ void parse_options(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   int rank;
+  int ppn, nnodes, size;
+  MPI_Comm comm_intranode;
 
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+  create_intranode_communicator(MPI_COMM_WORLD, &comm_intranode);
+  MPI_Comm_size(comm_intranode, &ppn);
+  nnodes = size / ppn;
 
   parse_options(argc, argv);
 
@@ -119,7 +128,7 @@ int main(int argc, char *argv[]) {
     if( rank == 0 ) {
       std::cout << "Case " << case_id << ": " << mpi_coll << std::endl;
     }
-    PGDataComparer pgd_comparer(mpi_coll);
+    PGDataComparer pgd_comparer(mpi_coll, nnodes, ppn);
     auto mod_name = pgtune_interface.get_module_name_for_mpi_collectives(mpi_coll);
     for( auto& alg_version : pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll) ) {
       std::vector<std::string> pgtunelib_argv;
@@ -180,6 +189,8 @@ int main(int argc, char *argv[]) {
   reprompib_deregister_sync_modules();
   reprompib_deregister_proc_sync_modules();
   reprompib_deregister_caching_modules();
+
+  MPI_Comm_free(&comm_intranode);
 
   MPI_Finalize();
 

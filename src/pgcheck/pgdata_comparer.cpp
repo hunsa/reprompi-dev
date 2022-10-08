@@ -3,8 +3,8 @@
 #include <numeric>
 #include "pgdata_comparer.h"
 
-PGDataComparer::PGDataComparer(std::string mpi_coll_name) :
-mpi_coll_name(mpi_coll_name)
+PGDataComparer::PGDataComparer(std::string mpi_coll_name, int nnodes, int ppn) :
+mpi_coll_name(mpi_coll_name), nnodes(nnodes), ppn(ppn)
 {}
 
 void PGDataComparer::add_dataframe(std::string mockup_name, PGData *data) {
@@ -22,6 +22,7 @@ PGCompareResults PGDataComparer::get_results() {
   std::vector<std::string> col_names = { "mockup", "count", "runtime" };
   PGCompareResults res(mpi_coll_name, col_names);
 
+  std::cout << "nnodes: " << nnodes << " ppn: " << ppn << std::endl;
   //std::cout << "get_results for: " << mpi_coll_name << std::endl;
   for(auto& mdata : mockup2data) {
     auto& data = mockup2data.at(mdata.first);
