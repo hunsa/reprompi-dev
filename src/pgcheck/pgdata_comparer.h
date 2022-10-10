@@ -18,6 +18,7 @@ public:
   PGDataComparer(std::string mpi_coll_name);
   void add_dataframe(std::string mockup_name, PGData *data);
   PGCompareResults get_results();
+  PGCompareResults get_results_t_test();
 
 };
 

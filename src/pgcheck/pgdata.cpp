@@ -56,7 +56,14 @@ std::vector<std::string> PGData::get_columns_names() {
 }
 
 std::vector<double> PGData::get_runtimes_for_count(int count) {
-  auto rt = csv.GetColumn<double>("runtime_sec");
+
+  std::vector<double> rt;
+  for(int i = 0; i < csv.GetRowCount(); i++) {
+      if (csv.GetCell<int>("count",i) == count ) {
+        rt.push_back(csv.GetCell<double>("runtime_sec",i));
+      }
+  }
+
   return rt;
 }
 

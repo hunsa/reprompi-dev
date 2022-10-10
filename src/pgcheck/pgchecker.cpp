@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
     }
 
     if(rank == 0) {
-      auto pgres = pgd_comparer.get_results();
+      auto pgres = pgd_comparer.get_results_t_test();
       std::cout << pgres << std::endl;
     }
     //break;
