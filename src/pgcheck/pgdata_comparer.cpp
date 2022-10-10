@@ -31,17 +31,17 @@ template<typename T>
 static T standard_deviation(std::vector<T> v) {
     T sum = 0;
     T v_mean = mean(v);
-    for (int i = 0; i < v.size(); i++) {
-      sum = sum + (v[i] - v_mean) * (v[i] - v_mean);
+    for (size_t idx = 0; idx < v.size(); idx++) {
+      sum = sum + (v[idx] - v_mean) * (v[idx] - v_mean);
     }
     return sqrt(sum / v.size());
 }
 
 template<typename T>
-static T t_test(std::vector<T> v, std::pair<double,double> default_results) {
+static T t_test(std::vector<T> v, double default_mean) {
     double v_mean = mean(v);
     double v_standard_deviation = standard_deviation(v);
-    return (v_mean - default_results.first) / v_standard_deviation / sqrt(v.size());
+    return (v_mean - default_mean) / v_standard_deviation / sqrt(v.size());
 }
 
 
@@ -72,7 +72,7 @@ PGCompareResults PGDataComparer::get_results() {
 
 PGCompareResults PGDataComparer::get_results_t_test() {
 
-    std::vector<std::string> col_names = { "mockup", "count", "n", "runtime_mean", "runtime_median", "t_value", "critical_t_value", "violation"  };
+    std::vector<std::string> col_names = { "mockup", "count", "N", "ppn", "n", "runtime_mean", "runtime_median", "t_value", "critical_t_value", "violation"  };
     PGCompareResults res(mpi_coll_name, col_names);
 
     std::unordered_map<int, double> critical_t_values;
@@ -126,6 +126,8 @@ PGCompareResults PGDataComparer::get_results_t_test() {
 
             row["mockup"] = mdata.first;
             row["count"] = std::to_string(count);
+            row["N"] = std::to_string(nnodes);
+            row["ppn"] = std::to_string(ppn);
             row["n"] = std::to_string(rts.size());
             row["runtime_mean"] = std::to_string(mean_rts*1000);
             row["runtime_median"] = std::to_string(median_rts*1000);

@@ -58,10 +58,10 @@ std::vector<std::string> PGData::get_columns_names() {
 std::vector<double> PGData::get_runtimes_for_count(int count) {
 
   std::vector<double> rt;
-  for(int i = 0; i < csv.GetRowCount(); i++) {
-      if (csv.GetCell<int>("count",i) == count ) {
-        rt.push_back(csv.GetCell<double>("runtime_sec",i));
-      }
+  for(size_t rowIdx = 0; rowIdx < csv.GetRowCount(); rowIdx++) {
+    if (csv.GetCell<int>("count", rowIdx) == count ) {
+      rt.push_back(csv.GetCell<double>("runtime_sec", rowIdx));
+    }
   }
 
   return rt;
