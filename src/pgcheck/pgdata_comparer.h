@@ -7,6 +7,13 @@
 #include "pgdata.h"
 #include "pgcomparer_results.h"
 
+struct StatisticValues {
+    int size;
+    double mean;
+    double median;
+    double variance;
+};
+
 class PGDataComparer {
 
 private:
