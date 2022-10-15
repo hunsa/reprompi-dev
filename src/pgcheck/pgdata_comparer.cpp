@@ -32,14 +32,14 @@ static T median(std::vector<T> v) {
 
 template<typename T>
 static T variance(std::vector<T> v) {
-    T sum = 0;
-    T v_mean = mean(v);
-    for (size_t idx = 0; idx < v.size(); idx++) {
-      sum = sum + (v[idx] - v_mean) * (v[idx] - v_mean);
-    }
+    const size_t v_size = v.size();
+    const T v_mean = mean(v);
 
-    double standard_deviation = sqrt(sum / v.size());
-    return pow(standard_deviation, 2);
+    auto variance_function = [&v_mean, &v_size](T accumulator, const T& value) {
+        return accumulator + ((value - v_mean) * (value - v_mean) / (v_size - 1));
+    };
+
+    return std::accumulate(v.begin(), v.end(), 0.0, variance_function);
 }
 
 static double t_test(StatisticValues alternative_values, StatisticValues default_values) {
