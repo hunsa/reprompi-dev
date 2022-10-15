@@ -133,7 +133,7 @@ PGCompareResults PGDataComparer::get_results_t_test() {
             bool violation_rts = t_test_rts < -critical_rts || t_test_rts > critical_rts;
             if(df <= 20 && df >= 1) {
                 critical_rts = critical_t_values[df];
-                violation_rts = t_test_rts > critical_rts;
+                violation_rts = t_test_rts < -critical_rts || t_test_rts > critical_rts;
             }
 
             std::unordered_map<std::string, std::string> row;
