@@ -11,8 +11,8 @@ void PGDataComparer::add_dataframe(std::string mockup_name, PGData *data) {
   mockup2data.insert( {mockup_name, data} );
 }
 
-const double PGDataComparer::critical_t_values[] = { 0, 12.706205, 4.302653, 3.182446, 2.776445, 2.570582, 2.446912, 2.364624,2.306004, 2.262157,2.228139, 2.200985, 2.178813, 2.160369,2.144787,2.131450, 2.119905, 2.109816, 2.100922, 2.093024, 2.085963};
-const double PGDataComparer::normal_distribution_value = 1.959964;
+const double PGDataComparer::critical_t_values[] = { 0, 6.314, 2.919986, 2.353363, 2.131847, 2.015048, 1.943180, 1.894579,1.859548, 1.833113,1.812461, 1.795885, 1.782288, 1.770933,1.761310,1.753050, 1.745884, 1.739607, 1.734064, 1.729133, 1.724718};
+const double PGDataComparer::normal_distribution_value = 1.644854;
 
 template<typename T>
 static T mean(std::vector<T> v) {
@@ -130,10 +130,10 @@ PGCompareResults PGDataComparer::get_results_t_test() {
             int df = alternative_values.size+default_data_results.at(count).size-2;
             double t_test_rts = t_test(alternative_values, default_data_results.at(count));
             double critical_rts = normal_distribution_value;
-            bool violation_rts = t_test_rts < -critical_rts || t_test_rts > critical_rts;
+            bool violation_rts = t_test_rts < -critical_rts;
             if(df <= 20 && df >= 1) {
                 critical_rts = critical_t_values[df];
-                violation_rts = t_test_rts < -critical_rts || t_test_rts > critical_rts;
+                violation_rts = t_test_rts < -critical_rts;
             }
 
             std::unordered_map<std::string, std::string> row;
