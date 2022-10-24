@@ -11,7 +11,7 @@ private:
   std::string mpi_name;
   std::vector<std::string> col_names;
   std::unordered_map<std::string, std::vector<std::string>> col_value_map;
-
+  const static int col_widths[];
 public:
   PGCompareResults(std::string mpi_name, std::vector<std::string> col_names);
   friend std::ostream& operator<< (std::ostream& out, const PGCompareResults& pgres);

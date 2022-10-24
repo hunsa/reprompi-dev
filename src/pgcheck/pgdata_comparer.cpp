@@ -77,8 +77,9 @@ PGCompareResults PGDataComparer::get_results() {
 
 PGCompareResults PGDataComparer::get_results_t_test() {
 
-    std::vector<std::string> col_names = { "mockup", "count", "N", "ppn", "n", "runtime_mean", "runtime_median", "t_value", "critical_t_value", "violation"  };
+    std::vector<std::string> col_names = { "collective", "count", "N", "ppn", "n", "default_median", "slowdown", "mockup", "mockup_median" };
     PGCompareResults res(mpi_coll_name, col_names);
+    std::unordered_map<int, std::pair<std::string, double>> fastest_mockup;
 
     std::unordered_map<int, StatisticValues> default_data_results;
 
@@ -87,6 +88,8 @@ PGCompareResults PGDataComparer::get_results_t_test() {
 
         auto rts_default = default_data->get_runtimes_for_count(count);
 
+        fastest_mockup.insert(std::make_pair(count, std::make_pair("", 0)));
+
         StatisticValues default_values;
         default_values.size = rts_default.size();
         default_values.mean = mean(rts_default);
@@ -94,16 +97,13 @@ PGCompareResults PGDataComparer::get_results_t_test() {
         default_values.variance = variance(rts_default);
 
         std::unordered_map<std::string, std::string> row;
-        row["mockup"] = "default";
+
+        row["collective"] = mpi_coll_name;
         row["count"] = std::to_string(count);
         row["N"] = std::to_string(nnodes);
         row["ppn"] = std::to_string(ppn);
         row["n"] = std::to_string(default_values.size);
-        row["runtime_mean"] = std::to_string(default_values.mean*1000);
-        row["runtime_median"] = std::to_string(default_values.median*1000);
-        row["critical_t_value"] = "";
-        row["t_value"] = "";
-        row["violation"] = "";
+        row["default_median"] = std::to_string(default_values.median*1000);
 
         res.add_row(row);
         default_data_results.insert(std::make_pair(count, default_values));
@@ -117,6 +117,7 @@ PGCompareResults PGDataComparer::get_results_t_test() {
         }
 
         auto& data = mockup2data.at(mdata.first);
+
         for(auto& count : data->get_unique_counts()) {
 
             auto rts = data->get_runtimes_for_count(count);
@@ -136,17 +137,28 @@ PGCompareResults PGDataComparer::get_results_t_test() {
                 violation_rts = t_test_rts < -critical_rts;
             }
 
+            if(violation_rts == 1 && ((alternative_values.median < fastest_mockup.at(count).second) || fastest_mockup.at(count).second == 0)) {
+                fastest_mockup[count].first = mdata.first;
+                fastest_mockup[count].second = alternative_values.median;
+            }
+        }
+    }
+
+    for (auto& count: fastest_mockup) {
+
+        auto& data = fastest_mockup.at(count.first);
+
+        if(data.second != 0) {
             std::unordered_map<std::string, std::string> row;
-            row["mockup"] = mdata.first;
-            row["count"] = std::to_string(count);
-            row["N"] = std::to_string(nnodes);
-            row["ppn"] = std::to_string(ppn);
-            row["n"] = std::to_string(alternative_values.size);
-            row["runtime_mean"] = std::to_string(alternative_values.mean*1000);
-            row["runtime_median"] = std::to_string(alternative_values.median*1000);
-            row["t_value"] = std::to_string(t_test_rts);
-            row["critical_t_value"] = std::to_string(critical_rts);
-            row["violation"] = std::to_string(violation_rts);
+            row["slowdown"] = std::to_string(default_data_results.at(count.first).median / data.second);
+            row["mockup"] = data.first;
+            row["mockup_median"] = std::to_string(data.second);
+            res.add_row(row);
+        } else {
+            std::unordered_map<std::string, std::string> row;
+            row["slowdown"] = "";
+            row["mockup"] = "";
+            row["mockup_median"] = "";
             res.add_row(row);
         }
     }
