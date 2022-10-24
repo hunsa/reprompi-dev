@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
     }
 
     if(rank == 0) {
-      auto pgres = pgd_comparer.get_results_t_test();
+      auto pgres = pgd_comparer.get_results_grouped();
       std::cout << pgres << std::endl;
     }
     //break;

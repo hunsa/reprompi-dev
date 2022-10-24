@@ -12,6 +12,8 @@ struct StatisticValues {
     double mean;
     double median;
     double variance;
+    std::string mockup;
+    double mockup_median;
 };
 
 class PGDataComparer {
@@ -30,6 +32,7 @@ public:
   void add_dataframe(std::string mockup_name, PGData *data);
   PGCompareResults get_results();
   PGCompareResults get_results_t_test();
+  PGCompareResults get_results_grouped();
 
 };
 
