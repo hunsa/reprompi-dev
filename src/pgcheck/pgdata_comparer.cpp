@@ -152,7 +152,7 @@ PGCompareResults PGDataComparer::get_results_t_test() {
             std::unordered_map<std::string, std::string> row;
             row["slowdown"] = std::to_string(default_data_results.at(count.first).median / data.second);
             row["mockup"] = data.first;
-            row["mockup_median"] = std::to_string(data.second);
+            row["mockup_median"] = std::to_string(data.second*1000);
             res.add_row(row);
         } else {
             std::unordered_map<std::string, std::string> row;
