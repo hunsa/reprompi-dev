@@ -183,8 +183,7 @@ int main(int argc, char *argv[]) {
 
     if(rank == 0) {
       auto pgres = pgd_comparer.get_results();
-      std::cout << pgres->get() << std::endl;
-      delete pgres;
+      std::cout << pgres << std::endl;
     }
     //break;
   }

@@ -83,10 +83,10 @@ TTestComparer::TTestComparer(std::string mpi_coll_name, int nnodes, int ppn) :
   PGDataComparer(mpi_coll_name, nnodes, ppn)
 {}
 
-PGCompareResults* TTestComparer::get_results() {
+std::string TTestComparer::get_results() {
 
   std::vector<std::string> col_names = { "mockup", "count", "N", "ppn", "n", "runtime_mean", "runtime_median", "t_value", "critical_t_value", "violation"  };
-  TTestResults* res = new TTestResults(mpi_coll_name, col_names);
+  TTestResults res(mpi_coll_name, col_names);
 
   std::unordered_map<int, StatisticValues> default_data_results;
 
@@ -113,7 +113,7 @@ PGCompareResults* TTestComparer::get_results() {
     row["t_value"] = "";
     row["violation"] = "";
 
-    res->add_row(row);
+    res.add_row(row);
     default_data_results.insert(std::make_pair(count, default_values));
 
   }
@@ -155,9 +155,9 @@ PGCompareResults* TTestComparer::get_results() {
       row["t_value"] = std::to_string(t_test_rts);
       row["critical_t_value"] = std::to_string(critical_rts);
       row["violation"] = std::to_string(violation_rts);
-      res->add_row(row);
+      res.add_row(row);
     }
   }
 
-  return res;
+  return res.get();
 }

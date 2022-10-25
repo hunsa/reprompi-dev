@@ -13,13 +13,6 @@ struct StatisticValues {
     double variance;
 };
 
-class PGCompareResults {
-
-public:
-  virtual std::string get() = 0;
-  virtual ~PGCompareResults() {};
-};
-
 class PGDataComparer {
 
 protected:
@@ -34,7 +27,7 @@ public:
 
   PGDataComparer(std::string mpi_coll_name, int nnodes, int ppn);
   void add_dataframe(std::string mockup_name, PGData *data);
-  virtual PGCompareResults* get_results() = 0;
+  virtual std::string get_results() = 0;
 
 };
 

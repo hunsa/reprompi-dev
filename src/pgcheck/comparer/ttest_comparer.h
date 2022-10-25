@@ -12,10 +12,10 @@ class TTestComparer : public PGDataComparer {
 
 public:
   TTestComparer(std::string mpi_coll_name, int nnodes, int ppn);
-  PGCompareResults* get_results();
+  std::string get_results();
 };
 
-class TTestResults : public PGCompareResults {
+class TTestResults {
 
 private:
   std::string mpi_name;
