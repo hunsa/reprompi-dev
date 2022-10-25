@@ -43,6 +43,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <numeric>
 
 static std::string input_file = "";
 
@@ -98,17 +99,6 @@ int main(int argc, char *argv[]) {
 
   PGInput input(input_file);
 
-//  int nb_args = 5;
-//  int my_argc = nb_args+1;
-//  char **my_argv;
-//
-//  my_argv = (char**)malloc(my_argc * sizeof(char*));
-//  for(int i=0; i<my_argc; i++) {
-//    my_argv[i] = (char*)malloc(100*sizeof(char));
-//  }
-
-  //auto pginfo_data = exec_command("./external/src/pgtunelib-build/bin/pgmpi_info");
-
   auto csv_conf = "./external/src/pgtunelib-build/pgmpi_conf.csv";
   std::ifstream ifs(csv_conf);
   if(! ifs.good() ) {
@@ -118,6 +108,26 @@ int main(int argc, char *argv[]) {
     exit(-1);
   }
 
+  // run a barrier test
+  auto barrier_options = "--calls-list=MPI_Barrier --msizes-list=1 --nrep=500 --proc-sync=roundtime --rt-bench-time-ms=2000 --bcast-nrep=1 --rt-barrier-count=0 --output-file=barrier.txt";
+  std::vector<std::string> barrier_argv_vector;
+  auto foo = std::vector<std::string>();
+  argv::compose_argv_vector(argv[0], barrier_options, foo, barrier_argv_vector);
+  int argc_test=0;
+  char **argv_test;
+  argv::convert_vector_to_argv_cstyle(barrier_argv_vector, &argc_test, &argv_test);
+  pgtune_override_argv_parameter(argc_test, argv_test);
+  run_collective(argc_test, argv_test);
+  argv::free_argv_cstyle(argc_test, argv_test);
+  if(rank == 0) {
+    auto data = new PGData("MPI_Barrier", "default");
+    data->read_csv_from_file("barrier.txt");
+    auto vals = data->get_runtimes_for_count(1);
+    double sum = std::accumulate(vals.begin(), vals.end(), 0.0);
+    double mean = sum / vals.size();
+    std::cout << "mean barrier: " << mean << std::endl;
+  }
+  
   std::string pginfo_data( (std::istreambuf_iterator<char>(ifs) ),
                            (std::istreambuf_iterator<char>()    ) );
 
@@ -137,15 +147,6 @@ int main(int argc, char *argv[]) {
       if( rank == 0 ) {
         std::cout << mod_name << ":" << alg_version << std::endl;
       }
-
-
-//      strcpy(my_argv[0], argv[0]);
-//      strcpy(my_argv[1], "--msizes-list=4,8");
-//      strcpy(my_argv[2], ("--calls-list=" + mpi_coll).c_str());
-//      strcpy(my_argv[3], "--nrep=10");
-//      strcpy(my_argv[4], "--output-file=foo.txt");
-//      strcpy(my_argv[5], ("--module=" + mod_name + "=" + "alg:" + alg_version).c_str());
-      //strcpy(my_argv[5], ("--module=" + mod_name + "=" + "alg:default").c_str());
 
       std::string call_options = input.get_call_options_for_case_id(case_id);
       pgtunelib_argv.push_back("--calls-list=" + mpi_coll);
