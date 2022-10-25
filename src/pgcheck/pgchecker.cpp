@@ -68,6 +68,34 @@ void parse_options(int argc, char *argv[]) {
   }
 }
 
+
+static double get_barrier_runtime() {
+  double mean = -1.0;
+  int rank;
+  // run a barrier test
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  auto barrier_options = "--calls-list=MPI_Barrier --msizes-list=1 --nrep=500 --proc-sync=roundtime --rt-bench-time-ms=2000 --bcast-nrep=1 --rt-barrier-count=0 --output-file=barrier.txt";
+  std::vector<std::string> barrier_argv_vector;
+  auto foo = std::vector<std::string>();
+  argv::compose_argv_vector("dummy", barrier_options, foo, barrier_argv_vector);
+  int argc_test=0;
+  char **argv_test;
+  argv::convert_vector_to_argv_cstyle(barrier_argv_vector, &argc_test, &argv_test);
+  pgtune_override_argv_parameter(argc_test, argv_test);
+  run_collective(argc_test, argv_test);
+  argv::free_argv_cstyle(argc_test, argv_test);
+  if(rank == 0) {
+    auto data = new PGData("MPI_Barrier", "default");
+    data->read_csv_from_file("barrier.txt");
+    auto vals = data->get_runtimes_for_count(1);
+    double sum = std::accumulate(vals.begin(), vals.end(), 0.0);
+    mean = sum / vals.size();
+  }
+  MPI_Bcast(&mean, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  return mean;
+}
+
 int main(int argc, char *argv[]) {
   int rank;
   int ppn, nnodes, size;
@@ -97,6 +125,13 @@ int main(int argc, char *argv[]) {
     }
   }
 
+
+  double barrier_mean = get_barrier_runtime();
+  if(rank == 0) {
+    std::cout << "mean barrier: " << barrier_mean << std::endl;
+  }
+
+
   PGInput input(input_file);
 
   auto csv_conf = "./external/src/pgtunelib-build/pgmpi_conf.csv";
@@ -108,26 +143,6 @@ int main(int argc, char *argv[]) {
     exit(-1);
   }
 
-  // run a barrier test
-  auto barrier_options = "--calls-list=MPI_Barrier --msizes-list=1 --nrep=500 --proc-sync=roundtime --rt-bench-time-ms=2000 --bcast-nrep=1 --rt-barrier-count=0 --output-file=barrier.txt";
-  std::vector<std::string> barrier_argv_vector;
-  auto foo = std::vector<std::string>();
-  argv::compose_argv_vector(argv[0], barrier_options, foo, barrier_argv_vector);
-  int argc_test=0;
-  char **argv_test;
-  argv::convert_vector_to_argv_cstyle(barrier_argv_vector, &argc_test, &argv_test);
-  pgtune_override_argv_parameter(argc_test, argv_test);
-  run_collective(argc_test, argv_test);
-  argv::free_argv_cstyle(argc_test, argv_test);
-  if(rank == 0) {
-    auto data = new PGData("MPI_Barrier", "default");
-    data->read_csv_from_file("barrier.txt");
-    auto vals = data->get_runtimes_for_count(1);
-    double sum = std::accumulate(vals.begin(), vals.end(), 0.0);
-    double mean = sum / vals.size();
-    std::cout << "mean barrier: " << mean << std::endl;
-  }
-  
   std::string pginfo_data( (std::istreambuf_iterator<char>(ifs) ),
                            (std::istreambuf_iterator<char>()    ) );
 
