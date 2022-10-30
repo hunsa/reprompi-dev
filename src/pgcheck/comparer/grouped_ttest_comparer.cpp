@@ -51,25 +51,27 @@ GroupedTTestResults::GroupedTTestResults(std::string mpi_name, std::vector<std::
 }
 
 std::string GroupedTTestResults::get() {
-  std::string res = "";
+  std::stringstream res;
 
-  res.append("MPI Collective: " + this->mpi_name + "\n");
+  res << "MPI Collective: " << this->mpi_name << "\n";
 
+  int idx = 0;
   for(auto& colname : this->col_names) {
-    res.append(colname + " ");
+    res << std::setw(col_widths[idx++]) << colname << " ";
   }
-  res.append("\n");
+  res << "\n";
 
   int nb_rows = this->col_value_map.at(this->col_names[0]).size();
   for(int i=0; i<nb_rows; i++) {
+    idx = 0;
     for(auto& colname : this->col_names) {
       auto & values = this->col_value_map.at(colname);
-      res.append(values[i] + " ");
+      res << std::setw(col_widths[idx++]) << values[i] << " ";
     }
-    res.append("\n");
+    res << "\n";
   }
 
-  return res;
+  return res.str();
 }
 
 void GroupedTTestResults::add_row(std::unordered_map<std::string,std::string>& row_map) {

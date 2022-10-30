@@ -4,7 +4,6 @@
 
 #include "default_comparer.h"
 #include <numeric>
-#include <iomanip>
 
 static const int col_widths[] = { 50, 10, 10 };
 

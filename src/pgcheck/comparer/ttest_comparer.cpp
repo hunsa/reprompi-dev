@@ -7,6 +7,7 @@
 
 static const double critical_t_values[] = { 0, 6.314, 2.919986, 2.353363, 2.131847, 2.015048, 1.943180, 1.894579,1.859548, 1.833113,1.812461, 1.795885, 1.782288, 1.770933,1.761310,1.753050, 1.745884, 1.739607, 1.734064, 1.729133, 1.724718};
 static const double normal_distribution_value = 1.644854;
+static const int col_widths[] = { 50, 15, 5, 5, 10, 15, 15, 15, 15,  5 };
 
 template<typename T>
 static T mean(std::vector<T> v) {
@@ -50,25 +51,27 @@ TTestResults::TTestResults(std::string mpi_name, std::vector<std::string> col_na
 }
 
 std::string TTestResults::get() {
-  std::string res = "";
+  std::stringstream res;
 
-  res.append("MPI Collective: " + this->mpi_name + "\n");
+  res << "MPI Collective: " << this->mpi_name << "\n";
 
+  int idx = 0;
   for(auto& colname : this->col_names) {
-    res.append(colname + " ");
+    res << std::setw(col_widths[idx++]) << colname << " ";
   }
-  res.append("\n");
+  res << "\n";
 
   int nb_rows = this->col_value_map.at(this->col_names[0]).size();
   for(int i=0; i<nb_rows; i++) {
+    idx = 0;
     for(auto& colname : this->col_names) {
       auto & values = this->col_value_map.at(colname);
-      res.append(values[i] + " ");
+      res << std::setw(col_widths[idx++]) << values[i] << " ";
     }
-    res.append("\n");
+    res << "\n";
   }
 
-  return res;
+  return res.str();
 }
 
 void TTestResults::add_row(std::unordered_map<std::string,std::string>& row_map) {
