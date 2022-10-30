@@ -7,10 +7,12 @@
 #include "pgdata.h"
 
 struct StatisticValues {
-    int size;
-    double mean;
-    double median;
-    double variance;
+  int size;
+  double mean;
+  double median;
+  double variance;
+  std::string mockup;
+  double mockup_median;
 };
 
 class PGDataComparer {

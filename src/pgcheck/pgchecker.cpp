@@ -35,7 +35,9 @@
 #include "pgtunelib_interface.h"
 #include "pgdata.h"
 #include "pgdata_comparer.h"
+#include "comparer/default_comparer.h"
 #include "comparer/ttest_comparer.h"
+#include "comparer/grouped_ttest_comparer.h"
 #include "pgcheck_input.h"
 #include "utils/argv_manager.h"
 
@@ -155,7 +157,7 @@ int main(int argc, char *argv[]) {
       std::cout << "Case " << case_id << ": " << mpi_coll << std::endl;
     }
     //PGDataComparer pgd_comparer(mpi_coll, nnodes, ppn);
-    TTestComparer pgd_comparer(mpi_coll, nnodes, ppn);
+    DefaultComparer pgd_comparer(mpi_coll, nnodes, ppn);
     auto mod_name = pgtune_interface.get_module_name_for_mpi_collectives(mpi_coll);
     for( auto& alg_version : pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll) ) {
       std::vector<std::string> pgtunelib_argv;
