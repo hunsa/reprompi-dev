@@ -6,7 +6,6 @@
 #define REPROMPI_DEV_SRC_PGCHECK_COMPARER_GROUPED_TTEST_COMPARER_H
 
 #include "../pgdata_comparer.h"
-#include "../comparer/comparer_data.h"
 #include <string>
 
 class GroupedTTestComparer : public PGDataComparer {

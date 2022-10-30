@@ -14,19 +14,18 @@ class ComparerData {
 
 public:
   ComparerData(int size, double mean, double median, double variance);
-  double get_fastest_mockup_median();
   int get_size();
-  double get_mean();
+  double get_mean_ms();
   double get_median();
   double get_median_ms();
-  double get_fastest_mockup_median_ms();
-  double get_variance();
   bool is_violated();
-  double get_slowdown();
+  bool get_violation(ComparerData data);
   std::string get_fastest_mockup();
   void set_fastest_mockup(std::string mockup, double mockup_median);
+  double get_critical_t_value(int alt_size);
+  double get_fastest_mockup_median_ms();
+  double get_slowdown();
   double get_t_test(ComparerData data);
-  bool get_violation(ComparerData data);
 
 private:
   int size;
@@ -36,6 +35,8 @@ private:
   bool violation;
   std::string fastest_mockup;
   double fastest_mockup_median;
+  double get_mean();
+  double get_variance();
 };
 
 

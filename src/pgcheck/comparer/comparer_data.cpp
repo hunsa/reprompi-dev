@@ -28,15 +28,16 @@ double ComparerData::get_t_test(ComparerData alt_res) {
 }
 
 bool ComparerData::get_violation(ComparerData alt_res) {
-  double t_test = get_t_test(alt_res);
-  int df = size + alt_res.get_size() - 2;
+  return get_t_test(alt_res) < -get_critical_t_value(alt_res.get_size());
+}
+
+double ComparerData::get_critical_t_value(int alt_size) {
+  int df = size + alt_size - 2;
   double critical = normal_distribution_value;
-  bool current_violation = t_test < -critical;
   if (df <= 20 && df >= 1) {
     critical = critical_t_values[df];
-    current_violation = t_test < -critical;
   }
-  return current_violation;
+  return critical;
 }
 
 int ComparerData::get_size() {
@@ -45,6 +46,10 @@ int ComparerData::get_size() {
 
 double ComparerData::get_mean() {
   return mean;
+}
+
+double ComparerData::get_mean_ms() {
+  return mean * 1000;
 }
 
 double ComparerData::get_median() {
@@ -61,10 +66,6 @@ double ComparerData::get_variance() {
 
 double ComparerData::get_slowdown() {
   return median / fastest_mockup_median;
-}
-
-double ComparerData::get_fastest_mockup_median() {
-  return fastest_mockup_median;
 }
 
 double ComparerData::get_fastest_mockup_median_ms() {
