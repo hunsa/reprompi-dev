@@ -35,6 +35,7 @@
 #include "pgtunelib_interface.h"
 #include "pgdata.h"
 #include "pgdata_comparer.h"
+#include "comparer/ttest_comparer.h"
 #include "pgcheck_input.h"
 #include "utils/argv_manager.h"
 
@@ -42,6 +43,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <numeric>
 
 static std::string input_file = "";
 
@@ -64,6 +66,34 @@ void parse_options(int argc, char *argv[]) {
       break;
     }
   }
+}
+
+
+static double get_barrier_runtime() {
+  double mean = -1.0;
+  int rank;
+  // run a barrier test
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  auto barrier_options = "--calls-list=MPI_Barrier --msizes-list=1 --nrep=500 --proc-sync=roundtime --rt-bench-time-ms=2000 --bcast-nrep=1 --rt-barrier-count=0 --output-file=barrier.txt";
+  std::vector<std::string> barrier_argv_vector;
+  auto foo = std::vector<std::string>();
+  argv::compose_argv_vector("dummy", barrier_options, foo, barrier_argv_vector);
+  int argc_test=0;
+  char **argv_test;
+  argv::convert_vector_to_argv_cstyle(barrier_argv_vector, &argc_test, &argv_test);
+  pgtune_override_argv_parameter(argc_test, argv_test);
+  run_collective(argc_test, argv_test);
+  argv::free_argv_cstyle(argc_test, argv_test);
+  if(rank == 0) {
+    auto data = new PGData("MPI_Barrier", "default");
+    data->read_csv_from_file("barrier.txt");
+    auto vals = data->get_runtimes_for_count(1);
+    double sum = std::accumulate(vals.begin(), vals.end(), 0.0);
+    mean = sum / vals.size();
+  }
+  MPI_Bcast(&mean, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  return mean;
 }
 
 int main(int argc, char *argv[]) {
@@ -95,18 +125,14 @@ int main(int argc, char *argv[]) {
     }
   }
 
+
+  double barrier_mean = get_barrier_runtime();
+  if(rank == 0) {
+    std::cout << "mean barrier: " << barrier_mean << std::endl;
+  }
+
+
   PGInput input(input_file);
-
-//  int nb_args = 5;
-//  int my_argc = nb_args+1;
-//  char **my_argv;
-//
-//  my_argv = (char**)malloc(my_argc * sizeof(char*));
-//  for(int i=0; i<my_argc; i++) {
-//    my_argv[i] = (char*)malloc(100*sizeof(char));
-//  }
-
-  //auto pginfo_data = exec_command("./external/src/pgtunelib-build/bin/pgmpi_info");
 
   auto csv_conf = "./external/src/pgtunelib-build/pgmpi_conf.csv";
   std::ifstream ifs(csv_conf);
@@ -128,22 +154,14 @@ int main(int argc, char *argv[]) {
     if( rank == 0 ) {
       std::cout << "Case " << case_id << ": " << mpi_coll << std::endl;
     }
-    PGDataComparer pgd_comparer(mpi_coll, nnodes, ppn);
+    //PGDataComparer pgd_comparer(mpi_coll, nnodes, ppn);
+    TTestComparer pgd_comparer(mpi_coll, nnodes, ppn);
     auto mod_name = pgtune_interface.get_module_name_for_mpi_collectives(mpi_coll);
     for( auto& alg_version : pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll) ) {
       std::vector<std::string> pgtunelib_argv;
       if( rank == 0 ) {
         std::cout << mod_name << ":" << alg_version << std::endl;
       }
-
-
-//      strcpy(my_argv[0], argv[0]);
-//      strcpy(my_argv[1], "--msizes-list=4,8");
-//      strcpy(my_argv[2], ("--calls-list=" + mpi_coll).c_str());
-//      strcpy(my_argv[3], "--nrep=10");
-//      strcpy(my_argv[4], "--output-file=foo.txt");
-//      strcpy(my_argv[5], ("--module=" + mod_name + "=" + "alg:" + alg_version).c_str());
-      //strcpy(my_argv[5], ("--module=" + mod_name + "=" + "alg:default").c_str());
 
       std::string call_options = input.get_call_options_for_case_id(case_id);
       pgtunelib_argv.push_back("--calls-list=" + mpi_coll);
@@ -180,7 +198,7 @@ int main(int argc, char *argv[]) {
     }
 
     if(rank == 0) {
-      auto pgres = pgd_comparer.get_results_grouped();
+      auto pgres = pgd_comparer.get_results();
       std::cout << pgres << std::endl;
     }
     //break;

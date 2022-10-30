@@ -68,7 +68,7 @@ add_executable(pgchecker
         pgtunelib_interface.cpp
         pgdata.cpp
         pgdata_comparer.cpp
-        pgcomparer_results.cpp
+        comparer/ttest_comparer.cpp
         pgcheck_input.cpp
         utils/string_utils.cpp
         utils/argv_manager.cpp
