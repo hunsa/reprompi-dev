@@ -3,51 +3,11 @@
 //
 
 #include "grouped_ttest_comparer.h"
-#include <numeric>
 
-static const double critical_t_values[] = { 0, 6.314, 2.919986, 2.353363, 2.131847, 2.015048, 1.943180, 1.894579,1.859548, 1.833113,1.812461, 1.795885, 1.782288, 1.770933,1.761310,1.753050, 1.745884, 1.739607, 1.734064, 1.729133, 1.724718};
-static const double normal_distribution_value = 1.644854;
-static const int col_widths[] = { 15, 15, 5, 5, 5, 15, 10, 50, 15 };
+static const int col_widths[] = {15, 15, 5, 5, 5, 15, 10, 50, 15};
 
-template<typename T>
-static T mean(std::vector<T> v) {
-  T sum = std::accumulate(v.begin(), v.end(), 0.0);
-  return sum/v.size();
-}
-
-template<typename T>
-static T median(std::vector<T> v) {
-  sort(v.begin(), v.end());
-  if (v.size() % 2 == 0) {
-    return (v[v.size() / 2] + v[v.size() / 2 - 1]) / 2;
-  } else {
-    return v[v.size() / 2];
-  }
-}
-
-template<typename T>
-static T variance(std::vector<T> v) {
-  const size_t v_size = v.size();
-  const T v_mean = mean(v);
-
-  auto variance_function = [&v_mean, &v_size](T accumulator, const T& value) {
-    return accumulator + ((value - v_mean) * (value - v_mean) / (v_size - 1));
-  };
-
-  return std::accumulate(v.begin(), v.end(), 0.0, variance_function);
-}
-
-static double t_test(StatisticValues alternative_values, StatisticValues default_values) {
-  double alternative_df = alternative_values.size-1;
-  double default_df = default_values.size-1;
-  double standard_error = sqrt((alternative_df*alternative_values.variance+default_df*default_values.variance)/(alternative_df+default_df));
-  return sqrt((alternative_values.size*default_values.size)/(alternative_values.size+default_values.size)) * ((alternative_values.mean-default_values.mean) / standard_error);
-}
-
-
-GroupedTTestResults::GroupedTTestResults(std::string mpi_name, std::vector<std::string> col_names) :
-    mpi_name(mpi_name), col_names(col_names)
-{
+GroupedTTestResults::GroupedTTestResults(std::string mpi_name, std::vector <std::string> col_names) :
+    mpi_name(mpi_name), col_names(col_names) {
 }
 
 std::string GroupedTTestResults::get() {
@@ -56,16 +16,16 @@ std::string GroupedTTestResults::get() {
   res << "MPI Collective: " << this->mpi_name << "\n";
 
   int idx = 0;
-  for(auto& colname : this->col_names) {
+  for (auto &colname: this->col_names) {
     res << std::setw(col_widths[idx++]) << colname << " ";
   }
   res << "\n";
 
   int nb_rows = this->col_value_map.at(this->col_names[0]).size();
-  for(int i=0; i<nb_rows; i++) {
+  for (int i = 0; i < nb_rows; i++) {
     idx = 0;
-    for(auto& colname : this->col_names) {
-      auto & values = this->col_value_map.at(colname);
+    for (auto &colname: this->col_names) {
+      auto &values = this->col_value_map.at(colname);
       res << std::setw(col_widths[idx++]) << values[i] << " ";
     }
     res << "\n";
@@ -74,101 +34,63 @@ std::string GroupedTTestResults::get() {
   return res.str();
 }
 
-void GroupedTTestResults::add_row(std::unordered_map<std::string,std::string>& row_map) {
-  for(auto& rows : row_map) {
-    //std::cout << "map: " << rows.first << " -> " << rows.second << std::endl;
+void GroupedTTestResults::add_row(std::unordered_map <std::string, std::string> &row_map) {
+  for (auto &rows: row_map) {
     col_value_map[rows.first].push_back(rows.second);
   }
 }
 
-
 GroupedTTestComparer::GroupedTTestComparer(std::string mpi_coll_name, int nnodes, int ppn) :
-  PGDataComparer(mpi_coll_name, nnodes, ppn)
-{}
+    PGDataComparer(mpi_coll_name, nnodes, ppn) {}
 
 std::string GroupedTTestComparer::get_results() {
 
-  std::vector <std::string> col_names = {"collective", "count", "N", "ppn", "n", "default_median", "slowdown", "mockup", "mockup_median"};
+  std::vector <std::string> col_names = {"collective", "count", "N", "ppn", "n", "default_median", "slowdown", "mockup",
+                                         "mockup_median"};
   GroupedTTestResults res(mpi_coll_name, col_names);
-
-  std::map<int, StatisticValues> default_data_results;
-
+  std::map<int, ComparerData> def_res;
   auto &default_data = mockup2data.at("default");
+  StatisticsUtils<double> statisticsUtils;
+
   for (auto &count: default_data->get_unique_counts()) {
-
     auto rts_default = default_data->get_runtimes_for_count(count);
-
-    StatisticValues default_values;
-    default_values.size = rts_default.size();
-    default_values.mean = mean(rts_default);
-    default_values.median = median(rts_default);
-    default_values.variance = variance(rts_default);
-    default_values.mockup_median = 0;
-    default_values.mockup = "";
-    default_data_results.insert(std::make_pair(count, default_values));
-
+    ComparerData default_values(rts_default.size(), statisticsUtils.mean(rts_default), statisticsUtils.median(rts_default), statisticsUtils.variance(rts_default));
+    def_res.insert(std::make_pair(count, default_values));
   }
 
   for (auto &mdata: mockup2data) {
-
     if (mdata.first == "default") {
       continue;
     }
-
     auto &data = mockup2data.at(mdata.first);
-
     for (auto &count: data->get_unique_counts()) {
-
       auto rts = data->get_runtimes_for_count(count);
-
-      StatisticValues alternative_values;
-      alternative_values.size = rts.size();
-      alternative_values.mean = mean(rts);
-      alternative_values.median = median(rts);
-      alternative_values.variance = variance(rts);
-
-      int df = alternative_values.size + default_data_results.at(count).size - 2;
-      double t_test_rts = t_test(alternative_values, default_data_results.at(count));
-      double critical_rts = normal_distribution_value;
-      bool violation_rts = t_test_rts < -critical_rts;
-      if (df <= 20 && df >= 1) {
-        critical_rts = critical_t_values[df];
-        violation_rts = t_test_rts < -critical_rts;
-      }
-
-      if (violation_rts == 1 && (default_data_results.at(count).mockup_median == 0 ||
-                                 alternative_values.median < default_data_results.at(count).mockup_median)) {
-        default_data_results.at(count).mockup = mdata.first;
-        default_data_results.at(count).mockup_median = alternative_values.median;
+      ComparerData alt_res(rts.size(), statisticsUtils.mean(rts), statisticsUtils.median(rts), statisticsUtils.variance(rts));
+      if (def_res.at(count).get_violation(alt_res)) {
+        def_res.at(count).set_fastest_mockup(mdata.first, alt_res.get_median());
       }
     }
   }
 
-  for (auto &count: default_data_results) {
-
-    auto &data = default_data_results.at(count.first);
-
+  for (auto &count: def_res) {
+    auto &data = def_res.at(count.first);
     std::unordered_map <std::string, std::string> row;
     row["collective"] = mpi_coll_name;
     row["count"] = std::to_string(count.first);
     row["N"] = std::to_string(nnodes);
     row["ppn"] = std::to_string(ppn);
-    row["n"] = std::to_string(data.size);
-    row["default_median"] = std::to_string(data.median * 1000);
-
-    if (data.mockup_median != 0) {
-      row["slowdown"] = std::to_string(data.median / data.mockup_median);
-      row["mockup"] = data.mockup;
-      row["mockup_median"] = std::to_string(data.mockup_median * 1000);
+    row["n"] = std::to_string(data.get_size());
+    row["default_median"] = std::to_string(data.get_median_ms());
+    if (data.is_violated()) {
+      row["slowdown"] = std::to_string(data.get_slowdown());
+      row["mockup"] = data.get_fastest_mockup();
+      row["mockup_median"] = std::to_string(data.get_fastest_mockup_median_ms());
     } else {
       row["slowdown"] = "";
       row["mockup"] = "";
       row["mockup_median"] = "";
     }
-
     res.add_row(row);
-
   }
-
   return res.get();
 }

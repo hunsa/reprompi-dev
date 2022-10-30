@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
       std::cout << "Case " << case_id << ": " << mpi_coll << std::endl;
     }
     //PGDataComparer pgd_comparer(mpi_coll, nnodes, ppn);
-    TTestComparer pgd_comparer(mpi_coll, nnodes, ppn);
+    GroupedTTestComparer pgd_comparer(mpi_coll, nnodes, ppn);
     auto mod_name = pgtune_interface.get_module_name_for_mpi_collectives(mpi_coll);
     for( auto& alg_version : pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll) ) {
       std::vector<std::string> pgtunelib_argv;

@@ -2,9 +2,12 @@
 #ifndef REPROMPI_SRC_PGCHECK_PGDATA_COMPARER_H
 #define REPROMPI_SRC_PGCHECK_PGDATA_COMPARER_H
 
+#include "utils/statistics_utils.h"
+#include "utils/statistics_utils.cpp"
 #include <vector>
 #include <unordered_map>
 #include <iomanip>
+#include <numeric>
 #include "pgdata.h"
 
 struct StatisticValues {

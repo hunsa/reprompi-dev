@@ -68,12 +68,14 @@ add_executable(pgchecker
         pgtunelib_interface.cpp
         pgdata.cpp
         pgdata_comparer.cpp
+        comparer/comparer_data.cpp
         comparer/default_comparer.cpp
         comparer/ttest_comparer.cpp
         comparer/grouped_ttest_comparer.cpp
         pgcheck_input.cpp
         utils/string_utils.cpp
         utils/argv_manager.cpp
+        utils/statistics_utils.cpp
 
         ${SRC_DIR}/benchmark_job.c
         ${SRC_DIR}/benchmarkCollective.c
