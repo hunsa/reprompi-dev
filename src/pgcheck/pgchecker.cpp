@@ -169,6 +169,7 @@ int main(int argc, char *argv[]) {
 
     if(rank == 0) {
       comparer = ComparerFactory::create_comparer(comparer_id, mpi_coll, nnodes, ppn);
+      comparer->set_barrier_time(barrier_mean);
     }
 
     auto mod_name = pgtune_interface.get_module_name_for_mpi_collectives(mpi_coll);

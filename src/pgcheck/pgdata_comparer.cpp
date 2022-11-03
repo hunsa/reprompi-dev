@@ -13,7 +13,7 @@ void PGDataComparer::add_dataframe(std::string mockup_name, PGData *data) {
 /**
    * adds the mean time for MPI_Barrier in seconds
    */
-void PGDataComparer::add_barrier_time(double time_s) {
+void PGDataComparer::set_barrier_time(double time_s) {
   barrier_time_s = time_s;
 }
 

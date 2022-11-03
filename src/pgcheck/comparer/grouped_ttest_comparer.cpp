@@ -85,6 +85,12 @@ std::string GroupedTTestComparer::get_results() {
       row["slowdown"] = std::to_string(data.get_slowdown());
       row["mockup"] = data.get_fastest_mockup();
       row["mockup_median"] = std::to_string(data.get_fastest_mockup_median_ms());
+      if( has_barrier_time() ) {
+        // don't forget, barrier time is in 's'
+        if( data.get_median_ms() - data.get_fastest_mockup_median_ms() < get_barrier_time() * 1000 ) {
+          row["mockup"] = row["mockup"] + "*";
+        }
+      }
     } else {
       row["slowdown"] = "";
       row["mockup"] = "";

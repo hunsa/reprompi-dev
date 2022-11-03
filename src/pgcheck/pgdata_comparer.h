@@ -32,7 +32,7 @@ public:
   /**
    * adds the mean time for MPI_Barrier in seconds
    */
-  void add_barrier_time(double time_s);
+  void set_barrier_time(double time_s);
 
   /**
    *
