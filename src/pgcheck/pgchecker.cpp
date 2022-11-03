@@ -38,6 +38,7 @@
 #include "comparer/default_comparer.h"
 #include "comparer/ttest_comparer.h"
 #include "comparer/grouped_ttest_comparer.h"
+#include "comparer/comparer_factory.h"
 #include "pgcheck_input.h"
 #include "utils/argv_manager.h"
 
@@ -49,13 +50,16 @@
 
 static std::string input_file = "";
 
+static int comparer_id = 2;
+
 void print_usage(char *command) {
-  std::cout << "usage: " << std::string(command) << " -f [input_file]" << std::endl;
+  std::cout << "usage: " << std::string(command) << " -f [input_file]" << " -c [comparer_id]" << std::endl;
+  std::cout << "comparer IDs: 0 : simple, 1 : T test, 2 : T test (grouped)" << std::endl;
 }
 
 void parse_options(int argc, char *argv[]) {
   int c;
-  while ((c = getopt(argc, argv, "hf:")) != -1)
+  while ((c = getopt(argc, argv, "hf:c:")) != -1)
   {
     switch (c) {
     case '?':
@@ -65,6 +69,9 @@ void parse_options(int argc, char *argv[]) {
       exit(-1);
     case 'f':
       input_file = std::string(optarg);
+      break;
+    case 'c':
+      comparer_id = std::atoi(optarg);
       break;
     }
   }
@@ -157,7 +164,13 @@ int main(int argc, char *argv[]) {
       std::cout << "Case " << case_id << ": " << mpi_coll << std::endl;
     }
     //PGDataComparer pgd_comparer(mpi_coll, nnodes, ppn);
-    GroupedTTestComparer pgd_comparer(mpi_coll, nnodes, ppn);
+    //GroupedTTestComparer pgd_comparer(mpi_coll, nnodes, ppn);
+    PGDataComparer *comparer = NULL;
+
+    if(rank == 0) {
+      comparer = ComparerFactory::create_comparer(comparer_id, mpi_coll, nnodes, ppn);
+    }
+
     auto mod_name = pgtune_interface.get_module_name_for_mpi_collectives(mpi_coll);
     for( auto& alg_version : pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll) ) {
       std::vector<std::string> pgtunelib_argv;
@@ -195,13 +208,14 @@ int main(int argc, char *argv[]) {
       if(rank == 0) {
         auto *data = new PGData(mpi_coll, alg_version);
         data->read_csv_from_file("foo.txt");
-        pgd_comparer.add_dataframe(alg_version, data);
+        comparer->add_dataframe(alg_version, data);
       }
     }
 
     if(rank == 0) {
-      auto pgres = pgd_comparer.get_results();
+      auto pgres = comparer->get_results();
       std::cout << pgres << std::endl;
+      delete comparer;
     }
     //break;
   }
