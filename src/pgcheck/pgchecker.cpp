@@ -50,7 +50,7 @@
 
 static std::string input_file = "";
 
-static int comparer_id = 2;
+static int comparer_id = 3;
 
 void print_usage(char *command) {
   std::cout << "usage: " << std::string(command) << " -f [input_file]" << " -c [comparer_id]" << std::endl;

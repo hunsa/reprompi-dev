@@ -25,6 +25,7 @@ public:
   double get_critical_t_value(int alt_size);
   double get_fastest_mockup_median_ms();
   double get_slowdown();
+  double get_slowdown(double mockup_median);
   double get_t_test(ComparerData data);
 
 private:

@@ -71,6 +71,7 @@ add_executable(pgchecker
         comparer/comparer_data.cpp
         comparer/comparer_factory.cpp
         comparer/default_comparer.cpp
+        comparer/detailed_ttest_comparer.cpp
         comparer/ttest_comparer.cpp
         comparer/grouped_ttest_comparer.cpp
         pgcheck_input.cpp

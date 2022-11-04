@@ -68,6 +68,10 @@ double ComparerData::get_slowdown() {
   return median / fastest_mockup_median;
 }
 
+double ComparerData::get_slowdown(double mockup_median) {
+  return median / mockup_median;
+}
+
 double ComparerData::get_fastest_mockup_median_ms() {
   return fastest_mockup_median * 1000;
 }
