@@ -76,6 +76,12 @@ std::string TTestComparer::get_results() {
                            statisticsUtils.median(rts), statisticsUtils.variance(rts));
       std::unordered_map <std::string, std::string> row;
       row["mockup"] = mdata.first;
+      if( has_barrier_time() ) {
+        // don't forget, barrier time is in 's'
+        if( def_res.at(count).get_median_ms() - alt_res.get_median_ms() < get_barrier_time() * 1000 ) {
+          row["mockup"] = row["mockup"] + "*";
+        }
+      }
       row["count"] = std::to_string(count);
       row["N"] = std::to_string(nnodes);
       row["ppn"] = std::to_string(ppn);
