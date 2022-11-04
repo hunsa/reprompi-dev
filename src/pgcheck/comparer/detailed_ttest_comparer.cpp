@@ -4,7 +4,7 @@
 
 #include "detailed_ttest_comparer.h"
 
-static const int col_widths[] = {50, 15, 5, 5, 10, 15, 15, 15, 15, 15, 15, 10, 10};
+static const int col_widths[] = {50, 15, 5, 5, 10, 15, 15, 15, 15, 15, 15, 10, 10, 13, 13};
 
 DetailedTTestResults::DetailedTTestResults(std::string mpi_name, std::vector <std::string> col_names) :
     mpi_name(mpi_name), col_names(col_names) {
@@ -41,7 +41,7 @@ DetailedTTestComparer::DetailedTTestComparer(std::string mpi_coll_name, int nnod
 
 std::string DetailedTTestComparer::get_results() {
   std::vector <std::string> col_names = {"mockup", "count", "N", "ppn", "n", "default_mean", "default_median", "mockup_mean", "mockup_median",
-                                         "t_value", "crit_t_val", "violation", "slowdown"};
+                                         "t_value", "crit_t_val", "violation", "slowdown", "has_barrier", "diff<barrier"};
   DetailedTTestResults res(mpi_coll_name, col_names);
   std::unordered_map<int, ComparerData> def_res;
   StatisticsUtils<double> statisticsUtils;
@@ -76,6 +76,16 @@ std::string DetailedTTestComparer::get_results() {
       row["crit_t_val"] = std::to_string(def_res.at(count).get_critical_t_value(alt_res.get_size()));
       row["violation"] = std::to_string(def_res.at(count).get_violation(alt_res));
       row["slowdown"] = std::to_string(def_res.at(count).get_slowdown(alt_res.get_median()));
+      if( has_barrier_time() ) {
+        row["has_barrier"] = "*";
+        if( def_res.at(count).get_median_ms() - alt_res.get_median_ms() < get_barrier_time() * 1000 ) {
+          row["diff<barrier"] = "*";
+        } else {
+          row["diff<barrier"] = " ";
+        }
+      } else {
+        row["has_barrier"] = " ";
+      }
       res.add_row(row);
     }
   }
