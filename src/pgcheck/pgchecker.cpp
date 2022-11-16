@@ -34,6 +34,7 @@
 #include "pgcheck_helper.h"
 #include "pgtunelib_interface.h"
 #include "pgdata.h"
+#include "pgdata_printer.h"
 #include "pgdata_comparer.h"
 #include "comparer/default_comparer.h"
 #include "comparer/ttest_comparer.h"
@@ -158,6 +159,11 @@ int main(int argc, char *argv[]) {
 //  std::cout << "DATA\n" << pginfo_data << "\nENDDATA" << std::endl;
   auto pgtune_interface = PGTuneLibInterface(pginfo_data);
 
+  std::string output_directory = "./output/";
+  bool overview = true;
+  PGDataPrinter *printer = NULL;
+  printer = new PGDataPrinter(comparer_id, output_directory, overview, nnodes, ppn);
+
   for(int case_id=0; case_id<input.get_number_of_test_cases(); case_id++) {
     std::string mpi_coll = input.get_mpi_collective_for_case_id(case_id);
     if( rank == 0 ) {
@@ -167,9 +173,12 @@ int main(int argc, char *argv[]) {
     //GroupedTTestComparer pgd_comparer(mpi_coll, nnodes, ppn);
     PGDataComparer *comparer = NULL;
 
+
     if(rank == 0) {
       comparer = ComparerFactory::create_comparer(comparer_id, mpi_coll, nnodes, ppn);
       comparer->set_barrier_time(barrier_mean);
+      printer->set_barrier_time(barrier_mean);
+      printer->add_mpi_coll_name(mpi_coll);
     }
 
     auto mod_name = pgtune_interface.get_module_name_for_mpi_collectives(mpi_coll);
@@ -210,16 +219,30 @@ int main(int argc, char *argv[]) {
         auto *data = new PGData(mpi_coll, alg_version);
         data->read_csv_from_file("foo.txt");
         comparer->add_dataframe(alg_version, data);
+        printer->add_dataframe_mockup(alg_version, data);
       }
     }
 
     if(rank == 0) {
+
+      if(!printer->print_collective()){
+        std::cerr << "Cannot print results" << std::endl;
+      }
+
+      /*
       auto pgres = comparer->get_results();
       std::cout << pgres << std::endl;
       delete comparer;
+       */
     }
     //break;
   }
+
+  if (overview) {
+    printer->print_overview();
+  }
+
+  delete printer;
 
   reprompib_deregister_sync_modules();
   reprompib_deregister_proc_sync_modules();

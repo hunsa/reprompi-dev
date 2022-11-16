@@ -10,6 +10,9 @@ void PGDataComparer::add_dataframe(std::string mockup_name, PGData *data) {
   mockup2data.insert( {mockup_name, data} );
 }
 
+void PGDataComparer::add_data(std::unordered_map<std::string, PGData *> data) {
+  mockup2data = data;
+}
 /**
    * adds the mean time for MPI_Barrier in seconds
    */

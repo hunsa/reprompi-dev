@@ -27,6 +27,8 @@ public:
 
   void add_dataframe(std::string mockup_name, PGData *data);
 
+  void add_data(std::unordered_map<std::string, PGData *> data);
+
   virtual std::string get_results() = 0;
 
   /**
