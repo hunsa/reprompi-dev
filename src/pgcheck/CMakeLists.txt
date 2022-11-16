@@ -65,6 +65,7 @@ add_custom_target(config
 add_executable(pgchecker
         pgchecker.cpp
         pgcheck_helper.cpp
+        pgcheck_options.cpp
         pgtunelib_interface.cpp
         pgdata.cpp
         pgdata_comparer.cpp

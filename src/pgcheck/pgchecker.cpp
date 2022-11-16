@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <time.h>
+#include <iostream>
+#include <fstream>
+#include <numeric>
 #include "mpi.h"
 #include <sys/stat.h>
 
@@ -29,10 +32,10 @@
 #include "reprompi_bench/sync/clock_sync/utils/communicator_utils.h"
 #include "benchmarkCollective.h"
 
-
 #include "pgmpi_tune.h"
 
 #include "pgcheck_helper.h"
+#include "pgcheck_options.h"
 #include "pgtunelib_interface.h"
 #include "pgdata.h"
 #include "pgdata_printer.h"
@@ -43,42 +46,6 @@
 #include "comparer/comparer_factory.h"
 #include "pgcheck_input.h"
 #include "utils/argv_manager.h"
-
-#include <getopt.h>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <numeric>
-
-static std::string input_file = "";
-
-static int comparer_id = 3;
-
-void print_usage(char *command) {
-  std::cout << "usage: " << std::string(command) << " -f [input_file]" << " -c [comparer_id]" << std::endl;
-  std::cout << "comparer IDs: 0 : simple, 1 : T test, 2 : T test (grouped)" << std::endl;
-}
-
-void parse_options(int argc, char *argv[]) {
-  int c;
-  while ((c = getopt(argc, argv, "hf:c:")) != -1)
-  {
-    switch (c) {
-    case '?':
-    case 'h':
-    default :
-      print_usage(argv[0]);
-      exit(-1);
-    case 'f':
-      input_file = std::string(optarg);
-      break;
-    case 'c':
-      comparer_id = std::atoi(optarg);
-      break;
-    }
-  }
-}
-
 
 static double get_barrier_runtime() {
   double mean = -1.0;
@@ -120,36 +87,39 @@ int main(int argc, char *argv[]) {
   MPI_Comm_size(comm_intranode, &ppn);
   nnodes = size / ppn;
 
-  parse_options(argc, argv);
+  PGCheckOptions *options = new PGCheckOptions(argc, argv);
+  PGDataPrinter *printer = NULL;
+
+  if(rank == 0) {
+    printer = new PGDataPrinter(options->get_comparer_type(), options->get_output_directory(), options->get_print_detailed_output(), nnodes, ppn, options->get_verbose());
+  }
 
   reprompib_register_sync_modules();
   reprompib_register_proc_sync_modules();
   reprompib_register_caching_modules();
 
-  std::ifstream ins(input_file);
+  std::ifstream ins(options->get_input_file());
   if( !ins.good() ) {
     if( rank == 0 ) {
-      std::cerr << "Error: input file '" << input_file << "' cannot be read\n" << std::endl;
-      print_usage(argv[0]);
+      printer->println_to_cerr("Error: input file '" + options->get_input_file() + "' cannot be read\n");
+      options->print_usage(argv[0]);
       fflush(stdout);
       exit(-1);
     }
   }
 
-
   double barrier_mean = get_barrier_runtime();
   if(rank == 0) {
-    std::cout << "mean barrier: " << barrier_mean << std::endl;
+    printer->println_to_cout( "mean barrier: " + std::to_string(barrier_mean));
   }
 
+  PGInput input(options->get_input_file());
 
-  PGInput input(input_file);
-
-  auto csv_conf = "./external/src/pgtunelib-build/pgmpi_conf.csv";
+  std::string csv_conf = "./external/src/pgtunelib-build/pgmpi_conf.csv";
   std::ifstream ifs(csv_conf);
   if(! ifs.good() ) {
     if( rank == 0 ) {
-      std::cerr << "Cannot find " << csv_conf << std::endl;
+      printer->println_to_cerr("Cannot find " + csv_conf);
     }
     exit(-1);
   }
@@ -157,35 +127,13 @@ int main(int argc, char *argv[]) {
   std::string pginfo_data( (std::istreambuf_iterator<char>(ifs) ),
                            (std::istreambuf_iterator<char>()    ) );
 
-//  std::cout << "DATA\n" << pginfo_data << "\nENDDATA" << std::endl;
   auto pgtune_interface = PGTuneLibInterface(pginfo_data);
-
-  std::string output_directory = "./output/";
-  bool overview = true;
-  PGDataPrinter *printer = NULL;
-
-  if(rank == 0) {
-    struct stat sb;
-    if(stat(output_directory.c_str(), &sb)!=0) {
-      std::cerr << "Cannot find " << output_directory << std::endl;
-      output_directory = "";
-    }
-    printer = new PGDataPrinter(comparer_id, output_directory, overview, nnodes, ppn);
-  }
 
   for(int case_id=0; case_id<input.get_number_of_test_cases(); case_id++) {
     std::string mpi_coll = input.get_mpi_collective_for_case_id(case_id);
-    if( rank == 0 ) {
-      std::cout << "Case " << case_id << ": " << mpi_coll << std::endl;
-    }
-    //PGDataComparer pgd_comparer(mpi_coll, nnodes, ppn);
-    //GroupedTTestComparer pgd_comparer(mpi_coll, nnodes, ppn);
-    PGDataComparer *comparer = NULL;
-
 
     if(rank == 0) {
-      comparer = ComparerFactory::create_comparer(comparer_id, mpi_coll, nnodes, ppn);
-      comparer->set_barrier_time(barrier_mean);
+      printer->println_to_cout("Case " + std::to_string(case_id) + ": " + mpi_coll);
       printer->set_barrier_time(barrier_mean);
       printer->add_mpi_coll_name(mpi_coll);
     }
@@ -194,7 +142,7 @@ int main(int argc, char *argv[]) {
     for( auto& alg_version : pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll) ) {
       std::vector<std::string> pgtunelib_argv;
       if( rank == 0 ) {
-        std::cout << mod_name << ":" << alg_version << std::endl;
+        printer->println_to_cout(mod_name + ":" + alg_version);
       }
 
       std::string call_options = input.get_call_options_for_case_id(case_id);
@@ -204,53 +152,30 @@ int main(int argc, char *argv[]) {
       std::vector<std::string> argv_vector;
       argv::compose_argv_vector(argv[0], call_options, pgtunelib_argv, argv_vector);
 
-//      for(auto it=argv_vector.begin(); it!=argv_vector.end(); it++) {
-//        std::cout << "argv_part" << ":" << *it << std::endl;
-//      }
-
       int argc_test=0;
       char **argv_test;
       argv::convert_vector_to_argv_cstyle(argv_vector, &argc_test, &argv_test);
 
-//      for(int i=0; i<argc_test; i++) {
-//        std::cout << "argv_part" << ":" << argv_test[i] << std::endl;
-//      }
-
-//      pgtune_override_argv_parameter(my_argc, my_argv);
-//      run_collective(my_argc, my_argv);
       pgtune_override_argv_parameter(argc_test, argv_test);
       run_collective(argc_test, argv_test);
-
       argv::free_argv_cstyle(argc_test, argv_test);
 
-//      std::cout << rank << ": reading data" << std::endl;
       if(rank == 0) {
         auto *data = new PGData(mpi_coll, alg_version);
         data->read_csv_from_file("foo.txt");
-        comparer->add_dataframe(alg_version, data);
         printer->add_dataframe_mockup(alg_version, data);
       }
     }
 
     if(rank == 0) {
-
       if(printer->print_collective() != 0){
         std::cerr << "Cannot print results" << std::endl;
       }
-
-      /*
-      auto pgres = comparer->get_results();
-      std::cout << pgres << std::endl;
-      delete comparer;
-       */
     }
-    //break;
   }
 
   if(rank == 0) {
-    if (overview) {
-      printer->print_overview();
-    }
+    printer->print_summary();
   }
 
   delete printer;

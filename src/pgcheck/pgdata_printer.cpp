@@ -4,8 +4,8 @@
 
 #include "pgdata_printer.h"
 
-PGDataPrinter::PGDataPrinter(int comparer_type, std::string output_directory, bool overview, int nnodes, int ppn) :
-    comparer_type(comparer_type), output_directory(output_directory), overview(overview), nnodes(nnodes), ppn(ppn) {}
+PGDataPrinter::PGDataPrinter(int comparer_type, std::string output_directory, bool detailed, int nnodes, int ppn, bool verbose) :
+    comparer_type(comparer_type), output_directory(output_directory), detailed(detailed), nnodes(nnodes), ppn(ppn), verbose(verbose) {}
 
 void PGDataPrinter::add_dataframe_mockup(std::string mockup_name, PGData *data) {
   mockup2data.insert({mockup_name, data});
@@ -25,7 +25,10 @@ int PGDataPrinter::print_collective() {
   comparer->add_data(mockup2data);
 
   auto pgres = comparer->get_results();
-  std::cout << pgres << std::endl;
+
+  if(verbose || output_directory.empty()) {
+    std::cout << pgres << std::endl;
+  }
 
   if (!output_directory.empty()) {
     std::string file_name  = output_directory + mpi_coll_names.back() + ".txt";
@@ -34,20 +37,32 @@ int PGDataPrinter::print_collective() {
     mockup_file.close();
   }
 
-  if (overview) {
+  if (detailed) {
     add_data_storage(pgres);
   }
-
-
 
   return EXIT_SUCCESS;
 }
 
-void PGDataPrinter::print_overview() {
-  std::string file_name  = output_directory + "MPI_Overview.txt";
-  std::ofstream overview_file(file_name);
-  overview_file << data_storage << std::endl;
-  overview_file.close();
+void PGDataPrinter::println_to_cerr(std::string message) {
+  std::cerr << message << std::endl;
+}
+
+void PGDataPrinter::println_to_cout(std::string message) {
+  if (verbose) {
+    std::cout << message << std::endl;
+  }
+}
+
+void PGDataPrinter::print_summary() {
+  if(detailed){
+    std::string file_name  = output_directory + "MPI_Overview.txt";
+    std::ofstream overview_file(file_name);
+    overview_file << data_storage << std::endl;
+    overview_file.close();
+  }
+
+  std::cout << "Files have been written to '" << output_directory << "'." << std::endl;
 }
 
 /**
