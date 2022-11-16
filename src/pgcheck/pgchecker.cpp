@@ -9,6 +9,7 @@
 #include <getopt.h>
 #include <time.h>
 #include "mpi.h"
+#include <sys/stat.h>
 
 #include "reprompi_bench/misc.h"
 #include "reprompi_bench/sync/clock_sync/synchronization.h"
@@ -162,7 +163,15 @@ int main(int argc, char *argv[]) {
   std::string output_directory = "./output/";
   bool overview = true;
   PGDataPrinter *printer = NULL;
-  printer = new PGDataPrinter(comparer_id, output_directory, overview, nnodes, ppn);
+
+  if(rank == 0) {
+    struct stat sb;
+    if(stat(output_directory.c_str(), &sb)!=0) {
+      std::cerr << "Cannot find " << output_directory << std::endl;
+      output_directory = "";
+    }
+    printer = new PGDataPrinter(comparer_id, output_directory, overview, nnodes, ppn);
+  }
 
   for(int case_id=0; case_id<input.get_number_of_test_cases(); case_id++) {
     std::string mpi_coll = input.get_mpi_collective_for_case_id(case_id);
@@ -225,7 +234,7 @@ int main(int argc, char *argv[]) {
 
     if(rank == 0) {
 
-      if(!printer->print_collective()){
+      if(printer->print_collective() != 0){
         std::cerr << "Cannot print results" << std::endl;
       }
 
@@ -238,8 +247,10 @@ int main(int argc, char *argv[]) {
     //break;
   }
 
-  if (overview) {
-    printer->print_overview();
+  if(rank == 0) {
+    if (overview) {
+      printer->print_overview();
+    }
   }
 
   delete printer;
