@@ -11,6 +11,27 @@
 #include <iomanip>
 #include <numeric>
 
+
+class PGDataResults {
+
+private:
+  std::string mpi_name;
+  std::vector<std::string> col_names;
+  std::vector<int> col_widths;
+  std::unordered_map<std::string, std::vector<std::string>> col_value_map;
+
+public:
+  PGDataResults(std::string mpi_name, std::vector<std::string> col_names);
+  void add_row(std::unordered_map<std::string,std::string>& row_map);
+  void set_col_widths(std::vector<int> widths);
+  std::string get_mpi_name();
+  std::vector<std::string> get_col_names();
+  int get_col_width(int index);
+  std::unordered_map<std::string, std::vector<std::string>> get_col_value_map();
+  int get_col_size();
+  std::vector<std::string> get_values_for_col_name(std::string key);
+};
+
 class PGDataComparer {
 
 protected:
@@ -29,7 +50,7 @@ public:
 
   void add_data(std::unordered_map<std::string, PGData *> data);
 
-  virtual std::string get_results() = 0;
+  virtual PGDataResults get_results() = 0;
 
   /**
    * adds the mean time for MPI_Barrier in seconds

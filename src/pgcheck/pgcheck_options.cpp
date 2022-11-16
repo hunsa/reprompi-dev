@@ -90,4 +90,7 @@ int PGCheckOptions::get_comparer_type() {
 bool PGCheckOptions::get_verbose() {
   return verbose;
 }
+bool PGCheckOptions::get_csv() {
+  return csv;
+}
 

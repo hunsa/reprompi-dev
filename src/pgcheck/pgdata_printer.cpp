@@ -4,41 +4,92 @@
 
 #include "pgdata_printer.h"
 
-PGDataPrinter::PGDataPrinter(int comparer_type, std::string output_directory, bool detailed, int nnodes, int ppn, bool verbose) :
-    comparer_type(comparer_type), output_directory(output_directory), detailed(detailed), nnodes(nnodes), ppn(ppn), verbose(verbose) {}
+PGDataPrinter::PGDataPrinter(PGCheckOptions * options, int nnodes, int ppn) :
+    options(options), nnodes(nnodes), ppn(ppn) {}
 
 void PGDataPrinter::add_dataframe_mockup(std::string mockup_name, PGData *data) {
   mockup2data.insert({mockup_name, data});
 }
 
 void PGDataPrinter::add_data_storage(std::string data) {
-  data_storage.append(data);
+  /*data_storage.append(data);*/
+}
+
+std::string PGDataPrinter::pgdata_to_string(PGDataResults data_result) {
+  std::stringstream res;
+  res << "MPI Collective: " << data_result.get_mpi_name() << "\n";
+  int idx = 0;
+  for (auto &colname: data_result.get_col_names()) {
+    res << std::setw(data_result.get_col_width(idx++)) << colname << " ";
+  }
+  res << "\n";
+  int nb_rows = data_result.get_col_size();
+  for (int i = 0; i < nb_rows; i++) {
+    idx = 0;
+    for (auto &col_name: data_result.get_col_names()) {
+      std::vector<std::string> values = data_result.get_values_for_col_name(col_name);
+      res << std::setw(data_result.get_col_width(idx++)) << values[i] << " ";
+    }
+    res << "\n";
+  }
+  return res.str();
+}
+
+std::string PGDataPrinter::pgdata_to_csv_string(PGDataResults data_result) {
+  std::stringstream res;
+  std::string col_delimiter = ",";
+  std::string row_delimiter = "\n";
+
+  std::vector<std::string> col_names = data_result.get_col_names();
+  for (auto &colname: col_names) {
+    res << colname << col_delimiter;
+  }
+  res << row_delimiter;
+  int nb_rows = data_result.get_col_size();
+  for (int i = 0; i < nb_rows; i++) {
+
+    for (auto iter = col_names.begin(); iter != col_names.end(); ++iter) {
+      std::vector<std::string> values = data_result.get_values_for_col_name(*iter);
+      res << values[i];
+      if (std::next(iter) != col_names.end()) {
+        res << col_delimiter;
+      }
+    }
+    res << row_delimiter;
+  }
+  return res.str();
 }
 
 /**
- * prints the PGData based on defined configurations
+ * prints the PGData based on defined options
  */
 int PGDataPrinter::print_collective() {
 
-  PGDataComparer *comparer = ComparerFactory::create_comparer(comparer_type, mpi_coll_names.back(), nnodes, ppn);
+  PGDataComparer *comparer = ComparerFactory::create_comparer(options->get_comparer_type(), mpi_coll_names.back(), nnodes, ppn);
   comparer->set_barrier_time(barrier_time_s);
   comparer->add_data(mockup2data);
 
-  auto pgres = comparer->get_results();
+  PGDataResults pgres = comparer->get_results();
+  std::string output_formatted = pgdata_to_string(pgres);
 
-  if(verbose || output_directory.empty()) {
-    std::cout << pgres << std::endl;
+  std::string output_directory = options->get_output_directory();
+
+  if(options->get_verbose() || output_directory.empty()) {
+    std::cout << output_formatted << std::endl;
   }
 
   if (!output_directory.empty()) {
     std::string file_name  = output_directory + mpi_coll_names.back() + ".txt";
     std::ofstream mockup_file(file_name);
-    mockup_file << pgres << std::endl;
+    mockup_file << output_formatted << std::endl;
     mockup_file.close();
   }
 
-  if (detailed) {
-    add_data_storage(pgres);
+  if (options->get_csv() && !output_directory.empty()) {
+    std::string csv_file_name  = output_directory + mpi_coll_names.back() + ".csv";
+    std::ofstream csv_file(csv_file_name);
+    csv_file << pgdata_to_csv_string(pgres) << std::endl;
+    csv_file.close();
   }
 
   return EXIT_SUCCESS;
@@ -49,20 +100,22 @@ void PGDataPrinter::println_to_cerr(std::string message) {
 }
 
 void PGDataPrinter::println_to_cout(std::string message) {
-  if (verbose) {
+  if (options->get_verbose()) {
     std::cout << message << std::endl;
   }
 }
 
 void PGDataPrinter::print_summary() {
+  /*
   if(detailed){
     std::string file_name  = output_directory + "MPI_Overview.txt";
     std::ofstream overview_file(file_name);
     overview_file << data_storage << std::endl;
     overview_file.close();
   }
+   */
 
-  std::cout << "Files have been written to '" << output_directory << "'." << std::endl;
+  std::cout << "Files have been written to '" << options->get_output_directory() << "'." << std::endl;
 }
 
 /**

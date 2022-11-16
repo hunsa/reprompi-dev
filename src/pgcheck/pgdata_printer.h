@@ -7,6 +7,7 @@
 
 #include "pgdata.h"
 #include "comparer/comparer_factory.h"
+#include "pgcheck_options.h"
 #include <vector>
 #include <unordered_map>
 #include <iomanip>
@@ -18,28 +19,23 @@ class PGDataPrinter {
 
 private:
   void add_data_storage(std::string data);
+  std::string pgdata_to_string(PGDataResults data_result);
+  std::string pgdata_to_csv_string(PGDataResults data_result);
 
 protected:
-  int comparer_type;
-  std::string output_directory;
-  bool detailed;
-  std::vector<std::string> mpi_coll_names;
-  int nnodes;  // number of nodes
-  int ppn;     // number of processes per node
-  bool verbose;
-  std::unordered_map<std::string, PGData *> mockup2data;
+  PGCheckOptions * options;
+  int nnodes;
+  int ppn;
   double barrier_time_s = -1.0;
-  std::string data_storage;
+  std::vector<std::string> mpi_coll_names;
+  std::unordered_map<std::string, PGData *> mockup2data;
 
 public:
 
   PGDataPrinter(
-      int comparer_type,
-      std::string output_directory,
-      bool detailed,
+      PGCheckOptions * options,
       int nnodes,
-      int ppn,
-      bool verbose
+      int ppn
   );
 
   int print_collective();

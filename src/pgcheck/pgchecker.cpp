@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
   PGDataPrinter *printer = NULL;
 
   if(rank == 0) {
-    printer = new PGDataPrinter(options->get_comparer_type(), options->get_output_directory(), options->get_print_detailed_output(), nnodes, ppn, options->get_verbose());
+    printer = new PGDataPrinter(options, nnodes, ppn);
   }
 
   reprompib_register_sync_modules();

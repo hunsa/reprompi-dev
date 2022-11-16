@@ -34,6 +34,7 @@ public:
   bool get_print_to_csv();
   bool get_verbose();
   int get_comparer_type();
+  bool get_csv();
 
 };
 
