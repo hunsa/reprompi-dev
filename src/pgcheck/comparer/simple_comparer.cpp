@@ -9,9 +9,9 @@ static std::vector<int> col_widths = {50, 10, 10};
 SimpleComparer::SimpleComparer(std::string mpi_coll_name, int nnodes, int ppn) :
     PGDataComparer(mpi_coll_name, nnodes, ppn) {}
 
-PGDataResults SimpleComparer::get_results() {
+PGDataTable SimpleComparer::get_results() {
   std::vector <std::string> col_names = {"mockup", "count", "runtime"};
-  PGDataResults res(mpi_coll_name, col_names);
+  PGDataTable res(mpi_coll_name, col_names);
   StatisticsUtils<double> statisticsUtils;
   for (auto &mdata: mockup2data) {
     auto &data = mockup2data.at(mdata.first);

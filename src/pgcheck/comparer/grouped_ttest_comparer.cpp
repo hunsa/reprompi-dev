@@ -9,11 +9,11 @@ static std::vector<int> col_widths = {15, 15, 5, 5, 5, 15, 10, 50, 15};
 GroupedTTestComparer::GroupedTTestComparer(std::string mpi_coll_name, int nnodes, int ppn) :
     PGDataComparer(mpi_coll_name, nnodes, ppn) {}
 
-PGDataResults GroupedTTestComparer::get_results() {
+PGDataTable GroupedTTestComparer::get_results() {
 
   std::vector <std::string> col_names = {"collective", "count", "N", "ppn", "n", "default_median", "slowdown", "mockup",
                                          "mockup_median"};
-  PGDataResults res(mpi_coll_name, col_names);
+  PGDataTable res(mpi_coll_name, col_names);
   std::map<int, ComparerData> def_res;
   auto &default_data = mockup2data.at("default");
   StatisticsUtils<double> statisticsUtils;

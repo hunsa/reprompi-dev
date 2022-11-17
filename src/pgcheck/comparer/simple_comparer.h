@@ -12,7 +12,7 @@ class SimpleComparer : public PGDataComparer {
 
 public:
   SimpleComparer(std::string mpi_coll_name, int nnodes, int ppn);
-  PGDataResults get_results();
+  PGDataTable get_results();
 };
 
 #endif //REPROMPI_DEV_SRC_PGCHECK_COMPARER_DEFAULT_COMPARER_H

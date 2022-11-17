@@ -15,7 +15,7 @@ void PGDataPrinter::add_data_storage(std::string data) {
   /*data_storage.append(data);*/
 }
 
-std::string PGDataPrinter::pgdata_to_string(PGDataResults data_result) {
+std::string PGDataPrinter::pgdata_to_string(PGDataTable data_result) {
   std::stringstream res;
   res << "MPI Collective: " << data_result.get_mpi_name() << "\n";
   int idx = 0;
@@ -35,7 +35,7 @@ std::string PGDataPrinter::pgdata_to_string(PGDataResults data_result) {
   return res.str();
 }
 
-std::string PGDataPrinter::pgdata_to_csv_string(PGDataResults data_result) {
+std::string PGDataPrinter::pgdata_to_csv_string(PGDataTable data_result) {
   std::stringstream res;
   std::string col_delimiter = ",";
   std::string row_delimiter = "\n";
@@ -72,7 +72,7 @@ int PGDataPrinter::print_collective() {
   comparer->set_barrier_time(barrier_time_s);
   comparer->add_data(mockup2data);
 
-  PGDataResults pgres = comparer->get_results();
+  PGDataTable pgres = comparer->get_results();
   std::string output_formatted = pgdata_to_string(pgres);
 
   std::string output_directory = options->get_output_directory();

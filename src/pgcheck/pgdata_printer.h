@@ -19,8 +19,8 @@ class PGDataPrinter {
 
 private:
   void add_data_storage(std::string data);
-  std::string pgdata_to_string(PGDataResults data_result);
-  std::string pgdata_to_csv_string(PGDataResults data_result);
+  std::string pgdata_to_string(PGDataTable data_result);
+  std::string pgdata_to_csv_string(PGDataTable data_result);
 
 protected:
   PGCheckOptions * options;

@@ -9,10 +9,10 @@ static std::vector<int> col_widths = {50, 15, 5, 5, 10, 15, 15, 15, 15, 15, 15, 
 DetailedTTestComparer::DetailedTTestComparer(std::string mpi_coll_name, int nnodes, int ppn) :
     PGDataComparer(mpi_coll_name, nnodes, ppn) {}
 
-PGDataResults DetailedTTestComparer::get_results() {
+PGDataTable DetailedTTestComparer::get_results() {
   std::vector <std::string> col_names = {"mockup", "count", "N", "ppn", "n", "default_mean", "default_median", "mockup_mean", "mockup_median",
                                          "t_value", "crit_t_val", "violation", "slowdown", "has_barrier", "diff<barrier"};
-  PGDataResults res(mpi_coll_name, col_names);
+  PGDataTable res(mpi_coll_name, col_names);
   std::unordered_map<int, ComparerData> def_res;
   StatisticsUtils<double> statisticsUtils;
   auto &default_data = mockup2data.at("default");
