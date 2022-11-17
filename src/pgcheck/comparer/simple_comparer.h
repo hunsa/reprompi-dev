@@ -8,10 +8,10 @@
 #include "../pgdata_comparer.h"
 #include <string>
 
-class DefaultComparer : public PGDataComparer {
+class SimpleComparer : public PGDataComparer {
 
 public:
-  DefaultComparer(std::string mpi_coll_name, int nnodes, int ppn);
+  SimpleComparer(std::string mpi_coll_name, int nnodes, int ppn);
   PGDataResults get_results();
 };
 

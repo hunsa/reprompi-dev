@@ -2,18 +2,17 @@
 // Created by Max on 10/30/22.
 //
 
-#include "default_comparer.h"
+#include "simple_comparer.h"
 
 static std::vector<int> col_widths = {50, 10, 10};
 
-DefaultComparer::DefaultComparer(std::string mpi_coll_name, int nnodes, int ppn) :
+SimpleComparer::SimpleComparer(std::string mpi_coll_name, int nnodes, int ppn) :
     PGDataComparer(mpi_coll_name, nnodes, ppn) {}
 
-PGDataResults DefaultComparer::get_results() {
+PGDataResults SimpleComparer::get_results() {
   std::vector <std::string> col_names = {"mockup", "count", "runtime"};
   PGDataResults res(mpi_coll_name, col_names);
   StatisticsUtils<double> statisticsUtils;
-  std::cout << "nnodes: " << nnodes << " ppn: " << ppn << std::endl;
   for (auto &mdata: mockup2data) {
     auto &data = mockup2data.at(mdata.first);
     for (auto &count: data->get_unique_counts()) {

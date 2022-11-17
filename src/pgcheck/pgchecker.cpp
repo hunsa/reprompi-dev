@@ -40,7 +40,7 @@
 #include "pgdata.h"
 #include "pgdata_printer.h"
 #include "pgdata_comparer.h"
-#include "comparer/default_comparer.h"
+#include "comparer/simple_comparer.h"
 #include "comparer/ttest_comparer.h"
 #include "comparer/grouped_ttest_comparer.h"
 #include "comparer/comparer_factory.h"

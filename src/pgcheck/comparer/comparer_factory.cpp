@@ -3,7 +3,7 @@
 //
 
 #include "comparer_factory.h"
-#include "default_comparer.h"
+#include "simple_comparer.h"
 #include "ttest_comparer.h"
 #include "detailed_ttest_comparer.h"
 #include "grouped_ttest_comparer.h"
@@ -12,7 +12,7 @@ PGDataComparer* ComparerFactory::create_comparer(int comparer_id, std::string mp
   PGDataComparer *comparer;
   switch(comparer_id) {
   case 0:
-    comparer = new DefaultComparer(mpi_coll_name, nnodes, ppn);
+    comparer = new SimpleComparer(mpi_coll_name, nnodes, ppn);
     break;
   case 1:
     comparer = new DetailedTTestComparer(mpi_coll_name, nnodes, ppn);
