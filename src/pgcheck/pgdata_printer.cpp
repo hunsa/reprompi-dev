@@ -41,8 +41,11 @@ std::string PGDataPrinter::pgdata_to_csv_string(PGDataResults data_result) {
   std::string row_delimiter = "\n";
 
   std::vector<std::string> col_names = data_result.get_col_names();
-  for (auto &colname: col_names) {
-    res << colname << col_delimiter;
+  for (auto iter = col_names.begin(); iter != col_names.end(); ++iter) {
+    res << *iter;
+    if (std::next(iter) != col_names.end()) {
+      res << col_delimiter;
+    }
   }
   res << row_delimiter;
   int nb_rows = data_result.get_col_size();
