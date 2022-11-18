@@ -12,6 +12,9 @@ class TTestComparer : public PGDataComparer {
 
 public:
   TTestComparer(std::string mpi_coll_name, int nnodes, int ppn);
+  /**
+   * @return data table in t-test format
+   */
   PGDataTable get_results();
 };
 

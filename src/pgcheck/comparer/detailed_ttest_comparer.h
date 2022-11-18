@@ -6,12 +6,14 @@
 #define REPROMPI_DEV_SRC_PGCHECK_COMPARER_DETAILED_TTEST_COMPARER_H
 
 #include "../pgdata_comparer.h"
-#include <string>
 
 class DetailedTTestComparer : public PGDataComparer {
 
 public:
   DetailedTTestComparer(std::string mpi_coll_name, int nnodes, int ppn);
+  /**
+   * @return data table in detailed t-test format
+   */
   PGDataTable get_results();
 };
 

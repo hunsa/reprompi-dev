@@ -6,12 +6,14 @@
 #define REPROMPI_DEV_SRC_PGCHECK_COMPARER_DEFAULT_COMPARER_H
 
 #include "../pgdata_comparer.h"
-#include <string>
 
 class SimpleComparer : public PGDataComparer {
 
 public:
   SimpleComparer(std::string mpi_coll_name, int nnodes, int ppn);
+  /**
+   * @return data table in simple format
+   */
   PGDataTable get_results();
 };
 

@@ -10,34 +10,20 @@ static const double critical_t_values[] = {0, 6.314, 2.919986, 2.353363, 2.13184
 static const double normal_distribution_value = 1.644854;
 
 ComparerData::ComparerData(int size, double mean, double median, double variance) :
-  size(size),
-  mean(mean),
-  median(median),
-  variance(variance),
-  violation(false),
-  fastest_mockup(""),
-  fastest_mockup_median(0)
-{}
+    violation(false),
+    size(size),
+    mean(mean),
+    median(median),
+    variance(variance),
+    fastest_mockup_median(0),
+    fastest_mockup("") {}
 
-double ComparerData::get_t_test(ComparerData alt_res) {
-  int alt_df = alt_res.get_size() - 1;
-  int def_df = size - 1;
-  double standard_error = sqrt((alt_df * alt_res.get_variance() + def_df * variance) /
-                               (alt_df + def_df));
-  return sqrt((alt_res.get_size() * size) / (alt_res.get_size() + size)) * ((alt_res.get_mean() - mean) / standard_error);
+bool ComparerData::is_violated() {
+  return violation;
 }
 
 bool ComparerData::get_violation(ComparerData alt_res) {
   return get_t_test(alt_res) < -get_critical_t_value(alt_res.get_size());
-}
-
-double ComparerData::get_critical_t_value(int alt_size) {
-  int df = size + alt_size - 2;
-  double critical = normal_distribution_value;
-  if (df <= 20 && df >= 1) {
-    critical = critical_t_values[df];
-  }
-  return critical;
 }
 
 int ComparerData::get_size() {
@@ -46,6 +32,10 @@ int ComparerData::get_size() {
 
 double ComparerData::get_mean() {
   return mean;
+}
+
+double ComparerData::get_variance() {
+  return variance;
 }
 
 double ComparerData::get_mean_ms() {
@@ -60,8 +50,17 @@ double ComparerData::get_median_ms() {
   return median * 1000;
 }
 
-double ComparerData::get_variance() {
-  return variance;
+double ComparerData::get_critical_t_value(int df) {
+  int df_sum = size + df - 2;
+  double critical = normal_distribution_value;
+  if (df_sum <= 20 && df_sum >= 1) {
+    critical = critical_t_values[df_sum];
+  }
+  return critical;
+}
+
+double ComparerData::get_fastest_mockup_median_ms() {
+  return fastest_mockup_median * 1000;
 }
 
 double ComparerData::get_slowdown() {
@@ -72,32 +71,23 @@ double ComparerData::get_slowdown(double mockup_median) {
   return median / mockup_median;
 }
 
-double ComparerData::get_fastest_mockup_median_ms() {
-  return fastest_mockup_median * 1000;
+double ComparerData::get_t_test(ComparerData alt_res) {
+  int alt_df = alt_res.get_size() - 1;
+  int def_df = size - 1;
+  double standard_error = sqrt((alt_df * alt_res.get_variance() + def_df * variance) /
+                               (alt_df + def_df));
+  return sqrt((alt_res.get_size() * size) / (alt_res.get_size() + size)) *
+         ((alt_res.get_mean() - mean) / standard_error);
 }
 
 std::string ComparerData::get_fastest_mockup() {
   return fastest_mockup;
 }
 
-bool ComparerData::is_violated() {
-  return violation;
-}
-
 void ComparerData::set_fastest_mockup(std::string mockup, double mockup_median) {
-  if(fastest_mockup_median == 0 || mockup_median < fastest_mockup_median) {
+  if (fastest_mockup_median == 0 || mockup_median < fastest_mockup_median) {
     violation = true;
     fastest_mockup = mockup;
     fastest_mockup_median = mockup_median;
   }
 }
-
-
-
-
-
-
-
-
-
-
