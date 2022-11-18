@@ -4,8 +4,8 @@
 
 #include "pgdata_printer.h"
 
-PGDataPrinter::PGDataPrinter(PGCheckOptions * options, int nnodes, int ppn) :
-    options(options), nnodes(nnodes), ppn(ppn) {}
+PGDataPrinter::PGDataPrinter(int nnodes, int ppn, PGCheckOptions * options) :
+    nnodes(nnodes), ppn(ppn), options(options) {}
 
 void PGDataPrinter::add_dataframe_mockup(std::string mockup_name, PGData *data) {
   mockup2data.insert({mockup_name, data});
@@ -15,32 +15,39 @@ void PGDataPrinter::add_data_storage(std::string data) {
   /*data_storage.append(data);*/
 }
 
-std::string PGDataPrinter::pgdata_to_string(PGDataTable data_result) {
+std::string PGDataPrinter::table_to_clear_string(PGDataTable table) {
   std::stringstream res;
-  res << "MPI Collective: " << data_result.get_mpi_name() << "\n";
+  std::vector<std::string> col_names = table.get_col_names();
+
+  if(!table.get_mpi_name().empty()) {
+    res << "MPI Collective: " << table.get_mpi_name() << "\n";
+  } else {
+    res << "MPI All Gathered Results " << "\n";
+  }
+
   int idx = 0;
-  for (auto &colname: data_result.get_col_names()) {
-    res << std::setw(data_result.get_col_width(idx++)) << colname << " ";
+  for (auto iter = col_names.begin(); iter != col_names.end(); ++iter) {
+    res << std::setw(table.get_col_width(idx++)) << *iter << " ";
   }
   res << "\n";
-  int nb_rows = data_result.get_col_size();
+  int nb_rows = table.get_col_size();
   for (int i = 0; i < nb_rows; i++) {
     idx = 0;
-    for (auto &col_name: data_result.get_col_names()) {
-      std::vector<std::string> values = data_result.get_values_for_col_name(col_name);
-      res << std::setw(data_result.get_col_width(idx++)) << values[i] << " ";
+    for (auto iter = col_names.begin(); iter != col_names.end(); ++iter) {
+      std::vector<std::string> values = table.get_values_for_col_name(*iter);
+      res << std::setw(table.get_col_width(idx++)) << values[i] << " ";
     }
     res << "\n";
   }
   return res.str();
 }
 
-std::string PGDataPrinter::pgdata_to_csv_string(PGDataTable data_result) {
+std::string PGDataPrinter::table_to_csv_string(PGDataTable table) {
   std::stringstream res;
   std::string col_delimiter = ",";
   std::string row_delimiter = "\n";
 
-  std::vector<std::string> col_names = data_result.get_col_names();
+  std::vector<std::string> col_names = table.get_col_names();
   for (auto iter = col_names.begin(); iter != col_names.end(); ++iter) {
     res << *iter;
     if (std::next(iter) != col_names.end()) {
@@ -48,11 +55,11 @@ std::string PGDataPrinter::pgdata_to_csv_string(PGDataTable data_result) {
     }
   }
   res << row_delimiter;
-  int nb_rows = data_result.get_col_size();
+  int nb_rows = table.get_col_size();
   for (int i = 0; i < nb_rows; i++) {
 
     for (auto iter = col_names.begin(); iter != col_names.end(); ++iter) {
-      std::vector<std::string> values = data_result.get_values_for_col_name(*iter);
+      std::vector<std::string> values = table.get_values_for_col_name(*iter);
       res << values[i];
       if (std::next(iter) != col_names.end()) {
         res << col_delimiter;
@@ -72,9 +79,8 @@ int PGDataPrinter::print_collective() {
   comparer->set_barrier_time(barrier_time_s);
   comparer->add_data(mockup2data);
 
-  PGDataTable pgres = comparer->get_results();
-  std::string output_formatted = pgdata_to_string(pgres);
-
+  PGDataTable table_coll_res = comparer->get_results();
+  std::string output_formatted = table_to_clear_string(table_coll_res);
   std::string output_directory = options->get_output_directory();
 
   if(options->get_verbose() || output_directory.empty()) {
@@ -91,8 +97,16 @@ int PGDataPrinter::print_collective() {
   if (options->get_csv() && !output_directory.empty()) {
     std::string csv_file_name  = output_directory + mpi_coll_names.back() + ".csv";
     std::ofstream csv_file(csv_file_name);
-    csv_file << pgdata_to_csv_string(pgres) << std::endl;
+    csv_file << table_to_csv_string(table_coll_res) << std::endl;
     csv_file.close();
+  }
+
+  if (options->get_merge_coll_tables()) {
+    if (merged_table.get_col_names().empty()) {
+      merged_table.set_col_names(table_coll_res.get_col_names());
+      merged_table.set_col_widths(table_coll_res.get_col_widths());
+    }
+    merged_table.add_table(table_coll_res);
   }
 
   return EXIT_SUCCESS;
@@ -109,16 +123,32 @@ void PGDataPrinter::println_to_cout(std::string message) {
 }
 
 void PGDataPrinter::print_summary() {
-  /*
-  if(detailed){
-    std::string file_name  = output_directory + "MPI_Overview.txt";
-    std::ofstream overview_file(file_name);
-    overview_file << data_storage << std::endl;
-    overview_file.close();
-  }
-   */
 
-  std::cout << "Files have been written to '" << options->get_output_directory() << "'." << std::endl;
+  if(options->get_merge_coll_tables()){
+
+    std::string merged_table_string = table_to_clear_string(merged_table);
+
+    if (options->get_verbose()) {
+      std::cout << merged_table_string;
+    }
+
+    std::string file_name_txt  = options->get_output_directory() + "MPI_Results.txt";
+    std::ofstream merged_file(file_name_txt);
+    merged_file << merged_table_string << std::endl;
+    merged_file.close();
+
+    if(options->get_csv()) {
+      std::string file_name_csv  = options->get_output_directory() + "MPI_Results.csv";
+      std::ofstream merged_csv_file(file_name_csv);
+      merged_csv_file << table_to_csv_string(merged_table) << std::endl;
+      merged_csv_file.close();
+    }
+  }
+
+  if (!options->get_output_directory().empty()) {
+    std::cout << "Files have been written to '" << options->get_output_directory() << "'." << std::endl;
+  }
+
 }
 
 /**

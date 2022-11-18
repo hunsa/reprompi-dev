@@ -15,27 +15,25 @@
 class PGCheckOptions {
 
 protected:
-  std::string input_file = "";
-  std::string output_directory = "./output/";
-  bool detailed = false;
+  bool merge_coll_tables = false;
   bool csv = false;
   bool verbose = false;
   int comparer_type = 3;
+  std::string input_file = "";
+  std::string output_directory = "";
+  std::string config_message = "";
 
 public:
-
   PGCheckOptions(int argc, char *argv[]);
-
   void print_usage(char *command);
-
-  std::string get_input_file();
-  std::string get_output_directory();
-  bool get_print_detailed_output();
+  bool get_merge_coll_tables();
   bool get_print_to_csv();
   bool get_verbose();
-  int get_comparer_type();
   bool get_csv();
-
+  int get_comparer_type();
+  std::string get_config_message();
+  std::string get_input_file();
+  std::string get_output_directory();
 };
 
 #endif //REPROMPI_SRC_PGCHECK_PGCHECK_OPTIONS_H

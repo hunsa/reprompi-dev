@@ -19,24 +19,22 @@ class PGDataPrinter {
 
 private:
   void add_data_storage(std::string data);
-  std::string pgdata_to_string(PGDataTable data_result);
-  std::string pgdata_to_csv_string(PGDataTable data_result);
+
+  std::string table_to_clear_string(PGDataTable data_result);
+
+  std::string table_to_csv_string(PGDataTable data_result);
 
 protected:
-  PGCheckOptions * options;
   int nnodes;
   int ppn;
   double barrier_time_s = -1.0;
-  std::vector<std::string> mpi_coll_names;
+  std::vector <std::string> mpi_coll_names;
   std::unordered_map<std::string, PGData *> mockup2data;
+  PGCheckOptions *options;
+  PGDataTable merged_table;
 
 public:
-
-  PGDataPrinter(
-      PGCheckOptions * options,
-      int nnodes,
-      int ppn
-  );
+  PGDataPrinter(int nnodes, int ppn, PGCheckOptions *options);
 
   int print_collective();
 

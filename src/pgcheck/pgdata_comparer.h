@@ -15,11 +15,11 @@
 class PGDataComparer {
 
 protected:
-  std::string mpi_coll_name;
-  int nnodes;  // number of nodes
-  int ppn;     // number of processes per node
-  std::unordered_map<std::string, PGData *> mockup2data;
+  int nnodes;
+  int ppn;
   double barrier_time_s = -1.0;
+  std::string mpi_coll_name;
+  std::unordered_map<std::string, PGData *> mockup2data;
 
 public:
 

@@ -7,16 +7,16 @@
 PGCheckOptions::PGCheckOptions(int argc, char *argv[]) {
   int c;
 
-  const char* short_opts = "hf:c:o:dsv";
+  const char* short_opts = "hf:c:o:msv";
   struct option long_opts[] =
   {
       {"help",     no_argument,       NULL, 'h'},
       {"input",    required_argument, NULL, 'f'},
       {"output",   required_argument, NULL, 'o'},
       {"comparer", required_argument, NULL, 'c'},
-      {"detailed", no_argument, NULL, 'd'},
-      {"csv",      no_argument, NULL, 's'},
-      {"verbose",      no_argument, NULL, 'v'},
+      {"merge",    no_argument,       NULL, 'm'},
+      {"csv",      no_argument,       NULL, 's'},
+      {"verbose",  no_argument,       NULL, 'v'},
       {NULL,       0,                 NULL, 0  }
   };
 
@@ -36,8 +36,8 @@ PGCheckOptions::PGCheckOptions(int argc, char *argv[]) {
       case 'o':
         output_directory = std::string(optarg);
         break;
-      case 'd':
-        detailed = true;
+      case 'm':
+        merge_coll_tables = true;
         break;
       case 's':
         csv = true;
@@ -49,11 +49,15 @@ PGCheckOptions::PGCheckOptions(int argc, char *argv[]) {
   }
 
   struct stat sb;
-  if(stat(output_directory.c_str(), &sb)!=0) {
-    std::cerr << "Cannot find " << output_directory << ". Write results to stdout." << std::endl;
+  if((stat(output_directory.c_str(), &sb)!=0) && !output_directory.empty()) {
+    config_message.append("Cannot find " + output_directory + ". Verbose (-v) was enabled. Writing output to std::cout.\n");
     output_directory = "";
+    verbose = true;
   }
-
+  if(output_directory.empty() && !verbose) {
+    config_message.append("Output directory was not specified. Verbose (-v) was enabled. Writing output to std::cout.\n");
+    verbose = true;
+  }
 }
 
 void PGCheckOptions::print_usage(char *command) {
@@ -62,7 +66,7 @@ void PGCheckOptions::print_usage(char *command) {
   std::cout << std::setw(28) << std::left << "  ?, -h, --help" << "Display this information." << std::endl;
   std::cout << std::setw(28) << std::left << "  -c, --comparer {0|1|2|3}" << "Specify the comparer type (0=Simple; 1=Detailed; 2=T-Test; 3=Grouped T-Test)." << std::endl;
   std::cout << std::setw(28) << std::left << "  -o, --output <path>" << "Specify an existing output folder." << std::endl;
-  std::cout << std::setw(28) << std::left << "  -d, --detailed" << "Print detailed output." << std::endl;
+  std::cout << std::setw(28) << std::left << "  -m, --merge" << "Print detailed output." << std::endl;
   std::cout << std::setw(28) << std::left << "  -s, --csv" << "Print results to .csv file." << std::endl;
   std::cout << std::setw(28) << std::left << "  -v, --verbose" << "Print additional information." << std::endl;
 }
@@ -75,8 +79,11 @@ std::string PGCheckOptions::get_output_directory() {
   return output_directory;
 }
 
-bool PGCheckOptions::get_print_detailed_output() {
-  return detailed;
+std::string PGCheckOptions::get_config_message() {
+  return config_message;
+}
+bool PGCheckOptions::get_merge_coll_tables() {
+  return merge_coll_tables;
 }
 
 bool PGCheckOptions::get_print_to_csv() {
