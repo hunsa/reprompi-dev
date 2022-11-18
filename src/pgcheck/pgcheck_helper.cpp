@@ -2,9 +2,7 @@
 // Created by Sascha on 9/22/22.
 //
 
-#include <cstdio>
-#include <iostream>
-#include <array>
+#include "pgcheck_helper.h"
 
 
 /**
