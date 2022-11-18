@@ -15,17 +15,19 @@
 class PGCheckOptions {
 
 protected:
-  bool merge_coll_tables = false;
-  bool csv = false;
-  bool verbose = false;
-  int comparer_type = 3;
+  bool merge_coll_tables = false;    // write additional file containing merged results
+  bool csv = false;                  // write results in csv format to file
+  bool verbose = false;              // write information and results to console
+  int comparer_type = 3;             // default is grouped t-test
   std::string input_file = "";
   std::string output_directory = "";
   std::string config_message = "";
 
 public:
+  /**
+   * options are parsed
+   */
   PGCheckOptions(int argc, char *argv[]);
-  void print_usage(char *command);
   bool get_merge_coll_tables();
   bool get_print_to_csv();
   bool get_verbose();
@@ -34,6 +36,10 @@ public:
   std::string get_config_message();
   std::string get_input_file();
   std::string get_output_directory();
+  /**
+   * prints usage to cout
+   */
+  void print_usage(char *command);
 };
 
 #endif //REPROMPI_SRC_PGCHECK_PGCHECK_OPTIONS_H

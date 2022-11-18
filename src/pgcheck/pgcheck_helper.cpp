@@ -4,7 +4,6 @@
 
 #include "pgcheck_helper.h"
 
-
 /**
  * not my code
  * https://raymii.org/s/articles/Execute_a_command_and_get_both_output_and_exit_code.html

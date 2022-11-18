@@ -1,10 +1,5 @@
 
-#include <iostream>
-#include <fstream>
-#include <cassert>
-
 #include "pgcheck_input.h"
-#include "utils/string_utils.h"
 
 PGInput::PGInput(std::string input_file_name) {
   std::ifstream ins(input_file_name);
