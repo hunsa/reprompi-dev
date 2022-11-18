@@ -12,7 +12,7 @@
 #include "log/zf_log.h"
 
 HCAAbstractClockSync::HCAAbstractClockSync(ClockOffsetAlg *offsetAlg, int n_fitpoints) :
-    offset_alg(offsetAlg), n_fitpoints(n_fitpoints) {
+    n_fitpoints(n_fitpoints), offset_alg(offsetAlg) {
 }
 
 HCAAbstractClockSync::~HCAAbstractClockSync() {
