@@ -7,14 +7,6 @@
 PGDataPrinter::PGDataPrinter(int nnodes, int ppn, PGCheckOptions * options) :
     nnodes(nnodes), ppn(ppn), options(options) {}
 
-void PGDataPrinter::add_dataframe_mockup(std::string mockup_name, PGData *data) {
-  mockup2data.insert({mockup_name, data});
-}
-
-void PGDataPrinter::add_data_storage(std::string data) {
-  /*data_storage.append(data);*/
-}
-
 std::string PGDataPrinter::table_to_clear_string(PGDataTable table) {
   std::stringstream res;
   std::vector<std::string> col_names = table.get_col_names();
@@ -70,9 +62,6 @@ std::string PGDataPrinter::table_to_csv_string(PGDataTable table) {
   return res.str();
 }
 
-/**
- * prints the PGData based on defined options
- */
 int PGDataPrinter::print_collective() {
 
   PGDataComparer *comparer = ComparerFactory::create_comparer(options->get_comparer_type(), mpi_coll_names.back(), nnodes, ppn);
@@ -123,7 +112,6 @@ void PGDataPrinter::println_to_cout(std::string message) {
 }
 
 void PGDataPrinter::print_summary() {
-
   if(options->get_merge_coll_tables()){
 
     std::string merged_table_string = table_to_clear_string(merged_table);
@@ -148,19 +136,16 @@ void PGDataPrinter::print_summary() {
   if (!options->get_output_directory().empty()) {
     std::cout << "Files have been written to '" << options->get_output_directory() << "'." << std::endl;
   }
-
 }
 
-/**
- * adds the mean time for MPI_Barrier in seconds
- */
+void PGDataPrinter::add_dataframe_mockup(std::string mockup_name, PGData *data) {
+  mockup2data.insert({mockup_name, data});
+}
+
 void PGDataPrinter::set_barrier_time(double time_s) {
   barrier_time_s = time_s;
 }
 
-/**
- * adds the coll name to mpi_coll_names vector
- */
 void PGDataPrinter::add_mpi_coll_name(std::string mpi_coll_name) {
   mpi_coll_names.push_back(mpi_coll_name);
 }

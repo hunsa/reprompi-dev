@@ -18,10 +18,14 @@
 class PGDataPrinter {
 
 private:
-  void add_data_storage(std::string data);
-
+  /**
+   * @return table formatted for txt or console as string
+   */
   std::string table_to_clear_string(PGDataTable data_result);
 
+  /**
+   * @return table formatted for csv file as string
+   */
   std::string table_to_csv_string(PGDataTable data_result);
 
 protected:
@@ -36,8 +40,14 @@ protected:
 public:
   PGDataPrinter(int nnodes, int ppn, PGCheckOptions *options);
 
+  /**
+   * prints results from collective as txt or csv to file or console
+   */
   int print_collective();
 
+  /**
+   * prints results from collective as txt or csv to file or console
+   */
   void print_summary();
 
   void println_to_cerr(std::string message);

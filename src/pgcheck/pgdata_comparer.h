@@ -26,8 +26,9 @@ public:
   PGDataComparer(std::string mpi_coll_name, int nnodes, int ppn);
   virtual ~PGDataComparer() {};
 
-  void add_dataframe(std::string mockup_name, PGData *data);
-
+  /**
+   * adds map of data to this
+   */
   void add_data(std::unordered_map<std::string, PGData *> data);
 
   virtual PGDataTable get_results() = 0;
