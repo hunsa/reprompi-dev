@@ -98,9 +98,11 @@ std::string PGCheckOptions::parse(int argc, char *argv[]) {
     return "output directory was not specified -> option verbose was enabled and output is written to cout";
   }
 
-  std::string slash = "/";
-  if (!std::equal(slash.rbegin(), slash.rend(), output_directory.rbegin())) {
-    output_directory = output_directory.append("/");
+  if(!output_directory.empty() && (stat(output_directory.c_str(), &sb)==0)) {
+    std::string slash = "/";
+    if (!std::equal(slash.rbegin(), slash.rend(), output_directory.rbegin())) {
+      output_directory = output_directory.append("/");
+    }
   }
 
   return "";
