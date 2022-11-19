@@ -28,38 +28,52 @@ private:
    */
   std::string table_to_csv_string(PGDataTable data_result);
 
-protected:
-  int nnodes;
-  int ppn;
-  double barrier_time_s = -1.0;
-  std::vector <std::string> mpi_coll_names;
-  std::unordered_map<std::string, PGData *> mockup2data;
+  void write_string_to_file(std::string text, std::string filename);
+
+  /**
+   * adds the result from collective to table
+   */
+  void add_table_to_merged_table(PGDataTable data_table);
+
+private:
   PGCheckOptions *options;
   PGDataTable merged_table;
 
 public:
-  PGDataPrinter(int nnodes, int ppn, PGCheckOptions *options);
+  PGDataPrinter() = default;
+  PGDataPrinter(PGCheckOptions *options);
 
   /**
-   * prints results from collective as txt or csv to file or console
+   * prints result from collective as txt or csv to file or console
+   * @return 0 if print was successful
    */
-  int print_collective();
+  int print_collective(PGDataComparer *comparer);
 
   /**
-   * prints results from collective as txt or csv to file or console
+   * prints merged table as txt or csv to file or console
+   * @return 0 if print was successful
    */
-  void print_summary();
+  int print_summary();
 
-  void println_to_cerr(std::string message);
-
+  /**
+   * prints message to cout if verbose is enabled
+   */
   void println_to_cout(std::string message);
 
-  void add_dataframe_mockup(std::string mockup_name, PGData *data);
+  /**
+   * prints warning message to cout, text color purple
+   */
+  void println_warning_to_cout(std::string message);
 
-  void add_mpi_coll_name(std::string mpi_coll_name);
+  /**
+   * prints error message to cerr, text color red
+   */
+  void println_error_to_cerr(std::string message);
 
-  void set_barrier_time(double time_s);
-
+  /**
+   * prints usage string
+   */
+  void print_usage(char *command);
 
 };
 

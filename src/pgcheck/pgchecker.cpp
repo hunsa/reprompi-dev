@@ -54,16 +54,16 @@ static double get_barrier_runtime() {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   auto barrier_options = "--calls-list=MPI_Barrier --msizes-list=1 --nrep=500 --proc-sync=roundtime --rt-bench-time-ms=2000 --bcast-nrep=1 --rt-barrier-count=0 --output-file=barrier.txt";
-  std::vector<std::string> barrier_argv_vector;
+  std::vector <std::string> barrier_argv_vector;
   auto foo = std::vector<std::string>();
   argv::compose_argv_vector("dummy", barrier_options, foo, barrier_argv_vector);
-  int argc_test=0;
+  int argc_test = 0;
   char **argv_test;
   argv::convert_vector_to_argv_cstyle(barrier_argv_vector, &argc_test, &argv_test);
   pgtune_override_argv_parameter(argc_test, argv_test);
   run_collective(argc_test, argv_test);
   argv::free_argv_cstyle(argc_test, argv_test);
-  if(rank == 0) {
+  if (rank == 0) {
     auto data = new PGData("MPI_Barrier", "default");
     data->read_csv_from_file("barrier.txt");
     auto vals = data->get_runtimes_for_count(1);
@@ -87,12 +87,36 @@ int main(int argc, char *argv[]) {
   MPI_Comm_size(comm_intranode, &ppn);
   nnodes = size / ppn;
 
-  PGCheckOptions *options = new PGCheckOptions(argc, argv);
+  PGCheckOptions *options = new PGCheckOptions();
   PGDataPrinter *printer = NULL;
+  std::string parse_res = options->parse(argc, argv);
 
-  if(rank == 0) {
-    printer = new PGDataPrinter(nnodes, ppn, options);
-    printer->println_to_cout(options->get_config_message());
+  if (rank == 0) {
+    printer = new PGDataPrinter(options);
+  }
+
+  // -h, --help was specified, terminate success
+  if (parse_res == "h") {
+    if (rank == 0) {
+      printer->print_usage(argv[0]);
+    }
+    MPI_Comm_free(&comm_intranode);
+    MPI_Finalize();
+    exit(EXIT_SUCCESS);
+  }
+  // error parsing options, terminate failure
+  else if (parse_res == "e"){
+    if (rank == 0) {
+      printer->println_error_to_cerr("cannot parse options");
+      printer->print_usage(argv[0]);
+    }
+    exit(EXIT_FAILURE);
+  }
+  // print warnings
+  else if (parse_res != "") {
+    if (rank == 0) {
+      printer->println_warning_to_cout(parse_res);
+    }
   }
 
   reprompib_register_sync_modules();
@@ -100,49 +124,48 @@ int main(int argc, char *argv[]) {
   reprompib_register_caching_modules();
 
   std::ifstream ins(options->get_input_file());
-  if( !ins.good() ) {
-    if( rank == 0 ) {
-      printer->println_to_cerr("Error: input file '" + options->get_input_file() + "' cannot be read\n");
-      options->print_usage(argv[0]);
+  if (!ins.good()) {
+    if (rank == 0) {
+      printer->println_error_to_cerr("input file '" + options->get_input_file() + "' cannot be read");
+      printer->print_usage(argv[0]);
       fflush(stdout);
       exit(-1);
     }
   }
 
   double barrier_mean = get_barrier_runtime();
-  if(rank == 0) {
-    printer->println_to_cout( "mean barrier: " + std::to_string(barrier_mean));
+  if (rank == 0) {
+    printer->println_to_cout("mean barrier: " + std::to_string(barrier_mean));
   }
 
   PGInput input(options->get_input_file());
 
   std::string csv_conf = "./external/src/pgtunelib-build/pgmpi_conf.csv";
   std::ifstream ifs(csv_conf);
-  if(! ifs.good() ) {
-    if( rank == 0 ) {
-      printer->println_to_cerr("Cannot find " + csv_conf);
+  if (!ifs.good()) {
+    if (rank == 0) {
+      printer->println_error_to_cerr("cannot find '" + csv_conf + "'");
     }
     exit(-1);
   }
 
-  std::string pginfo_data( (std::istreambuf_iterator<char>(ifs) ),
-                           (std::istreambuf_iterator<char>()    ) );
+  std::string pginfo_data((std::istreambuf_iterator<char>(ifs)),
+                          (std::istreambuf_iterator<char>()));
 
   auto pgtune_interface = PGTuneLibInterface(pginfo_data);
 
-  for(int case_id=0; case_id<input.get_number_of_test_cases(); case_id++) {
+  for (int case_id = 0; case_id < input.get_number_of_test_cases(); case_id++) {
     std::string mpi_coll = input.get_mpi_collective_for_case_id(case_id);
 
-    if(rank == 0) {
+    if (rank == 0) {
       printer->println_to_cout("Case " + std::to_string(case_id) + ": " + mpi_coll);
-      printer->set_barrier_time(barrier_mean);
-      printer->add_mpi_coll_name(mpi_coll);
     }
 
     auto mod_name = pgtune_interface.get_module_name_for_mpi_collectives(mpi_coll);
-    for( auto& alg_version : pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll) ) {
-      std::vector<std::string> pgtunelib_argv;
-      if( rank == 0 ) {
+    std::unordered_map < std::string, PGData * > coll_data;
+    for (auto &alg_version: pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll)) {
+      std::vector <std::string> pgtunelib_argv;
+      if (rank == 0) {
         printer->println_to_cout(mod_name + ":" + alg_version);
       }
 
@@ -150,10 +173,10 @@ int main(int argc, char *argv[]) {
       pgtunelib_argv.push_back("--calls-list=" + mpi_coll);
       pgtunelib_argv.push_back("--output-file=foo.txt");
       pgtunelib_argv.push_back("--module=" + mod_name + "=" + "alg:" + alg_version);
-      std::vector<std::string> argv_vector;
+      std::vector <std::string> argv_vector;
       argv::compose_argv_vector(argv[0], call_options, pgtunelib_argv, argv_vector);
 
-      int argc_test=0;
+      int argc_test = 0;
       char **argv_test;
       argv::convert_vector_to_argv_cstyle(argv_vector, &argc_test, &argv_test);
 
@@ -161,25 +184,28 @@ int main(int argc, char *argv[]) {
       run_collective(argc_test, argv_test);
       argv::free_argv_cstyle(argc_test, argv_test);
 
-      if(rank == 0) {
+      if (rank == 0) {
         auto *data = new PGData(mpi_coll, alg_version);
         data->read_csv_from_file("foo.txt");
-        printer->add_dataframe_mockup(alg_version, data);
+        coll_data.insert({alg_version, data});
       }
     }
 
-    if(rank == 0) {
-      if(printer->print_collective() != 0){
-        std::cerr << "Cannot print results" << std::endl;
+    if (rank == 0) {
+      PGDataComparer *comparer = ComparerFactory::create_comparer(options->get_comparer_type(), mpi_coll, nnodes, ppn);
+      comparer->set_barrier_time(barrier_mean);
+      comparer->add_data(coll_data);
+      if (printer->print_collective(comparer) != 0) {
+        printer->println_error_to_cerr("cannot print results");
+        exit(-1);
       }
     }
   }
 
-  if(rank == 0) {
+  if (rank == 0) {
     printer->print_summary();
+    delete printer;
   }
-
-  delete printer;
 
   reprompib_deregister_sync_modules();
   reprompib_deregister_proc_sync_modules();

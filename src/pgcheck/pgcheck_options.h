@@ -24,10 +24,7 @@ protected:
   std::string config_message = "";
 
 public:
-  /**
-   * options are parsed
-   */
-  PGCheckOptions(int argc, char *argv[]);
+  PGCheckOptions() = default;
   bool get_merge_coll_tables();
   bool get_print_to_csv();
   bool get_verbose();
@@ -37,9 +34,10 @@ public:
   std::string get_input_file();
   std::string get_output_directory();
   /**
-   * prints usage to cout
+   * options are parsed
+   * @return error code or warning message
    */
-  void print_usage(char *command);
+  std::string parse(int argc, char *argv[]);
 };
 
 #endif //REPROMPI_SRC_PGCHECK_PGCHECK_OPTIONS_H

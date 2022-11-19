@@ -24,6 +24,7 @@ protected:
 public:
 
   PGDataComparer(std::string mpi_coll_name, int nnodes, int ppn);
+
   virtual ~PGDataComparer() {};
 
   /**
@@ -34,9 +35,10 @@ public:
   virtual PGDataTable get_results() = 0;
 
   /**
-   * adds the mean time for MPI_Barrier in seconds
+   *
+   * @return true if barrier time has been set before
    */
-  void set_barrier_time(double time_s);
+  bool has_barrier_time();
 
   /**
    *
@@ -45,10 +47,9 @@ public:
   double get_barrier_time();
 
   /**
-   *
-   * @return true if barrier time has been set before
+   * adds the mean time for MPI_Barrier in seconds
    */
-  bool has_barrier_time();
+  void set_barrier_time(double time_s);
 
 };
 
