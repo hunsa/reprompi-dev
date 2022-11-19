@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string.h>
 #include <stdio.h>
+#include <algorithm>
 #include <iomanip>
 #include <sys/stat.h>
 

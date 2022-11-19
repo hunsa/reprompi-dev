@@ -140,7 +140,7 @@ void PGDataPrinter::print_usage(char *command) {
   std::cout << "USAGE: " << std::string(command) << " -f input_file [options]" << std::endl << std::endl;
   std::cout << "OPTIONS:" << std::endl;
   std::cout << std::setw(28) << std::left << "  ?, -h, --help" << "Display this information." << std::endl;
-  std::cout << std::setw(28) << std::left << "  -c, --comparer {0|1|2|3}" << "Specify the comparer type (0=Simple; 1=Detailed; 2=T-Test; 3=Grouped T-Test)." << std::endl;
+  std::cout << std::setw(28) << std::left << "  -c, --comparer {0|1|2|3}" << "Specify the comparer type (0=Simple; 1=T-Test; 2=Detailed T-Test; 3=Grouped T-Test)." << std::endl;
   std::cout << std::setw(28) << std::left << "  -o, --output <path>" << "Specify an existing output folder." << std::endl;
   std::cout << std::setw(28) << std::left << "  -m, --merge" << "Additionally results of all collectives are merged into one table." << std::endl;
   std::cout << std::setw(28) << std::left << "  -s, --csv" << "Print results to .csv file. Output directory must be specified. The csv formatted table is never written to the console." << std::endl;

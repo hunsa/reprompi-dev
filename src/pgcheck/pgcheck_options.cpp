@@ -38,26 +38,22 @@ std::string PGCheckOptions::get_config_message() {
 
 std::string PGCheckOptions::parse(int argc, char *argv[]) {
   int c;
-  const char* short_opts = "hf:c:o:msv";
   struct option long_opts[] =
       {
           {"help",     no_argument,       NULL, 'h'},
-          {"input",    required_argument, NULL, 'f'},
-          {"output",   required_argument, NULL, 'o'},
-          {"comparer", required_argument, NULL, 'c'},
           {"merge",    no_argument,       NULL, 'm'},
           {"csv",      no_argument,       NULL, 's'},
           {"verbose",  no_argument,       NULL, 'v'},
+          {"input",    required_argument, NULL, 'f'},
+          {"output",   required_argument, NULL, 'o'},
+          {"comparer", required_argument, NULL, 'c'},
           {NULL,       0,                 NULL, 0  }
       };
 
-  while ((c = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
+  while ((c = getopt_long(argc, argv, ":hmsvf:o:c:", long_opts, NULL)) != -1) {
     switch (c) {
       case 'h':
         return "h";
-      case '?':
-      default :
-        return "e";
       case 'f':
         input_file = std::string(optarg);
         break;
@@ -76,15 +72,24 @@ std::string PGCheckOptions::parse(int argc, char *argv[]) {
       case 'v':
         verbose = true;
         break;
+      case '?':
+      default :
+        return "e";
     }
   }
 
   // print results to cout if output directory is not present
   struct stat sb;
   if((stat(output_directory.c_str(), &sb)!=0) && !output_directory.empty()) {
+    std::string not_found_directory = output_directory;
     output_directory = "";
     verbose = true;
-    return "cannot find directory '" + output_directory + "' -> option verbose was enabled and output is written to cout";
+
+    if(csv) {
+      csv = false;
+      return "cannot find directory '" + not_found_directory + "' -> option verbose was enabled, option csv was disabled";
+    }
+    return "cannot find directory '" + not_found_directory + "' -> option verbose was enabled";
   }
 
   // print results to cout if output directory was not specified
@@ -92,5 +97,11 @@ std::string PGCheckOptions::parse(int argc, char *argv[]) {
     verbose = true;
     return "output directory was not specified -> option verbose was enabled and output is written to cout";
   }
+
+  std::string slash = "/";
+  if (!std::equal(slash.rbegin(), slash.rend(), output_directory.rbegin())) {
+    output_directory = output_directory.append("/");
+  }
+
   return "";
 }

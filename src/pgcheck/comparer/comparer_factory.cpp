@@ -15,10 +15,10 @@ PGDataComparer* ComparerFactory::create_comparer(int comparer_id, std::string mp
     comparer = new SimpleComparer(mpi_coll_name, nnodes, ppn);
     break;
   case 1:
-    comparer = new DetailedTTestComparer(mpi_coll_name, nnodes, ppn);
-    break;
-  case 2:
     comparer = new TTestComparer(mpi_coll_name, nnodes, ppn);
+      break;
+  case 2:
+    comparer = new DetailedTTestComparer(mpi_coll_name, nnodes, ppn);
     break;
   case 3:
     comparer = new GroupedTTestComparer(mpi_coll_name, nnodes, ppn);

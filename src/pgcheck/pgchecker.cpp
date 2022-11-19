@@ -59,10 +59,12 @@ static double get_barrier_runtime() {
   argv::compose_argv_vector("dummy", barrier_options, foo, barrier_argv_vector);
   int argc_test = 0;
   char **argv_test;
+
   argv::convert_vector_to_argv_cstyle(barrier_argv_vector, &argc_test, &argv_test);
   pgtune_override_argv_parameter(argc_test, argv_test);
   run_collective(argc_test, argv_test);
   argv::free_argv_cstyle(argc_test, argv_test);
+
   if (rank == 0) {
     auto data = new PGData("MPI_Barrier", "default");
     data->read_csv_from_file("barrier.txt");

@@ -51,8 +51,8 @@ void PGDataTable::add_row(std::unordered_map <std::string, std::string> &row_map
 }
 
 void PGDataTable::add_table(PGDataTable table) {
-  if (col_names[0] != "Collective") {
-    col_names.insert(col_names.begin(), "Collective");
+  if (col_names[0] != "collective") {
+    col_names.insert(col_names.begin(), "collective");
     col_widths.insert(col_widths.begin(), 20);
   }
 
@@ -62,6 +62,6 @@ void PGDataTable::add_table(PGDataTable table) {
       std::vector <std::string> values = table.get_values_for_col_name(*iter);
       col_value_map[*iter].push_back(values[i]);
     }
-    col_value_map["Collective"].push_back(table.get_mpi_name());
+    col_value_map["collective"].push_back(table.get_mpi_name());
   }
 }
