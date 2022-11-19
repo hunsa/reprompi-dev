@@ -28,6 +28,9 @@ private:
    */
   std::string table_to_csv_string(PGDataTable data_result);
 
+  /**
+   * writes text to new file with filename
+   */
   void write_string_to_file(std::string text, std::string filename);
 
   /**
@@ -40,7 +43,6 @@ private:
   PGDataTable merged_table;
 
 public:
-  PGDataPrinter() = default;
   PGDataPrinter(PGCheckOptions *options);
 
   /**

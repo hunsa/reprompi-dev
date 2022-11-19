@@ -4,17 +4,6 @@
 
 #include "pgtunelib_interface.h"
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <sstream>
-#include <istream>
-
-#include "utils/csv.hpp"
-using namespace csv;
-
-
 std::vector<std::string> split_line(std::string line);
 
 PGTuneLibInterface::PGTuneLibInterface(std::string pgmpi_info_str)
@@ -35,7 +24,6 @@ PGTuneLibInterface::PGTuneLibInterface(std::string pgmpi_info_str)
       std::get<1>(mpi2module[mpiname]).push_back(row["algname"].get());
     }
   }
-
 }
 
 std::string PGTuneLibInterface::get_module_name_for_mpi_collectives(std::string mpi_coll_name) {
