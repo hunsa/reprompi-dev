@@ -95,13 +95,16 @@ std::string PGDataPrinter::table_to_csv_string(PGDataTable table) {
   res << row_delimiter;
   int nb_rows = table.get_col_size();
   for (int i = 0; i < nb_rows; i++) {
-
     for (auto iter = col_names.begin(); iter != col_names.end(); ++iter) {
       std::vector <std::string> values = table.get_values_for_col_name(*iter);
       res << values[i];
       if (std::next(iter) != col_names.end()) {
         res << col_delimiter;
       }
+    }
+    // escape last new line
+    if(i == (nb_rows-1)) {
+      continue;
     }
     res << row_delimiter;
   }
