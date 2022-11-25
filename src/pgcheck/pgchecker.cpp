@@ -46,9 +46,10 @@
 #include "comparer/comparer_factory.h"
 #include "pgcheck_input.h"
 #include "utils/argv_manager.h"
+#include "utils/statistics_utils.h"
 
 static double get_barrier_runtime() {
-  double mean = -1.0;
+  double avg_runtime = -1.0;
   int rank;
   // run a barrier test
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -69,11 +70,12 @@ static double get_barrier_runtime() {
     auto data = new PGData("MPI_Barrier", "default");
     data->read_csv_from_file("barrier.txt");
     auto vals = data->get_runtimes_for_count(1);
-    double sum = std::accumulate(vals.begin(), vals.end(), 0.0);
-    mean = sum / vals.size();
+    //double sum = std::accumulate(vals.begin(), vals.end(), 0.0);
+    //avg_runtime = sum / vals.size();
+    avg_runtime = StatisticsUtils<double>().median(vals);
   }
-  MPI_Bcast(&mean, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  return mean;
+  MPI_Bcast(&avg_runtime, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  return avg_runtime;
 }
 
 int main(int argc, char *argv[]) {
