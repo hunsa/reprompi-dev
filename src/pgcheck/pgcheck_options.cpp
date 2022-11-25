@@ -78,6 +78,9 @@ std::string PGCheckOptions::parse(int argc, char *argv[]) {
     }
   }
 
+  optind = 1;
+  opterr = 1;
+
   // print results to cout if output directory is not present
   struct stat sb;
   if((stat(output_directory.c_str(), &sb)!=0) && !output_directory.empty()) {
