@@ -9,17 +9,15 @@
 #include <vector>
 #include <unordered_map>
 #include <iostream>
+#include <algorithm>
 #include <fstream>
 #include <sstream>
-#include "utils/csv.hpp"
-
-using namespace csv;
 
 class PGTuneLibInterface {
 
 private:
   std::vector <std::string> mpi_collectives;
-  std::unordered_map <std::string, std::tuple<std::string, std::vector<std::string>>>
+  std::unordered_map <std::string, std::tuple<std::string, std::vector < std::string>>>
   mpi2module;
 
 public:
