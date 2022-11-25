@@ -1,76 +1,42 @@
 
-#include <sstream>
-#include <fstream>
-#include <set>
 #include "pgdata.h"
 
 PGData::PGData(std::string mpi_coll_name, std::string mockup_name) :
-  mpi_coll_name(mpi_coll_name),
-  mockup_name(mockup_name)
-{
+    mpi_coll_name(mpi_coll_name),
+    mockup_name(mockup_name) {
 }
 
 int PGData::read_csv_from_file(std::string csv_path) {
 
-  std::ifstream infile(csv_path);
-  std::string line;
-  std::string out = "";
-
-  while (std::getline(infile, line))
-  {
-    if( line[0] != '#' ) {
-
-      std::istringstream iss(line);
-      std::string token;
-      bool first = true;
-
-      while (iss >> token) {
-        //std::cout << "token: " << token << std::endl;
-        if( ! first ) {
-          out.append(";");
-        } else {
-          first = false;
-        }
-        out.append(token);
-      }
-      out.append("\n");
-    }
-  }
-
-  //std::cout << "out: " << out << std::endl;
-  std::stringstream sstream(out);
-
-  csv = rapidcsv::Document(sstream,
-                           rapidcsv::LabelParams(),
-                           rapidcsv::SeparatorParams(';', true),
-                           rapidcsv::ConverterParams(),
-                           rapidcsv::LineReaderParams(true,'#'));
-
-  //std::cout << "col num: " << csv.GetColumnCount() << std::endl;
+  CSVParser *parser = new CSVParser();
+  table = parser->parse_file(csv_path);
 
   return 0;
 }
 
-std::vector<std::string> PGData::get_columns_names() {
-  return csv.GetColumnNames();
+std::vector <std::string> PGData::get_columns_names() {
+  return table.get_col_names();
 }
 
 std::vector<double> PGData::get_runtimes_for_count(int count) {
-
-  std::vector<double> rt;
-  for(size_t rowIdx = 0; rowIdx < csv.GetRowCount(); rowIdx++) {
-    if (csv.GetCell<int>("count", rowIdx) == count ) {
-      rt.push_back(csv.GetCell<double>("runtime_sec", rowIdx));
+  std::vector<double> runtimes;
+  for (int rowIdx = 0; rowIdx < table.get_col_size(); rowIdx++) {
+    if(fromString<int>(table.get_values_col_row("count", rowIdx)) == count) {
+      runtimes.push_back(fromString<double>(table.get_values_col_row("runtime_sec", rowIdx)));
     }
   }
 
-  return rt;
+  return runtimes;
 }
 
 std::vector<int> PGData::get_unique_counts() {
-  auto counts = csv.GetColumn<int>("count");
-  //std::cout << "counts.size: " << counts.size() << std::endl;
-  std::set<int> unique_counts(counts.begin(), counts.end());
-  std::vector<int> ucv(unique_counts.begin(), unique_counts.end());
-  return ucv;
+  auto counts = table.get_values_for_col_name("count");
+  std::set<std::string> unique_counts(counts.begin(), counts.end());
+  std::vector<std::string> ucv(unique_counts.begin(), unique_counts.end());
+
+  std::vector<int> int_vector_res;
+  for (auto iter = ucv.begin(); iter != ucv.end(); ++iter) {
+    int_vector_res.push_back(fromString<int>(*iter));
+  }
+  return int_vector_res;
 }

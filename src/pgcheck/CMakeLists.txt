@@ -64,6 +64,7 @@ add_custom_target(config
 
 add_executable(pgchecker
         pgchecker.cpp
+        utils/csv_parser.cpp
         pgcheck_helper.cpp
         pgcheck_options.cpp
         pgtunelib_interface.cpp

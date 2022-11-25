@@ -32,6 +32,10 @@ std::vector <std::string> PGDataTable::get_values_for_col_name(std::string key) 
   return col_value_map.at(key);
 }
 
+std::string PGDataTable::get_values_col_row(std::string col, int row) {
+  return col_value_map.at(col).at(row);
+}
+
 std::unordered_map <std::string, std::vector<std::string>> PGDataTable::get_col_value_map() {
   return col_value_map;
 }

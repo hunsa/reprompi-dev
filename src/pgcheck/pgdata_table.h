@@ -31,6 +31,8 @@ public:
 
   std::string get_mpi_name();
 
+  std::string get_values_col_row(std::string col, int row);
+
   std::vector<int> get_col_widths();
 
   std::vector <std::string> get_col_names();

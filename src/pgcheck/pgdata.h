@@ -8,12 +8,19 @@
 #include <string>
 #include <vector>
 #include <limits>
-#include "utils/rapidcsv.h"
+#include <sstream>
+#include <fstream>
+#include <set>
+#include <map>
+#include <algorithm>
+#include "pgdata_table.h"
+#include "utils/string_utils.h"
+#include "utils/csv_parser.h"
 
 class PGData {
   std::string mpi_coll_name;
   std::string mockup_name;
-  rapidcsv::Document csv;
+  PGDataTable table;
 
 public:
   PGData(std::string mpi_coll_name, std::string mockup_name);
