@@ -6,7 +6,6 @@
 #include "pgdata_table.h"
 #include "comparer/comparer_data.h"
 #include "utils/statistics_utils.h"
-#include "utils/statistics_utils.cpp"
 #include <vector>
 #include <unordered_map>
 #include <iomanip>
