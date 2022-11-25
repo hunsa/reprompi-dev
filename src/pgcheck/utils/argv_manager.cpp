@@ -31,7 +31,8 @@ void convert_vector_to_argv_cstyle(std::vector <std::string> &argv_vector,
                                    int *argc_out, char ***argv_out) {
 
   *argc_out = argv_vector.size();
-  *argv_out = new char*[argv_vector.size()];
+  // we need +1 as the last element should be NULL, argv[argc] = NULL
+  *argv_out = new char*[argv_vector.size()+1];
   for(size_t i=0; i<argv_vector.size(); i++) {
     std::string argv_cpy_s(argv_vector.at(i));
     //std::cout << "argv_cpy_s: " << argv_cpy_s << std::endl;
@@ -43,7 +44,7 @@ void convert_vector_to_argv_cstyle(std::vector <std::string> &argv_vector,
     // just making sure that we indeed end with null termination
     assert((*argv_out)[i][argv_cpy_s.size()]=='\0');
   }
-
+  (*argv_out)[*argc_out] = NULL;
 }
 
 void free_argv_cstyle(int argc_in, char **argv_in) {
