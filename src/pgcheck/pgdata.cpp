@@ -35,8 +35,9 @@ std::vector<int> PGData::get_unique_counts() {
   std::vector<std::string> ucv(unique_counts.begin(), unique_counts.end());
 
   std::vector<int> int_vector_res;
-  for (auto iter = ucv.begin(); iter != ucv.end(); ++iter) {
+  for (auto iter = ucv.begin(); iter != (ucv.end()-1); ++iter) {
     int_vector_res.push_back(fromString<int>(*iter));
   }
+
   return int_vector_res;
 }
