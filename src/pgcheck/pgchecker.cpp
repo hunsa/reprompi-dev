@@ -82,6 +82,7 @@ int main(int argc, char *argv[]) {
   int rank;
   int ppn, nnodes, size;
   MPI_Comm comm_intranode;
+  std::string tmp_dir = "./data";
 
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -174,8 +175,15 @@ int main(int argc, char *argv[]) {
       }
 
       std::string call_options = input.get_call_options_for_case_id(case_id);
+      std::string tmp_out_file = tmp_dir + "/" + "data_" + mpi_coll + "_" + alg_version + ".dat";
+      struct stat sb;
+      stat(tmp_dir.c_str(), &sb);
+      if( ! S_ISDIR (sb.st_mode) ) {
+        mkdir(tmp_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      }
+
       pgtunelib_argv.push_back("--calls-list=" + mpi_coll);
-      pgtunelib_argv.push_back("--output-file=foo.txt");
+      pgtunelib_argv.push_back("--output-file=" + tmp_out_file);
       pgtunelib_argv.push_back("--module=" + mod_name + "=" + "alg:" + alg_version);
       std::vector <std::string> argv_vector;
       argv::compose_argv_vector(argv[0], call_options, pgtunelib_argv, argv_vector);
@@ -190,7 +198,7 @@ int main(int argc, char *argv[]) {
 
       if (rank == 0) {
         auto *data = new PGData(mpi_coll, alg_version);
-        data->read_csv_from_file("foo.txt");
+        data->read_csv_from_file(tmp_out_file);
         coll_data.insert({alg_version, data});
       }
     }
