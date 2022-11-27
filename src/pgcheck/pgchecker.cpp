@@ -176,10 +176,12 @@ int main(int argc, char *argv[]) {
 
       std::string call_options = input.get_call_options_for_case_id(case_id);
       std::string tmp_out_file = tmp_dir + "/" + "data_" + mpi_coll + "_" + alg_version + ".dat";
-      struct stat sb;
-      stat(tmp_dir.c_str(), &sb);
-      if( ! S_ISDIR (sb.st_mode) ) {
-        mkdir(tmp_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      if( rank == 0 ) {
+        struct stat sb;
+        stat(tmp_dir.c_str(), &sb);
+        if( ! S_ISDIR (sb.st_mode) ) {
+          mkdir(tmp_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        }
       }
 
       pgtunelib_argv.push_back("--calls-list=" + mpi_coll);
