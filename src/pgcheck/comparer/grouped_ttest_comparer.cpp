@@ -4,7 +4,7 @@
 
 #include "grouped_ttest_comparer.h"
 
-static std::vector<int> col_widths = {18, 15, 5, 5, 5, 15, 10, 50, 15};
+static std::vector<int> col_widths = {25, 15, 5, 5, 5, 15, 10, 50, 15};
 
 GroupedTTestComparer::GroupedTTestComparer(std::string mpi_coll_name, int nnodes, int ppn) :
     PGDataComparer(mpi_coll_name, nnodes, ppn) {}
