@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
 
   double barrier_mean = get_barrier_runtime();
   if (rank == 0) {
-    printer->println_to_cout("avg barrier: " + std::to_string(barrier_mean));
+    printer->println_to_cout("avg barrier [ms]: " + std::to_string(barrier_mean*1000));
   }
 
   PGInput input(options.get_input_file());
