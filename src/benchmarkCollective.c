@@ -147,9 +147,6 @@ void run_collective(int argc, char **argv) {
 
   start_time = time(NULL);
 
-  // parse arguments and set-up benchmarking jobs
-  print_command_line_args(argc, argv);
-
   reprompib_parse_bench_options(argc, argv);  // only "-h" for help
 
   // parse common arguments (e.g., msizes list, MPI calls to benchmark, input file)

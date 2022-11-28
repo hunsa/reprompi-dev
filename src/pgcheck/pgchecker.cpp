@@ -92,9 +92,9 @@ int main(int argc, char *argv[]) {
   MPI_Comm_size(comm_intranode, &ppn);
   nnodes = size / ppn;
 
-  PGCheckOptions *options = new PGCheckOptions();
+  PGCheckOptions options;
   PGDataPrinter *printer = NULL;
-  std::string parse_res = options->parse(argc, argv);
+  std::string parse_res = options.parse(argc, argv);
 
   if (rank == 0) {
     printer = new PGDataPrinter(options);
@@ -128,10 +128,10 @@ int main(int argc, char *argv[]) {
   reprompib_register_proc_sync_modules();
   reprompib_register_caching_modules();
 
-  std::ifstream ins(options->get_input_file());
+  std::ifstream ins(options.get_input_file());
   if (!ins.good()) {
     if (rank == 0) {
-      printer->println_error_to_cerr("input file '" + options->get_input_file() + "' cannot be read");
+      printer->println_error_to_cerr("input file '" + options.get_input_file() + "' cannot be read");
       printer->print_usage(argv[0]);
       fflush(stdout);
       exit(-1);
@@ -143,7 +143,7 @@ int main(int argc, char *argv[]) {
     printer->println_to_cout("avg barrier: " + std::to_string(barrier_mean));
   }
 
-  PGInput input(options->get_input_file());
+  PGInput input(options.get_input_file());
 
   std::string csv_conf = "./external/src/pgtunelib-build/pgmpi_conf.csv";
   std::ifstream ifs(csv_conf);
@@ -171,7 +171,8 @@ int main(int argc, char *argv[]) {
     for (auto &alg_version: pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll)) {
       std::vector <std::string> pgtunelib_argv;
       if (rank == 0) {
-        printer->println_to_cout(mod_name + ":" + alg_version);
+        printer->println_to_cout("\n################################");
+        printer->println_to_cout("Collecting data: " + mod_name + ":" + alg_version);
       }
 
       std::string call_options = input.get_call_options_for_case_id(case_id);
@@ -195,6 +196,12 @@ int main(int argc, char *argv[]) {
       argv::convert_vector_to_argv_cstyle(argv_vector, &argc_test, &argv_test);
 
       pgtune_override_argv_parameter(argc_test, argv_test);
+      if( rank == 0 ) {
+        if( options.get_verbose() ) {
+          print_command_line_args(argc_test, argv_test);
+        }
+      }
+
       run_collective(argc_test, argv_test);
       argv::free_argv_cstyle(argc_test, argv_test);
 
@@ -206,7 +213,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (rank == 0) {
-      PGDataComparer *comparer = ComparerFactory::create_comparer(options->get_comparer_type(), mpi_coll, nnodes, ppn);
+      PGDataComparer *comparer = ComparerFactory::create_comparer(options.get_comparer_type(), mpi_coll, nnodes, ppn);
       comparer->set_barrier_time(barrier_mean);
       comparer->add_data(coll_data);
       if (printer->print_collective(comparer) != 0) {
@@ -217,7 +224,9 @@ int main(int argc, char *argv[]) {
   }
 
   if (rank == 0) {
+    printer->println_to_cout("\n################################");
     printer->print_summary();
+    printer->println_to_cout("################################");
     delete printer;
   }
 

@@ -39,11 +39,11 @@ private:
   void add_table_to_merged_table(PGDataTable data_table);
 
 private:
-  PGCheckOptions *options;
+  PGCheckOptions options;
   PGDataTable merged_table;
 
 public:
-  PGDataPrinter(PGCheckOptions *options);
+  PGDataPrinter(PGCheckOptions& options);
 
   /**
    * prints result from collective as txt or csv to file or console

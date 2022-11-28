@@ -4,12 +4,12 @@
 
 #include "pgdata_printer.h"
 
-PGDataPrinter::PGDataPrinter(PGCheckOptions *options) : options(options) {}
+PGDataPrinter::PGDataPrinter(PGCheckOptions& options) : options(options) {}
 
 int PGDataPrinter::print_collective(PGDataComparer *comparer) {
   PGDataTable table_coll_res = comparer->get_results();
   std::string output_formatted = table_to_clear_string(table_coll_res);
-  std::string output_directory = options->get_output_directory();
+  std::string output_directory = options.get_output_directory();
   std::string filename = output_directory + table_coll_res.get_mpi_name();
 
   println_to_cout(output_formatted);
@@ -17,12 +17,12 @@ int PGDataPrinter::print_collective(PGDataComparer *comparer) {
   if (!output_directory.empty()) {
     write_string_to_file(output_formatted, filename + ".txt");
 
-    if (options->get_csv()) {
+    if (options.get_csv()) {
       write_string_to_file(table_to_csv_string(table_coll_res), filename + ".csv");
     }
   }
 
-  if (options->get_merge_coll_tables()) {
+  if (options.get_merge_coll_tables()) {
     add_table_to_merged_table(table_coll_res);
   }
 
@@ -30,8 +30,8 @@ int PGDataPrinter::print_collective(PGDataComparer *comparer) {
 }
 
 int PGDataPrinter::print_summary() {
-  std::string output_directory = options->get_output_directory();
-  if (options->get_merge_coll_tables()) {
+  std::string output_directory = options.get_output_directory();
+  if (options.get_merge_coll_tables()) {
     std::string merged_table_string = table_to_clear_string(merged_table);
     std::string filename = output_directory + "MPI_Results";
 
@@ -40,14 +40,14 @@ int PGDataPrinter::print_summary() {
     if(!output_directory.empty()) {
       write_string_to_file(merged_table_string, filename + ".txt");
 
-      if (options->get_csv()) {
+      if (options.get_csv()) {
         write_string_to_file(table_to_csv_string(merged_table), filename + ".csv");
       }
     }
   }
 
   if (!output_directory.empty()) {
-    std::cout << "Files have been written to '" << options->get_output_directory() << "'." << std::endl;
+    std::cout << "Files have been written to '" << options.get_output_directory() << "'." << std::endl;
   }
 
   return EXIT_SUCCESS;
@@ -112,7 +112,7 @@ std::string PGDataPrinter::table_to_csv_string(PGDataTable table) {
 }
 
 void PGDataPrinter::println_to_cout(std::string message) {
-  if (options->get_verbose()) {
+  if (options.get_verbose()) {
     std::cout << message << std::endl;
   }
 }

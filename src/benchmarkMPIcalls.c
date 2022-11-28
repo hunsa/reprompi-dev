@@ -49,6 +49,9 @@ int main(int argc, char* argv[]) {
 
   MPI_Init(&argc, &argv);
 
+  // parse arguments and set-up benchmarking jobs
+  print_command_line_args(argc, argv);
+
   reprompib_register_sync_modules();
   reprompib_register_proc_sync_modules();
   reprompib_register_caching_modules();
