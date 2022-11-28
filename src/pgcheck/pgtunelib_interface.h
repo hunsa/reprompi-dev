@@ -11,9 +11,6 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "utils/csv.hpp"
-
-using namespace csv;
 
 class PGTuneLibInterface {
 
