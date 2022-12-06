@@ -3,6 +3,9 @@
 //
 
 #include "pgtunelib_interface.h"
+#include "utils/csv.hpp"
+
+using namespace csv;
 
 std::vector <std::string> split_line(std::string line);
 
