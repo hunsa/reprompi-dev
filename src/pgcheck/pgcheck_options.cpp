@@ -36,7 +36,7 @@ std::string PGCheckOptions::get_config_message() {
   return config_message;
 }
 
-std::string PGCheckOptions::parse(int argc, char *argv[]) {
+int PGCheckOptions::parse(int argc, char *argv[]) {
   int c;
   struct option long_opts[] =
       {
@@ -53,7 +53,9 @@ std::string PGCheckOptions::parse(int argc, char *argv[]) {
   while ((c = getopt_long(argc, argv, ":hmsvf:o:c:", long_opts, NULL)) != -1) {
     switch (c) {
       case 'h':
-        return "h";
+      case '?':
+      default :
+        return -1;
       case 'f':
         input_file = std::string(optarg);
         break;
@@ -72,9 +74,6 @@ std::string PGCheckOptions::parse(int argc, char *argv[]) {
       case 'v':
         verbose = true;
         break;
-      case '?':
-      default :
-        return "e";
     }
   }
 
@@ -95,15 +94,15 @@ std::string PGCheckOptions::parse(int argc, char *argv[]) {
 
     if(csv) {
       csv = false;
-      return "cannot find directory '" + not_found_directory + "' -> option verbose was enabled, option csv was disabled";
+      std::cout << "\033[35m" << "Warning: " << "cannot find directory '" << not_found_directory << "' -> option verbose was enabled, option csv was disabled" << "\033[0m" << std::endl;
     }
-    return "cannot find directory '" + not_found_directory + "' -> option verbose was enabled";
+    std::cout << "\033[35m" << "Warning: " << "cannot find directory '" << not_found_directory << "' -> option verbose was enabled" << "\033[0m" << std::endl;
   }
 
   // print results to cout if output directory was not specified
   if(output_directory.empty() && !verbose) {
     verbose = true;
-    return "output directory was not specified -> option verbose was enabled and output is written to cout";
+    std::cout << "\033[35m" << "Warning: " << "output directory was not specified -> option verbose was enabled and output is written to cout" << "\033[0m" << std::endl;
   }
 
   if(!output_directory.empty() && (stat(output_directory.c_str(), &sb)==0)) {
@@ -113,5 +112,5 @@ std::string PGCheckOptions::parse(int argc, char *argv[]) {
     }
   }
 
-  return "";
+  return 1;
 }

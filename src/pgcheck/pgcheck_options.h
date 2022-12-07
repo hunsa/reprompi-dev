@@ -38,7 +38,7 @@ public:
    * options are parsed
    * @return error code or warning message
    */
-  std::string parse(int argc, char *argv[]);
+  int parse(int argc, char *argv[]);
 };
 
 #endif //REPROMPI_SRC_PGCHECK_PGCHECK_OPTIONS_H

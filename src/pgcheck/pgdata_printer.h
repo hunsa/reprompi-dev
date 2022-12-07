@@ -43,7 +43,7 @@ private:
   PGDataTable merged_table;
 
 public:
-  PGDataPrinter(PGCheckOptions& options);
+  PGDataPrinter() = default;
 
   /**
    * prints result from collective as txt or csv to file or console
@@ -76,6 +76,8 @@ public:
    * prints usage string
    */
   void print_usage(char *command);
+
+  void set_options(PGCheckOptions &new_options);
 
 };
 

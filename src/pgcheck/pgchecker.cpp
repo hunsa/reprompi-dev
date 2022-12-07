@@ -94,34 +94,23 @@ int main(int argc, char *argv[]) {
 
   PGCheckOptions options;
   PGDataPrinter *printer = NULL;
-  std::string parse_res = options.parse(argc, argv);
 
   if (rank == 0) {
-    printer = new PGDataPrinter(options);
+    printer = new PGDataPrinter();
   }
 
-  // -h, --help was specified, terminate success
-  if (parse_res == "h") {
+  if (!options.parse(argc, argv)) {
     if (rank == 0) {
       printer->print_usage(argv[0]);
     }
+
     MPI_Comm_free(&comm_intranode);
     MPI_Finalize();
-    exit(EXIT_SUCCESS);
-  }
-  // error parsing options, terminate failure
-  else if (parse_res == "e"){
-    if (rank == 0) {
-      printer->println_error_to_cerr("cannot parse options");
-      printer->print_usage(argv[0]);
-    }
     exit(EXIT_FAILURE);
   }
-  // print warnings
-  else if (parse_res != "") {
-    if (rank == 0) {
-      printer->println_warning_to_cout(parse_res);
-    }
+
+  if (rank == 0) {
+    printer->set_options(options);
   }
 
   reprompib_register_sync_modules();
@@ -140,7 +129,7 @@ int main(int argc, char *argv[]) {
 
   double barrier_mean = get_barrier_runtime();
   if (rank == 0) {
-    printer->println_to_cout("avg barrier [ms]: " + std::to_string(barrier_mean*1000));
+    printer->println_to_cout("avg barrier [ms]: " + std::to_string(barrier_mean * 1000));
   }
 
   PGInput input(options.get_input_file());
@@ -177,10 +166,10 @@ int main(int argc, char *argv[]) {
 
       std::string call_options = input.get_call_options_for_case_id(case_id);
       std::string tmp_out_file = tmp_dir + "/" + "data_" + mpi_coll + "_" + alg_version + ".dat";
-      if( rank == 0 ) {
+      if (rank == 0) {
         struct stat sb;
         stat(tmp_dir.c_str(), &sb);
-        if( ! S_ISDIR (sb.st_mode) ) {
+        if (!S_ISDIR(sb.st_mode)) {
           mkdir(tmp_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         }
       }
@@ -196,8 +185,8 @@ int main(int argc, char *argv[]) {
       argv::convert_vector_to_argv_cstyle(argv_vector, &argc_test, &argv_test);
 
       pgtune_override_argv_parameter(argc_test, argv_test);
-      if( rank == 0 ) {
-        if( options.get_verbose() ) {
+      if (rank == 0) {
+        if (options.get_verbose()) {
           print_command_line_args(argc_test, argv_test);
         }
       }
