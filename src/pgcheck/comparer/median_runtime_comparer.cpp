@@ -4,13 +4,12 @@
 
 #include "median_runtime_comparer.h"
 
-static std::vector<int> col_widths = {30};
-
 MedianRuntimeComparer::MedianRuntimeComparer(std::string mpi_coll_name, int nnodes, int ppn) :
     PGDataComparer(mpi_coll_name, nnodes, ppn) {}
 
 PGDataTable MedianRuntimeComparer::get_results() {
   std::vector <std::string> col_names = {"message_size"};
+  std::vector<int> col_widths = {15};
   PGDataTable res(mpi_coll_name, col_names);
   StatisticsUtils<double> statisticsUtils;
   bool first = true;
@@ -29,7 +28,7 @@ PGDataTable MedianRuntimeComparer::get_results() {
         col_widths.push_back(data->get_mockup_name().size() + 4);
       }
 
-      std::cout << "mockup:" << data->get_mockup_name() << std::endl;
+      std::cout << "mockup:" << data->get_mockup_name() << ":" << data->get_mockup_name().length()<< std::endl;
       row[data->get_mockup_name()] = std::to_string(statisticsUtils.median(rts) * 1000);
 
     }

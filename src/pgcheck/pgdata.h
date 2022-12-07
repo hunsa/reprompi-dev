@@ -27,12 +27,13 @@ public:
 
   int read_csv_from_file(std::string csv_path);
 
+  std::string get_mockup_name();
+
   std::vector<std::string> get_columns_names();
 
   std::vector<int> get_unique_counts();
 
   std::vector<double> get_runtimes_for_count(int count);
-
 };
 
 #endif //REPROMPI_SRC_PGCHECK_PGDATA_H

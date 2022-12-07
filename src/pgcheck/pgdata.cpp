@@ -12,6 +12,10 @@ int PGData::read_csv_from_file(std::string csv_path) {
   return 0;
 }
 
+std::string PGData::get_mockup_name() {
+  return mockup_name;
+}
+
 std::vector <std::string> PGData::get_columns_names() {
   return table.get_col_names();
 }
