@@ -78,6 +78,7 @@ add_executable(pgchecker
         comparer/detailed_ttest_comparer.cpp
         comparer/ttest_comparer.cpp
         comparer/grouped_ttest_comparer.cpp
+        comparer/median_runtime_comparer.cpp
         pgcheck_input.cpp
         utils/string_utils.cpp
         utils/argv_manager.cpp

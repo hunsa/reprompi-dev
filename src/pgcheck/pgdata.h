@@ -29,9 +29,10 @@ public:
 
   std::vector<std::string> get_columns_names();
 
+  std::vector<int> get_unique_counts();
+
   std::vector<double> get_runtimes_for_count(int count);
 
-  std::vector<int> get_unique_counts();
 };
 
 #endif //REPROMPI_SRC_PGCHECK_PGDATA_H

@@ -7,26 +7,13 @@ PGData::PGData(std::string mpi_coll_name, std::string mockup_name) :
 }
 
 int PGData::read_csv_from_file(std::string csv_path) {
-
   CSVParser *parser = new CSVParser();
   table = parser->parse_file(csv_path);
-
   return 0;
 }
 
 std::vector <std::string> PGData::get_columns_names() {
   return table.get_col_names();
-}
-
-std::vector<double> PGData::get_runtimes_for_count(int count) {
-  std::vector<double> runtimes;
-  for (int rowIdx = 0; rowIdx < table.get_col_size(); rowIdx++) {
-    if(fromString<int>(table.get_values_col_row("count", rowIdx)) == count) {
-      runtimes.push_back(fromString<double>(table.get_values_col_row("runtime_sec", rowIdx)));
-    }
-  }
-
-  return runtimes;
 }
 
 std::vector<int> PGData::get_unique_counts() {
@@ -40,4 +27,15 @@ std::vector<int> PGData::get_unique_counts() {
   }
 
   return int_vector_res;
+}
+
+std::vector<double> PGData::get_runtimes_for_count(int count) {
+  std::vector<double> runtimes;
+  for (int rowIdx = 0; rowIdx < table.get_col_size(); rowIdx++) {
+    if(fromString<int>(table.get_values_col_row("count", rowIdx)) == count) {
+      runtimes.push_back(fromString<double>(table.get_values_col_row("runtime_sec", rowIdx)));
+    }
+  }
+
+  return runtimes;
 }
