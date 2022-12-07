@@ -7,7 +7,8 @@
 #include "ttest_comparer.h"
 #include "detailed_ttest_comparer.h"
 #include "grouped_ttest_comparer.h"
-#include "median_runtime_comparer.h"
+#include "abs_runtime_comparer.h"
+#include "rel_runtime_comparer.h"
 
 PGDataComparer* ComparerFactory::create_comparer(int comparer_id, std::string mpi_coll_name, int nnodes, int ppn) {
   PGDataComparer *comparer;
@@ -25,7 +26,10 @@ PGDataComparer* ComparerFactory::create_comparer(int comparer_id, std::string mp
     comparer = new GroupedTTestComparer(mpi_coll_name, nnodes, ppn);
     break;
   case 4:
-    comparer = new MedianRuntimeComparer(mpi_coll_name, nnodes, ppn);
+    comparer = new AbsRuntimeComparer(mpi_coll_name, nnodes, ppn);
+    break;
+  case 5:
+    comparer = new RelRuntimeComparer(mpi_coll_name, nnodes, ppn);
     break;
   default:
     comparer = new GroupedTTestComparer(mpi_coll_name, nnodes, ppn);
