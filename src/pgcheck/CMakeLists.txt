@@ -27,7 +27,7 @@ set(OFFLINE_BUILD_MODE off CACHE BOOL "download a fresh copy of all dependencies
 if (OFFLINE_BUILD_MODE)
     message(STATUS "disable git pull")
     ExternalProject_Add(pgtunelib
-            GIT_REPOSITORY git@ophelia.par.tuwien.ac.at:hunold/pgtune_lib.git
+            GIT_REPOSITORY git@github.com:hunsa/pgmpitunelib-private.git
             GIT_TAG pgcheck
             GIT_SUBMODULES submodules/mpi-lane-collectives
             CMAKE_ARGS ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
@@ -38,7 +38,7 @@ if (OFFLINE_BUILD_MODE)
 else()
     message(STATUS "enable git pull")
     ExternalProject_Add(pgtunelib
-            GIT_REPOSITORY git@ophelia.par.tuwien.ac.at:hunold/pgtune_lib.git
+            GIT_REPOSITORY git@github.com:hunsa/pgmpitunelib-private.git
             GIT_TAG pgcheck
             GIT_SUBMODULES submodules/mpi-lane-collectives
             CMAKE_ARGS ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
