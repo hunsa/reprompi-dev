@@ -24,12 +24,22 @@ endif()
 
 set(OFFLINE_BUILD_MODE off CACHE BOOL "download a fresh copy of all dependencies")
 
+if(OPTION_ENABLE_CIRCULANTS)
+    set(GIT_SUBMODULES_CIRCULANTS GIT_SUBMODULES submodules/mpi_circulants)
+    set(PGTUNE_CMAKE_ARGS "-DOPTION_ENABLE_CIRCULANTS=ON ${PGTUNE_CMAKE_ARGS}")
+    message(STATUS "Enabling circulant collectives in pgtunelib")
+else()
+    set(GIT_SUBMODULES_CIRCULANTS "")
+    message(STATUS "Circulant collectives in pgtunelib disabled")
+endif()
+
 if (OFFLINE_BUILD_MODE)
     message(STATUS "disable git pull")
     ExternalProject_Add(pgtunelib
             GIT_REPOSITORY git@github.com:hunsa/pgmpitunelib-private.git
             GIT_TAG pgcheck
             GIT_SUBMODULES submodules/mpi-lane-collectives
+            ${GIT_SUBMODULES_CIRCULANTS}
             CMAKE_ARGS ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
             PREFIX ${CMAKE_SOURCE_DIR}/external/
             DOWNLOAD_COMMAND ""
@@ -41,6 +51,7 @@ else()
             GIT_REPOSITORY git@github.com:hunsa/pgmpitunelib-private.git
             GIT_TAG pgcheck
             GIT_SUBMODULES submodules/mpi-lane-collectives
+            ${GIT_SUBMODULES_CIRCULANTS}
             CMAKE_ARGS ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
             PREFIX ${CMAKE_SOURCE_DIR}/external/
     )
