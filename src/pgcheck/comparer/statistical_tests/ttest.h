@@ -2,15 +2,15 @@
 // Created by Max on 10/30/22.
 //
 
-#ifndef REPROMPI_DEV_SRC_PGCHECK_COMPARER_COMPARER_DATA_H
-#define REPROMPI_DEV_SRC_PGCHECK_COMPARER_COMPARER_DATA_H
+#ifndef REPROMPI_DEV_SRC_PGCHECK_COMPARER_STATISTICAL_TESTS_TTEST_H
+#define REPROMPI_DEV_SRC_PGCHECK_COMPARER_STATISTICAL_TESTS_TTEST_H
 
 #include <string>
 #include <vector>
 #include <numeric>
 #include <cmath>
 
-class ComparerData {
+class TTest {
 
 private:
   bool violation;
@@ -27,14 +27,14 @@ private:
 
 
 public:
-  ComparerData(int size, double mean, double median, double variance);
+  TTest(int size, double mean, double median, double variance);
 
   bool is_violated();
 
   /**
    * @return true if t-value of data is smaller than critical t-value
    */
-  bool get_violation(ComparerData data);
+  bool get_violation(TTest data);
 
   int get_size();
 
@@ -61,7 +61,7 @@ public:
   /**
    * @return t-value for this and data sample
    */
-  double get_t_test(ComparerData data);
+  double get_t_test(TTest data);
 
   std::string get_fastest_mockup();
 
@@ -72,4 +72,4 @@ public:
 
 };
 
-#endif //REPROMPI_DEV_SRC_PGCHECK_COMPARER_COMPARER_DATA_H
+#endif //REPROMPI_DEV_SRC_PGCHECK_COMPARER_STATISTICAL_TESTS_TTEST_H

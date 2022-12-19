@@ -83,10 +83,12 @@ add_executable(pgchecker
         pgdata_table.cpp
         pgdata_comparer.cpp
         pgdata_printer.cpp
-        comparer/comparer_data.cpp
+        comparer/statistical_tests/ttest.cpp
+        comparer/statistical_tests/wilcoxon.cpp
         comparer/comparer_factory.cpp
         comparer/simple_comparer.cpp
         comparer/detailed_ttest_comparer.cpp
+        comparer/detailed_wilcoxon_comparer.cpp
         comparer/ttest_comparer.cpp
         comparer/grouped_ttest_comparer.cpp
         comparer/abs_runtime_comparer.cpp

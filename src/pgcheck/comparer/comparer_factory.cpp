@@ -5,6 +5,7 @@
 #include "comparer_factory.h"
 #include "simple_comparer.h"
 #include "ttest_comparer.h"
+#include "detailed_wilcoxon_comparer.h"
 #include "detailed_ttest_comparer.h"
 #include "grouped_ttest_comparer.h"
 #include "abs_runtime_comparer.h"
@@ -30,6 +31,9 @@ PGDataComparer* ComparerFactory::create_comparer(int comparer_id, std::string mp
     break;
   case 5:
     comparer = new RelRuntimeComparer(mpi_coll_name, nnodes, ppn);
+    break;
+  case 6:
+    comparer = new DetailedWilcoxonComparer(mpi_coll_name, nnodes, ppn);
     break;
   default:
     comparer = new GroupedTTestComparer(mpi_coll_name, nnodes, ppn);

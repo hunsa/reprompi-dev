@@ -40,6 +40,7 @@ public:
 
     return std::accumulate(v.begin(), v.end(), 0.0, variance_function);
   }
+
 };
 
 #endif //REPROMPI_DEV_SRC_PGCHECK_UTILS_STATISTICS_UTILS_H

@@ -13,12 +13,12 @@ PGDataTable TTestComparer::get_results() {
   std::vector <std::string> col_names = {"mockup", "count", "N", "ppn", "n", "runtime_mean", "runtime_median",
                                          "t_value", "critical_t_value", "violation"};
   PGDataTable res(mpi_coll_name, col_names);
-  std::unordered_map<int, ComparerData> def_res;
+  std::unordered_map<int, TTest> def_res;
   StatisticsUtils<double> statisticsUtils;
   auto &default_data = mockup2data.at("default");
   for (auto &count: default_data->get_unique_counts()) {
     auto rts_default = default_data->get_runtimes_for_count(count);
-    ComparerData default_values(rts_default.size(), statisticsUtils.mean(rts_default),
+    TTest default_values(rts_default.size(), statisticsUtils.mean(rts_default),
                                 statisticsUtils.median(rts_default), statisticsUtils.variance(rts_default));
     std::unordered_map <std::string, std::string> row;
     row["mockup"] = "default";
@@ -42,7 +42,7 @@ PGDataTable TTestComparer::get_results() {
     auto &data = mockup2data.at(mdata.first);
     for (auto &count: data->get_unique_counts()) {
       auto rts = data->get_runtimes_for_count(count);
-      ComparerData alt_res(rts.size(), statisticsUtils.mean(rts),
+      TTest alt_res(rts.size(), statisticsUtils.mean(rts),
                            statisticsUtils.median(rts), statisticsUtils.variance(rts));
       std::unordered_map <std::string, std::string> row;
       row["mockup"] = mdata.first;
