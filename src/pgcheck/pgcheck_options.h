@@ -19,7 +19,8 @@ protected:
   bool merge_coll_tables = false;    // write additional file containing merged results
   bool csv = false;                  // write results in csv format to file
   bool verbose = false;              // write information and results to console
-  int comparer_type = 3;             // default is grouped t-test
+  int comparer_type = 3;             // default is grouped
+  int test_type = 0;                 // default is t-test
   std::string input_file = "";
   std::string output_directory = "";
   std::string config_message = "";
@@ -31,6 +32,7 @@ public:
   bool get_verbose();
   bool get_csv();
   int get_comparer_type();
+  int get_test_type();
   std::string get_config_message();
   std::string get_input_file();
   std::string get_output_directory();

@@ -2,14 +2,14 @@
 // Created by Sascha on 10/22/22.
 //
 
-#include "ttest_comparer.h"
+#include "violation_comparer.h"
 
 static std::vector<int> col_widths = {50, 15, 5, 5, 10, 15, 15, 15, 15, 5};
 
-TTestComparer::TTestComparer(std::string mpi_coll_name, int nnodes, int ppn) :
-    PGDataComparer(mpi_coll_name, nnodes, ppn) {}
+ViolationComparer::ViolationComparer(int test_type, std::string mpi_coll_name, int nnodes, int ppn) :
+    PGDataComparer(mpi_coll_name, nnodes, ppn), test_type(test_type) {}
 
-PGDataTable TTestComparer::get_results() {
+PGDataTable ViolationComparer::get_results() {
   std::vector <std::string> col_names = {"mockup", "count", "N", "ppn", "n", "runtime_mean", "runtime_median",
                                          "t_value", "critical_t_value", "violation"};
   PGDataTable res(mpi_coll_name, col_names);

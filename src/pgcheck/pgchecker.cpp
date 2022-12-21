@@ -41,8 +41,8 @@
 #include "pgdata_printer.h"
 #include "pgdata_comparer.h"
 #include "comparer/simple_comparer.h"
-#include "comparer/ttest_comparer.h"
-#include "comparer/grouped_ttest_comparer.h"
+#include "comparer/violation/violation_comparer.h"
+#include "comparer/violation/grouped_violation_comparer.h"
 #include "comparer/comparer_factory.h"
 #include "pgcheck_input.h"
 #include "utils/argv_manager.h"
@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (rank == 0) {
-      PGDataComparer *comparer = ComparerFactory::create_comparer(options.get_comparer_type(), mpi_coll, nnodes, ppn);
+      PGDataComparer *comparer = ComparerFactory::create_comparer(options.get_comparer_type(), options.get_test_type(), mpi_coll, nnodes, ppn);
       comparer->set_barrier_time(barrier_mean);
       comparer->add_data(coll_data);
       if (printer->print_collective(comparer) != 0) {

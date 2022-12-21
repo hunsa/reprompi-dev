@@ -2,14 +2,14 @@
 // Created by Max on 10/30/22.
 //
 
-#include "grouped_ttest_comparer.h"
+#include "grouped_violation_comparer.h"
 
 static std::vector<int> col_widths = {25, 15, 5, 5, 5, 15, 10, 50, 15};
 
-GroupedTTestComparer::GroupedTTestComparer(std::string mpi_coll_name, int nnodes, int ppn) :
-    PGDataComparer(mpi_coll_name, nnodes, ppn) {}
+GroupedViolationComparer::GroupedViolationComparer(int test_type, std::string mpi_coll_name, int nnodes, int ppn) :
+    PGDataComparer(mpi_coll_name, nnodes, ppn), test_type(test_type) {}
 
-PGDataTable GroupedTTestComparer::get_results() {
+PGDataTable GroupedViolationComparer::get_results() {
 
   std::vector <std::string> col_names = {"collective", "count", "N", "ppn", "n", "default_median", "slowdown", "mockup",
                                          "mockup_median"};

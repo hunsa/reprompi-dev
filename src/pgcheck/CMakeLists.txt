@@ -88,10 +88,9 @@ add_executable(pgchecker
         comparer/statistical_test/wilcoxon.cpp
         comparer/comparer_factory.cpp
         comparer/simple_comparer.cpp
-        comparer/detailed_ttest_comparer.cpp
-        comparer/detailed_wilcoxon_comparer.cpp
-        comparer/ttest_comparer.cpp
-        comparer/grouped_ttest_comparer.cpp
+        comparer/violation/detailed_violation_comparer.cpp
+        comparer/violation/violation_comparer.cpp
+        comparer/violation/grouped_violation_comparer.cpp
         comparer/runtime/abs_runtime_comparer.cpp
         comparer/runtime/rel_runtime_comparer.cpp
         pgcheck_input.cpp

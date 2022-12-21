@@ -24,6 +24,10 @@ int PGCheckOptions::get_comparer_type() {
   return comparer_type;
 }
 
+int PGCheckOptions::get_test_type() {
+  return test_type;
+}
+
 std::string PGCheckOptions::get_input_file() {
   return input_file;
 }
@@ -47,10 +51,11 @@ int PGCheckOptions::parse(int argc, char *argv[]) {
           {"input",    required_argument, NULL, 'f'},
           {"output",   required_argument, NULL, 'o'},
           {"comparer", required_argument, NULL, 'c'},
+          {"test",     required_argument, NULL, 't'},
           {NULL,       0,                 NULL, 0  }
       };
 
-  while ((c = getopt_long(argc, argv, ":hmsvf:o:c:", long_opts, NULL)) != -1) {
+  while ((c = getopt_long(argc, argv, ":hmsvf:o:c:t:", long_opts, NULL)) != -1) {
     switch (c) {
       case 'h':
       case '?':
@@ -61,6 +66,9 @@ int PGCheckOptions::parse(int argc, char *argv[]) {
         break;
       case 'c':
         comparer_type = std::atoi(optarg);
+        break;
+      case 't':
+        test_type = std::atoi(optarg);
         break;
       case 'o':
         output_directory = std::string(optarg);
