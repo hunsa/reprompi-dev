@@ -91,8 +91,8 @@ add_executable(pgchecker
         comparer/detailed_wilcoxon_comparer.cpp
         comparer/ttest_comparer.cpp
         comparer/grouped_ttest_comparer.cpp
-        comparer/abs_runtime_comparer.cpp
-        comparer/rel_runtime_comparer.cpp
+        comparer/runtime/abs_runtime_comparer.cpp
+        comparer/runtime/rel_runtime_comparer.cpp
         pgcheck_input.cpp
         utils/string_utils.cpp
         utils/argv_manager.cpp

@@ -2,10 +2,10 @@
 // Created by Max on 12/07/22.
 //
 
-#ifndef REPROMPI_DEV_SRC_PGCHECK_COMPARER_REL_RUNTIME_COMPARER_H
-#define REPROMPI_DEV_SRC_PGCHECK_COMPARER_REL_RUNTIME_COMPARER_H
+#ifndef REPROMPI_DEV_SRC_PGCHECK_COMPARER_RUNTIME_REL_RUNTIME_COMPARER_H
+#define REPROMPI_DEV_SRC_PGCHECK_COMPARER_RUNTIME_REL_RUNTIME_COMPARER_H
 
-#include "../pgdata_comparer.h"
+#include "../../pgdata_comparer.h"
 #include <string>
 
 class RelRuntimeComparer : public PGDataComparer {
@@ -18,4 +18,4 @@ public:
   PGDataTable get_results();
 };
 
-#endif //REPROMPI_DEV_SRC_PGCHECK_COMPARER_REL_RUNTIME_COMPARER_H
+#endif //REPROMPI_DEV_SRC_PGCHECK_COMPARER_RUNTIME_REL_RUNTIME_COMPARER_H

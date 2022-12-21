@@ -13,3 +13,10 @@ CMakeCache.txt
 CPackConfig.cmake
 CPackSourceConfig.cmake
 *.dylib
+data/
+barrier.txt
+external/
+.idea/
+bin/
+src/pgtunelib-stamp/
+src/version.h
