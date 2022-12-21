@@ -14,8 +14,9 @@ private:
 
 public:
   GroupedViolationComparer(int test_type, std::string mpi_coll_name, int nnodes, int ppn);
+
   /**
-   * @return data table in grouped t-test format
+   * @return data table in grouped violation format
    */
   PGDataTable get_results();
 };

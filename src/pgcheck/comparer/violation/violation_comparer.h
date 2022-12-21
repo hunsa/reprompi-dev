@@ -6,7 +6,6 @@
 #define REPROMPI_DEV_SRC_PGCHECK_COMPARER_VIOLATION_VIOLATION_COMPARER_H
 
 #include "../../pgdata_comparer.h"
-#include <string>
 
 class ViolationComparer : public PGDataComparer {
 
@@ -15,8 +14,9 @@ private:
 
 public:
   ViolationComparer(int test_type, std::string mpi_coll_name, int nnodes, int ppn);
+
   /**
-   * @return data table in t-test format
+   * @return data table in simple violation format
    */
   PGDataTable get_results();
 };

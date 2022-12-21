@@ -10,9 +10,6 @@ static const double critical_t_values[] = {0, 6.313752, 2.919986, 2.353363, 2.13
                                            1.717144, 1.713872, 1.710882};
 static const double normal_distribution_value = 1.644854;
 
-Wilcoxon::Wilcoxon(std::vector<double> sample) :
-    TwoSampleTest(sample) {}
-
 double Wilcoxon::get_z_value() {
 
   std::vector <std::pair<double, bool>> ranked_diff = get_ordered_diff_sign_vector();
@@ -95,14 +92,6 @@ double Wilcoxon::get_z_value() {
 double Wilcoxon::get_critical_value() {
   int size = std::min(sample_1.size(), sample_2.size());
   return TwoSampleTest::get_critical_value(size);
-}
-
-void Wilcoxon::set_sample_1(std::vector<double> sample) {
-  sample_1 = sample;
-}
-
-void Wilcoxon::set_sample_2(std::vector<double> sample) {
-  sample_2 = sample;
 }
 
 double Wilcoxon::get_shared_rank_deviation(int shared_rank_count) {

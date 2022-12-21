@@ -1,74 +1,32 @@
 //
-// Created by Max on 10/30/22.
+// Created by Max on 12/26/22.
 //
 
 #ifndef REPROMPI_DEV_SRC_PGCHECK_COMPARER_STATISTICAL_TESTS_TTEST_H
 #define REPROMPI_DEV_SRC_PGCHECK_COMPARER_STATISTICAL_TESTS_TTEST_H
 
-#include <string>
-#include <vector>
-#include <numeric>
-#include <cmath>
+#include "two_sample_test.h"
 
-class TTest {
-
-private:
-  bool violation;
-  int size;
-  double mean;
-  double median;
-  double variance;
-  double fastest_mockup_median;
-  std::string fastest_mockup;
-
-  double get_mean();
-
-  double get_variance();
-
+class TTest : public TwoSampleTest {
 
 public:
-  TTest(int size, double mean, double median, double variance);
 
-  bool is_violated();
-
-  /**
-   * @return true if t-value of data is smaller than critical t-value
-   */
-  bool get_violation(TTest data);
-
-  int get_size();
-
-  double get_mean_ms();
-
-  double get_median();
-
-  double get_median_ms();
+  TTest() = default;
 
   /**
-   * @return critical t-value for sum of dfs
+   * @return critical t-value for degrees of freedom
    */
-  double get_critical_t_value(int df);
-
-  double get_fastest_mockup_median_ms();
-
-  double get_slowdown();
+  double get_critical_value();
 
   /**
-   * @return slowdown between this and mockup_median
+   * @return t-test-value for samples
    */
-  double get_slowdown(double mockup_median);
+  double get_z_value();
 
   /**
-   * @return t-value for this and data sample
+   * @return true if t-test-value is smaller than critical t-value
    */
-  double get_t_test(TTest data);
-
-  std::string get_fastest_mockup();
-
-  /**
-   * overwrites fastest mockup is mockup_median is smaller than current
-   */
-  void set_fastest_mockup(std::string mockup, double mockup_median);
+  bool get_violation();
 
 };
 

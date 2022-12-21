@@ -4,12 +4,13 @@
 
 #include "pgdata.h"
 #include "pgdata_table.h"
-#include "comparer/statistical_test/ttest.h"
+#include "comparer/comparer_data.h"
 #include "utils/statistics_utils.h"
 #include <vector>
 #include <unordered_map>
 #include <iomanip>
 #include <numeric>
+#include <string>
 
 class PGDataComparer {
 

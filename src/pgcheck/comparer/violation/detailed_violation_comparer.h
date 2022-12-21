@@ -14,8 +14,9 @@ private:
 
 public:
   DetailedViolationComparer(int test_type, std::string mpi_coll_name, int nnodes, int ppn);
+
   /**
-   * @return data table in detailed t-test format
+   * @return data table in detailed violation format
    */
   PGDataTable get_results();
 };
