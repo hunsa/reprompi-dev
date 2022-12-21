@@ -6,6 +6,7 @@
 #define REPROMPI_DEV_SRC_PGCHECK_COMPARER_STATISTICAL_TEST_WILCOXON_H
 
 #include "two_sample_test.h"
+#include <assert.h>
 
 class Wilcoxon : public TwoSampleTest {
 
