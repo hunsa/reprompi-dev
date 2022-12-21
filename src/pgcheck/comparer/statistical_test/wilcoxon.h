@@ -14,12 +14,12 @@
 #include <cmath>
 #include <algorithm>
 #include "../../utils/statistics_utils.h"
+#include "two_sample_test.h"
 
-class Wilcoxon {
+class Wilcoxon : public TwoSampleTest {
 
 private:
-  std::vector<double> sample_1;
-  std::vector<double> sample_2;
+
   double z_value;
 
   std::vector<std::pair<double, bool>> get_ordered_diff_sign_vector();
@@ -28,13 +28,14 @@ private:
 
 
 public:
+
   Wilcoxon(std::vector<double> sample);
 
   void set_sample_1(std::vector<double> sample);
 
   void set_sample_2(std::vector<double> sample);
 
-  double get_wilcoxon_value();
+  double get_z_value();
 
   double get_critical_value();
 

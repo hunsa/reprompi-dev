@@ -21,11 +21,11 @@ PGDataTable DetailedWilcoxonComparer::get_results() {
   auto &default_data = mockup2data.at("default");
   for (auto &count: default_data->get_unique_counts()) {
     auto rts_default = default_data->get_runtimes_for_count(count);
-    Wilcoxon wilcoxon_data(rts_default);
+    auto *wilcoxon_data = new Wilcoxon(rts_default);
     TTest default_values(rts_default.size(), statisticsUtils.mean(rts_default),
                                 statisticsUtils.median(rts_default), statisticsUtils.variance(rts_default));
     def_res.insert(std::make_pair(count, default_values));
-    wilcoxon_res.insert(std::make_pair(count, wilcoxon_data));
+    wilcoxon_res.insert(std::make_pair(count, *wilcoxon_data));
   }
 
   for (auto &mdata: mockup2data) {
@@ -48,7 +48,7 @@ PGDataTable DetailedWilcoxonComparer::get_results() {
       row["default_median"] = std::to_string(def_res.at(count).get_median_ms());
       row["mockup_mean"] = std::to_string(alt_res.get_mean_ms());
       row["mockup_median"] = std::to_string(alt_res.get_median_ms());
-      row["wilcoxon_value"] = std::to_string(wilcoxon_res.at(count).get_wilcoxon_value());
+      row["wilcoxon_value"] = std::to_string(wilcoxon_res.at(count).get_z_value());
       row["critical_value"] = std::to_string(wilcoxon_res.at(count).get_critical_value());
       row["violation"] = std::to_string(wilcoxon_res.at(count).get_violation());
       row["slowdown"] = std::to_string(def_res.at(count).get_slowdown(alt_res.get_median()));

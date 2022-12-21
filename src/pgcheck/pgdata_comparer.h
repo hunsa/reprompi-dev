@@ -4,7 +4,7 @@
 
 #include "pgdata.h"
 #include "pgdata_table.h"
-#include "comparer/statistical_tests/ttest.h"
+#include "comparer/statistical_test/ttest.h"
 #include "utils/statistics_utils.h"
 #include <vector>
 #include <unordered_map>

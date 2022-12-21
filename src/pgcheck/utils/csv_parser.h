@@ -15,7 +15,7 @@
 #include "csv_parser.h"
 #include "../pgdata_table.h"
 #include "../pgdata.h"
-#include "../comparer/statistical_tests/ttest.h"
+#include "../comparer/statistical_test/ttest.h"
 
 class CSVParser {
 
