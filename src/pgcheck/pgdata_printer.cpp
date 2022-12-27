@@ -142,7 +142,7 @@ void PGDataPrinter::print_usage(char *command) {
   std::cout << "OPTIONS:" << std::endl;
   std::cout << std::setw(36) << std::left << "  ?, -h, --help" << "Display this information." << std::endl;
   std::cout << std::setw(36) << std::left << "  -c, --comparer {0|1|2|3|4|5}" << "Specify the comparer type (0=Simple|1=Absolute Median|2=Relative Median|3=Violation-Test|4=Detailed Violation-Test|5=Grouped Violation-Test)." << std::endl;
-  std::cout << std::setw(36) << std::left << "  -t, --test {0|1}" << "Specify the test type (0=T-Test|1=Wilcoxon-Rank-Sum-Test)." << std::endl;
+  std::cout << std::setw(36) << std::left << "  -t, --test {0|1|2}" << "Specify the test type (0=T-Test|1=Wilcoxon-Rank-Sum-Test|2=Wilcoxon-Mann-Whitney)." << std::endl;
   std::cout << std::setw(36) << std::left << "  -o, --output <path>" << "Specify an existing output folder." << std::endl;
   std::cout << std::setw(36) << std::left << "  -m, --merge" << "Additionally results of all collectives are merged into one table." << std::endl;
   std::cout << std::setw(36) << std::left << "  -s, --csv" << "Print results to .csv file. Output directory must be specified. The csv formatted table is never written to the console." << std::endl;

@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <ostream>
 #include <algorithm>
+#include <assert.h>
 #include "../../utils/statistics_utils.h"
 
 class TwoSampleTest {

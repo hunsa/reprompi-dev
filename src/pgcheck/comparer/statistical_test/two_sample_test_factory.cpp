@@ -12,7 +12,10 @@ TwoSampleTest *TwoSampleTestFactory::create_two_sample_test(int test_id) {
       two_sample_test = new TTest();
       break;
     case 1:
-      two_sample_test = new Wilcoxon();
+      two_sample_test = new WilcoxonRankSum();
+      break;
+    case 2:
+      two_sample_test = new WilcoxonMannWhitney();
       break;
   }
   return two_sample_test;

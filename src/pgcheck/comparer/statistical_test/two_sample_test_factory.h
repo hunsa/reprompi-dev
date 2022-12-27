@@ -7,7 +7,8 @@
 
 #include "two_sample_test.h"
 #include "ttest.h"
-#include "wilcoxon.h"
+#include "wilcoxon_rank_sum.h"
+#include "wilcoxon_mann_whitney.h"
 
 class TwoSampleTestFactory {
 public:
