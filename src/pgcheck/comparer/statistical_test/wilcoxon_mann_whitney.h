@@ -7,6 +7,16 @@
 
 #include "two_sample_test.h"
 
+struct rank_element{
+  double runtime;
+  int sample_id;
+
+  bool operator<(const rank_element& a) const
+  {
+    return runtime < a.runtime;
+  }
+};
+
 class WilcoxonMannWhitney : public TwoSampleTest {
 
 private:

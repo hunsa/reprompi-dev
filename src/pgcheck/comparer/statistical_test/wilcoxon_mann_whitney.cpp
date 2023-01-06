@@ -17,17 +17,73 @@ double WilcoxonMannWhitney::get_z_value() {
   double sample_1_rank_sum = 0;
   double sample_2_rank_sum = 0;
 
-  std::sort(sample_1.begin(), sample_1.end());
-  std::sort(sample_2.begin(), sample_2.end());
+  std::vector<rank_element> ranks;
 
-  while (i < n || j < m) {
-    if (i < n && (j >= m || sample_1[i] < sample_2[j])) {
-      sample_1_rank_sum += i + j + 1;
-      ++i;
+  for (auto iter = sample_1.begin(); iter != sample_1.end(); ++iter) {
+    ranks.push_back({*iter,1});
+  }
+
+  for (auto iter = sample_2.begin(); iter != sample_2.end(); ++iter) {
+    ranks.push_back({*iter,2});
+  }
+
+  std::vector<double> bounded_ranks;
+  StatisticsUtils<double> statisticsUtils;
+  std::sort(ranks.begin(), ranks.end());
+
+  // add first rank if not bound
+  if (ranks[1].runtime != ranks[2].runtime) {
+    if (ranks[1].sample_id == 1) {
+      sample_1_rank_sum += 1;
     } else {
-      sample_2_rank_sum += i + j + 1;
-      ++j;
+      sample_2_rank_sum += 1;
     }
+  }
+
+  for (int rank = 2; rank <= ranks.size(); rank++) {
+    // two values share the same rank
+    if (ranks[rank - 1].runtime == ranks[rank].runtime) {
+      if (bounded_ranks.empty()) {
+        bounded_ranks.push_back(rank - 1);
+      }
+      bounded_ranks.push_back(rank);
+    }
+      // value is different from previous
+    else {
+      // but previous values shared the same rank
+      if (!bounded_ranks.empty()) {
+        double mean_bounded_ranks = statisticsUtils.mean(bounded_ranks);
+        for (auto iter = bounded_ranks.begin(); iter != bounded_ranks.end(); ++iter) {
+          if (ranks[*iter].sample_id == 1) {
+            sample_1_rank_sum += mean_bounded_ranks;
+          } else {
+            sample_2_rank_sum += mean_bounded_ranks;
+          }
+        }
+        bounded_ranks.clear();
+      }
+    }
+
+    if (ranks[rank - 1].runtime != ranks[rank].runtime
+        && ranks[rank + 1].runtime != ranks[rank].runtime) {
+      if (ranks[rank].sample_id == 1) {
+        sample_1_rank_sum += rank;
+      } else {
+        sample_2_rank_sum += rank;
+      }
+    }
+  }
+
+  if (!bounded_ranks.empty()) {
+    double mean_bounded_ranks = statisticsUtils.mean(bounded_ranks);
+    for (auto iter = bounded_ranks.begin(); iter != bounded_ranks.end(); ++iter) {
+      if (ranks[*iter].sample_id == 1) {
+        sample_1_rank_sum += mean_bounded_ranks;
+      } else {
+        sample_2_rank_sum += mean_bounded_ranks;
+      }
+    }
+    bounded_ranks.clear();
   }
 
   // assert that all ranks where assigned
