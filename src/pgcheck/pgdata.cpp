@@ -29,7 +29,7 @@ std::vector<int> PGData::get_unique_counts() {
   for (auto iter = ucv.begin(); iter != ucv.end(); ++iter) {
     int_vector_res.push_back(fromString<int>(*iter));
   }
-
+  sort(int_vector_res.begin(), int_vector_res.end());
   return int_vector_res;
 }
 
