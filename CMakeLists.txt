@@ -14,6 +14,8 @@ set(INCLUDE_PLATFORM_CONFIG_FILE "${CMAKE_SOURCE_DIR}/platform_files/default.cma
     CACHE STRING "Configure project to use a specific platform file")
 include(${INCLUDE_PLATFORM_CONFIG_FILE})
 
+get_filename_component(ABS_INCLUDE_PLATFORM_CONFIG_FILE ${INCLUDE_PLATFORM_CONFIG_FILE} ABSOLUTE)
+
 find_package(GSL REQUIRED)
 if (GSL_INCLUDE_DIR)
 message (STATUS "GSL INCLUDES: ${GSL_INCLUDE_DIR}")
