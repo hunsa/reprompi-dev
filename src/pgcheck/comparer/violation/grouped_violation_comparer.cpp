@@ -49,6 +49,7 @@ PGDataTable GroupedViolationComparer::get_results() {
 
     std::cout << std::to_string(data.get_slowdown()) << std::endl;
     std::cout << std::to_string(data.get_median()) << std::endl;
+
     std::cout << std::endl;
 
     /*if (data.is_violated()) {
