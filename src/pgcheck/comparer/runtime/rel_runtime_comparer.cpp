@@ -8,8 +8,8 @@ RelRuntimeComparer::RelRuntimeComparer(std::string mpi_coll_name, int nnodes, in
     PGDataComparer(mpi_coll_name, nnodes, ppn) {}
 
 PGDataTable RelRuntimeComparer::get_results() {
-  std::vector <std::string> col_names = {"message_size", "mockup", "median_ms"};
-  std::vector<int> col_widths = {15, 50, 15};
+  std::vector <std::string> col_names = {"message_size", "mockup", "relative_runtime"};
+  std::vector<int> col_widths = {15, 50, 20};
   PGDataTable res(mpi_coll_name, col_names);
   StatisticsUtils<double> statisticsUtils;
 
@@ -21,7 +21,7 @@ PGDataTable RelRuntimeComparer::get_results() {
     std::unordered_map <std::string, std::string> row;
     row["message_size"] = std::to_string(count);
     row["mockup"] = "default";
-    row["median_ms"] = std::to_string(1);
+    row["relative_runtime"] = std::to_string(1);
     res.add_row(row);
   }
 
@@ -35,7 +35,7 @@ PGDataTable RelRuntimeComparer::get_results() {
       std::unordered_map <std::string, std::string> row;
       row["message_size"] = std::to_string(count);
       row["mockup"] = mdata.first;
-      row["median_ms"] = std::to_string(def_res.at(count) / statisticsUtils.median(rts));
+      row["relative_runtime"] = std::to_string(def_res.at(count) / statisticsUtils.median(rts));
       res.add_row(row);
     }
   }
