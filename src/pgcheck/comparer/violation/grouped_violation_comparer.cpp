@@ -46,7 +46,9 @@ PGDataTable GroupedViolationComparer::get_results() {
     row["ppn"] = std::to_string(ppn);
     row["n"] = std::to_string(data.get_size());
     row["default_median"] = std::to_string(data.get_median_ms());
-    if (data.is_violated()) {
+
+    std::cout << std::to_string(data.get_slowdown()) << std::endl;
+    /*if (data.is_violated()) {
       row["slowdown"] = std::to_string(data.get_slowdown());
       row["mockup"] = data.get_fastest_mockup();
       row["mockup_median"] = std::to_string(data.get_fastest_mockup_median_ms());
@@ -60,7 +62,11 @@ PGDataTable GroupedViolationComparer::get_results() {
       row["slowdown"] = "";
       row["mockup"] = "";
       row["mockup_median"] = "";
-    }
+    }*/
+
+    row["slowdown"] = "";
+    row["mockup"] = "";
+    row["mockup_median"] = "";
     res.add_row(row);
   }
   res.set_col_widths(col_widths);

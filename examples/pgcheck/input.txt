@@ -1,2 +1,1 @@
-MPI_Bcast   --msizes-list=10,100 --nrep=500 --proc-sync=roundtime --rt-bench-time-ms=2000 --rt-barrier-count=0
-MPI_Allreduce --msizes-list=10,100 --nrep=500 --proc-sync=roundtime --rt-bench-time-ms=2000 --rt-barrier-count=0
+MPI_Allreduce --msizes-list=8,80,800,8000,80000 --nrep=5000 --proc-sync=roundtime --rt-bench-time-ms=3000 --rt-barrier-count=0
