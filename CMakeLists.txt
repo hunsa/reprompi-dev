@@ -14,6 +14,8 @@ set(INCLUDE_PLATFORM_CONFIG_FILE "${CMAKE_SOURCE_DIR}/platform_files/default.cma
     CACHE STRING "Configure project to use a specific platform file")
 include(${INCLUDE_PLATFORM_CONFIG_FILE})
 
+get_filename_component(ABS_INCLUDE_PLATFORM_CONFIG_FILE ${INCLUDE_PLATFORM_CONFIG_FILE} ABSOLUTE)
+
 find_package(GSL REQUIRED)
 if (GSL_INCLUDE_DIR)
 message (STATUS "GSL INCLUDES: ${GSL_INCLUDE_DIR}")
@@ -71,14 +73,6 @@ SET(MY_COMPILE_FLAGS "")
 ######################################
 if(RDTSC_CALIBRATION)
     SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DRDTSC_CALIBRATION")
-endif()
-
-if(ENABLE_RDTSC)
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_RDTSC")
-endif()
-
-if(ENABLE_RDTSCP)
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_RDTSCP")
 endif()
 
 if(ENABLE_GETTIME_REALTIME)
@@ -202,8 +196,6 @@ ${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/GlobalClock.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/GlobalClockLM.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/GlobalClockOffset.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/MPIClock.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/RdtscpClock.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/RdtscClock.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/GettimeClock.cpp
 
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_offset_algs/ClockOffset.cpp
@@ -250,6 +242,22 @@ ${SRC_DIR}/log/zf_log.c
 #${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/sync_info.c
 #${SRC_DIR}/reprompi_bench/misc.c
 )
+
+if(ENABLE_RDTSC)
+    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_RDTSC")
+    set(CLOCKSYNC_SRC_FILES
+        ${CLOCKSYNC_SRC_FILES}
+        ${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/RdtscClock.cpp
+        )
+endif()
+
+if(ENABLE_RDTSCP)
+    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_RDTSCP")
+    set(CLOCKSYNC_SRC_FILES
+            ${CLOCKSYNC_SRC_FILES}
+            ${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/RdtscpClock.cpp
+            )
+endif()
 
 
 set(REPROMPIBENCH_FILES
