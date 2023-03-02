@@ -10,10 +10,6 @@ double WilcoxonMannWhitney::get_z_value() {
   double m = sample_2.size();
   double size_squared = n * m;
   double size_sum = n + m;
-
-  std::size_t i = 0;
-  std::size_t j = 0;
-
   double sample_1_rank_sum = 0;
   double sample_2_rank_sum = 0;
 
@@ -40,7 +36,7 @@ double WilcoxonMannWhitney::get_z_value() {
     }
   }
 
-  for (int rank = 2; rank <= ranks.size(); rank++) {
+  for (size_t rank = 2; rank <= ranks.size(); rank++) {
     // two values share the same rank
     if (ranks[rank - 1].runtime == ranks[rank].runtime) {
       if (bounded_ranks.empty()) {
