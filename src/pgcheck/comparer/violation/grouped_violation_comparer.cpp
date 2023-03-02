@@ -32,8 +32,6 @@ PGDataTable GroupedViolationComparer::get_results() {
       auto rts = data->get_runtimes_for_count(count);
       ComparerData alt_res(rts);
 
-      std::cout << "VIOLATION: " << def_res.at(count).get_violation(alt_res) << std::endl;
-
       if (def_res.at(count).get_violation(alt_res)) {
         def_res.at(count).set_fastest_mockup(mdata.first, alt_res.get_median());
       }

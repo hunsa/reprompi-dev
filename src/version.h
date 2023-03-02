@@ -24,6 +24,6 @@
 #ifndef VERSION_H_
 #define VERSION_H_
 
-static const char git_commit[] = "0024750302fcdf09308c46e7793ddde7ef872d1a";
+static const char git_commit[] = "cbd51e205a0adde17e3acab3d3dc3fbf442dcab5";
 
 #endif /* VERSION_H_ */
