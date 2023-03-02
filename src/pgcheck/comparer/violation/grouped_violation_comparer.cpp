@@ -47,6 +47,7 @@ PGDataTable GroupedViolationComparer::get_results() {
     row["n"] = std::to_string(data.get_size());
     row["default_median"] = std::to_string(data.get_median_ms());
 
+    std::cout << std::to_string(data.get_fastest_mockup_median_ms()) << std::endl;
     std::cout << std::to_string(data.get_slowdown()) << std::endl;
     std::cout << std::to_string(data.get_median()) << std::endl;
 
