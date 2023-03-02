@@ -16,7 +16,7 @@ class ComparerData {
 
 private:
 
-  bool violation; // indicates if this object is affected by a guideline violation
+  bool violation = false; // indicates if this object is affected by a guideline violation
   double fastest_mockup_median = 0; // median of the fastest mockup which violates the guidelines
   std::string fastest_mockup; // name of the fastest mockup
   std::vector<double> runtimes; // a vector of runtimes
