@@ -52,11 +52,7 @@ double ComparerData::get_fastest_mockup_median_ms() {
 }
 
 double ComparerData::get_slowdown() {
-  if (fastest_mockup_median != 0) {
-    return get_median() / fastest_mockup_median;
-  }
-
-  return 0;
+  return get_median() / fastest_mockup_median;
 }
 
 double ComparerData::get_slowdown(double mockup_median) {

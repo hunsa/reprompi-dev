@@ -31,6 +31,9 @@ PGDataTable GroupedViolationComparer::get_results() {
     for (auto &count: data->get_unique_counts()) {
       auto rts = data->get_runtimes_for_count(count);
       ComparerData alt_res(rts);
+
+      std::cout << "VIOLATION: " << def_res.at(count).get_violation(alt_res) << std::endl;
+
       if (def_res.at(count).get_violation(alt_res)) {
         def_res.at(count).set_fastest_mockup(mdata.first, alt_res.get_median());
       }
@@ -63,9 +66,6 @@ PGDataTable GroupedViolationComparer::get_results() {
       row["mockup_median"] = "";
     }
 
-    row["slowdown"] = "";
-    row["mockup"] = "";
-    row["mockup_median"] = "";
     res.add_row(row);
   }
   res.set_col_widths(col_widths);
