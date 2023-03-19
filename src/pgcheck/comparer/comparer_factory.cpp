@@ -9,6 +9,7 @@
 #include "violation/grouped_violation_comparer.h"
 #include "runtime/abs_runtime_comparer.h"
 #include "runtime/rel_runtime_comparer.h"
+#include "raw/raw_comparer.h"
 
 PGDataComparer *
 ComparerFactory::create_comparer(int comparer_id, int test_type, std::string mpi_coll_name, int nnodes, int ppn) {
@@ -29,9 +30,12 @@ ComparerFactory::create_comparer(int comparer_id, int test_type, std::string mpi
     case 4:
       comparer = new DetailedViolationComparer(test_type, mpi_coll_name, nnodes, ppn);
       break;
-    default:
     case 5:
       comparer = new GroupedViolationComparer(test_type, mpi_coll_name, nnodes, ppn);
+      break;
+    default:
+    case 6:
+      comparer = new RawComparer(mpi_coll_name, nnodes, ppn);
       break;
   }
   return comparer;

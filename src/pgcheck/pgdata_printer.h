@@ -7,6 +7,7 @@
 
 #include "pgdata.h"
 #include "comparer/comparer_factory.h"
+#include "comparer/raw/raw_comparer.h"
 #include "pgcheck_options.h"
 #include <vector>
 #include <unordered_map>
@@ -15,8 +16,8 @@
 #include <iostream>
 #include <fstream>
 
-class PGDataPrinter {
 
+class PGDataPrinter {
 private:
   /**
    * @return table formatted for txt or console as string
@@ -36,11 +37,13 @@ private:
   /**
    * adds the result from collective to table
    */
-  void add_table_to_merged_table(PGDataTable data_table);
+  void add_table_to_merged_table(PGDataTable data_table, size_t merge_table_id);
 
 private:
   PGCheckOptions options;
-  PGDataTable merged_table;
+  std::vector<PGDataTable> merged_table;
+  std::vector <std::string> comparer_names = {"simple", "abs_runtime", "rel_runtime", "violation", "detailed_violation",
+                                            "grouped_violation", "raw"};
 
 public:
   PGDataPrinter() = default;
@@ -49,7 +52,7 @@ public:
    * prints result from collective as txt or csv to file or console
    * @return 0 if print was successful
    */
-  int print_collective(PGDataComparer *comparer);
+  int print_collective(PGDataComparer *comparer, int comparer_type, size_t merge_table_id);
 
   /**
    * prints merged table as txt or csv to file or console

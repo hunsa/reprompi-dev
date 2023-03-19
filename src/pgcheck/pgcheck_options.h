@@ -11,16 +11,18 @@
 #include <stdio.h>
 #include <algorithm>
 #include <iomanip>
+#include <vector>
 #include <sys/stat.h>
 
 class PGCheckOptions {
 
 protected:
-  bool merge_coll_tables = false;    // write additional file containing merged results
-  bool csv = false;                  // write results in csv format to file
-  bool verbose = false;              // write information and results to console
-  int comparer_type = 3;             // default is grouped
-  int test_type = 0;                 // default is t-test
+  bool merge_coll_tables = false;       // write additional file containing merged results
+  bool csv = false;                     // write results in csv format to file
+  bool verbose = false;                 // write information and results to console
+  bool allow_mkdir = false;             // allow pgchecker to make directories
+  std::vector<int> comparer_list = {6}; // raw data is always written
+  int test_type = 0;                    // default is t-test
   std::string input_file = "";
   std::string output_directory = "";
   std::string config_message = "";
@@ -30,8 +32,9 @@ public:
   bool get_merge_coll_tables();
   bool get_print_to_csv();
   bool get_verbose();
+  bool get_allow_mkdir();
   bool get_csv();
-  int get_comparer_type();
+  std::vector<int> get_comparer_list();
   int get_test_type();
   std::string get_config_message();
   std::string get_input_file();

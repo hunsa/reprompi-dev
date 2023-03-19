@@ -16,12 +16,12 @@ bool PGCheckOptions::get_verbose() {
   return verbose;
 }
 
-bool PGCheckOptions::get_csv() {
-  return csv;
+bool PGCheckOptions::get_allow_mkdir() {
+  return allow_mkdir;
 }
 
-int PGCheckOptions::get_comparer_type() {
-  return comparer_type;
+bool PGCheckOptions::get_csv() {
+  return csv;
 }
 
 int PGCheckOptions::get_test_type() {
@@ -40,19 +40,25 @@ std::string PGCheckOptions::get_config_message() {
   return config_message;
 }
 
+std::vector<int> PGCheckOptions::get_comparer_list() {
+  return comparer_list;
+}
+
 int PGCheckOptions::parse(int argc, char *argv[]) {
   int c;
   struct option long_opts[] =
       {
-          {"help",     no_argument,       NULL, 'h'},
-          {"merge",    no_argument,       NULL, 'm'},
-          {"csv",      no_argument,       NULL, 's'},
-          {"verbose",  no_argument,       NULL, 'v'},
-          {"input",    required_argument, NULL, 'f'},
-          {"output",   required_argument, NULL, 'o'},
-          {"comparer", required_argument, NULL, 'c'},
-          {"test",     required_argument, NULL, 't'},
-          {NULL,       0,                 NULL, 0  }
+          {"help",        no_argument,       NULL, 'h'},
+          {"merge",       no_argument,       NULL, 'm'},
+          {"csv",         no_argument,       NULL, 's'},
+          {"verbose",     no_argument,       NULL, 'v'},
+          {"allow-mkdir", no_argument,       NULL, 'd'},
+          {"input",       required_argument, NULL, 'f'},
+          {"output",      required_argument, NULL, 'o'},
+          {"test",        required_argument, NULL, 't'},
+          {"comp-list",   required_argument, NULL, 'c'},
+          {NULL,          0,                 NULL,  0 }
+
       };
 
   while ((c = getopt_long(argc, argv, ":hmsvf:o:c:t:", long_opts, NULL)) != -1) {
@@ -63,9 +69,6 @@ int PGCheckOptions::parse(int argc, char *argv[]) {
         return -1;
       case 'f':
         input_file = std::string(optarg);
-        break;
-      case 'c':
-        comparer_type = std::atoi(optarg);
         break;
       case 't':
         test_type = std::atoi(optarg);
@@ -81,6 +84,21 @@ int PGCheckOptions::parse(int argc, char *argv[]) {
         break;
       case 'v':
         verbose = true;
+        break;
+      case 'd':
+        allow_mkdir = true;
+        break;
+      case 'c':
+        std::string comp_string = optarg;
+        std::string delimiter = ",";
+        size_t pos = 0;
+        std::string token;
+        while ((pos = comp_string.find(delimiter)) != std::string::npos) {
+          token = comp_string.substr(0, pos);
+          comparer_list.push_back(std::stoi(token));
+          comp_string.erase(0, pos + delimiter.length());
+        }
+        comparer_list.push_back(std::stoi(comp_string));
         break;
     }
   }

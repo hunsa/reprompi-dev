@@ -148,6 +148,8 @@ int main(int argc, char *argv[]) {
 
   auto pgtune_interface = PGTuneLibInterface(pginfo_data);
 
+  size_t merge_table_id = 0;
+
   for (int case_id = 0; case_id < input.get_number_of_test_cases(); case_id++) {
     std::string mpi_coll = input.get_mpi_collective_for_case_id(case_id);
 
@@ -202,14 +204,17 @@ int main(int argc, char *argv[]) {
     }
 
     if (rank == 0) {
-      PGDataComparer *comparer = ComparerFactory::create_comparer(options.get_comparer_type(), options.get_test_type(), mpi_coll, nnodes, ppn);
-      comparer->set_barrier_time(barrier_mean);
-      comparer->add_data(coll_data);
-      if (printer->print_collective(comparer) != 0) {
-        printer->println_error_to_cerr("cannot print results");
-        exit(-1);
+      for(auto comparer_type : options.get_comparer_list()) {
+        PGDataComparer *comparer = ComparerFactory::create_comparer(comparer_type, options.get_test_type(), mpi_coll, nnodes, ppn);
+        comparer->set_barrier_time(barrier_mean);
+        comparer->add_data(coll_data);
+        if (printer->print_collective(comparer, comparer_type, merge_table_id++) != 0) {
+          printer->println_error_to_cerr("cannot print results");
+          exit(-1);
+        }
       }
     }
+    merge_table_id = 0;
   }
 
   if (rank == 0) {

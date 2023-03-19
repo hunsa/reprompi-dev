@@ -4,24 +4,43 @@
 
 #include "pgdata_printer.h"
 
-int PGDataPrinter::print_collective(PGDataComparer *comparer) {
+int PGDataPrinter::print_collective(PGDataComparer *comparer, int comparer_type, size_t merge_table_id) {
   PGDataTable table_coll_res = comparer->get_results();
   std::string output_formatted = table_to_clear_string(table_coll_res);
   std::string output_directory = options.get_output_directory();
-  std::string filename = output_directory + table_coll_res.get_mpi_name();
 
-  println_to_cout(output_formatted);
+  std::string filename = "";
+  std::string folder_name;
 
+  if (options.get_allow_mkdir()) {
+    folder_name = output_directory + comparer_names.at(comparer_type) + "/";
+    filename = folder_name + table_coll_res.get_mpi_name();
+  } else {
+    filename = output_directory + comparer_names.at(comparer_type) + "_" + table_coll_res.get_mpi_name();
+  }
+
+  // never print raw to cout
+  if(typeid(*comparer).name() != typeid(RawComparer).name()) {
+    println_to_cout(output_formatted);
+  }
+
+  char * folder_chars = const_cast<char*>(folder_name.c_str());
   if (!output_directory.empty()) {
-    write_string_to_file(output_formatted, filename + ".txt");
-
+    if (options.get_allow_mkdir()) {
+      int status = mkdir(folder_chars, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      if (status != 0) {
+        println_warning_to_cout("folder exists");
+      } else {
+        println_to_cout("folder created");
+      }
+    }
     if (options.get_csv()) {
       write_string_to_file(table_to_csv_string(table_coll_res), filename + ".csv");
     }
   }
 
   if (options.get_merge_coll_tables()) {
-    add_table_to_merged_table(table_coll_res);
+    add_table_to_merged_table(table_coll_res, merge_table_id);
   }
 
   return EXIT_SUCCESS;
@@ -30,16 +49,28 @@ int PGDataPrinter::print_collective(PGDataComparer *comparer) {
 int PGDataPrinter::print_summary() {
   std::string output_directory = options.get_output_directory();
   if (options.get_merge_coll_tables()) {
-    std::string merged_table_string = table_to_clear_string(merged_table);
-    std::string filename = output_directory + "MPI_Results";
 
-    println_to_cout(merged_table_string);
+    size_t merge_table_id = 0;
 
-    if(!output_directory.empty()) {
-      write_string_to_file(merged_table_string, filename + ".txt");
+    for (auto table : merged_table) {
+      std::string merged_table_string = table_to_clear_string(table);
+      size_t comp_name = options.get_comparer_list().at(merge_table_id++);
 
-      if (options.get_csv()) {
-        write_string_to_file(table_to_csv_string(merged_table), filename + ".csv");
+      std::string filename;
+
+      if (options.get_allow_mkdir()) {
+        filename = output_directory + comparer_names.at(comp_name) + "/Results";
+      } else {
+        filename = output_directory + comparer_names.at(comp_name) + "_Results";
+      }
+
+
+      if(!output_directory.empty()) {
+        write_string_to_file(merged_table_string, filename + ".txt");
+
+        if (options.get_csv()) {
+          write_string_to_file(table_to_csv_string(table), filename + ".csv");
+        }
       }
     }
   }
@@ -129,12 +160,15 @@ void PGDataPrinter::write_string_to_file(std::string text, std::string filename)
   file.close();
 }
 
-void PGDataPrinter::add_table_to_merged_table(PGDataTable data_table) {
-  if (merged_table.get_col_names().empty()) {
-    merged_table.set_col_names(data_table.get_col_names());
-    merged_table.set_col_widths(data_table.get_col_widths());
+void PGDataPrinter::add_table_to_merged_table(PGDataTable data_table, size_t merge_table_id) {
+  if (merged_table.size() < (1 + merge_table_id)) {
+    merged_table.push_back(PGDataTable());
   }
-  merged_table.add_table(data_table);
+  if (merged_table.at(merge_table_id).get_col_names().empty()) {
+    merged_table.at(merge_table_id).set_col_names(data_table.get_col_names());
+    merged_table.at(merge_table_id).set_col_widths(data_table.get_col_widths());
+  }
+  merged_table.at(merge_table_id).add_table(data_table);
 }
 
 void PGDataPrinter::print_usage(char *command) {
