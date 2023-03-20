@@ -105,7 +105,17 @@ mpirun -np 4 ./bin/mpibenchmark --calls-list=MPI_Bcast,MPI_Allgather
   - `MPI_Scatter`
 
 ### Mockup Functions of Various MPI Collectives
-  TODO
+
+| **MPI_Allgather** | **MPI_Allreduce**            | **MPI_Alltoall** | **MPI_Bcast**     | **MPI_Gather** | **MPI_Reduce**            | **MPI_Reduce_scatter_block** | **MPI_Scan**       | **MPI_Scatter** |
+|-------------------|------------------------------|------------------|-------------------|----------------|---------------------------|------------------------------|--------------------|-----------------|
+| Default           | Default                      | Default          | Default           | Default        | Default                   | Default                      | Default            | Default         |
+| Allgatherv        | Reduce+Bcast                 | Alltoallv        | Allgatherv        | Allgather      | Allreduce                 | Reduce+Scatter               | Exscan+Reducelocal | Bcast           |
+| Allreduce         | Reducescatterblock+Allgather | Lane             | Scatter+Allgather | Gatherv        | Reducescatterblock+Gather | Reducescatter                | Lane               | Scatterv        |
+| Alltoall          | Reducescatter+Allgatherv     |                  | Lane              | Reduce         | Reducescatter+Gatherv     | Allreduce                    | Hier               | Lane            |
+| Gather+Bcast      | Lane                         |                  | Hier              | Lane           | Reducescatter             | Hier                         |                    | Hier            |
+| Lane              | Hier                         |                  |                   | Hier           | Lane                      | Lane                         |                    |                 |
+| Lane Zero         |                              |                  |                   |                | Hier                      |                              |                    |                 |
+| Hier                          |                    |                 |
 
     
 
