@@ -63,9 +63,95 @@ void PGDataTable::add_table(PGDataTable table) {
   int nb_rows = table.get_col_size();
   for (int i = 0; i < nb_rows; i++) {
     for (auto iter = col_names.rbegin(); iter != (col_names.rend() - 1); ++iter) {
-      std::vector <std::string> values = table.get_values_for_col_name(*iter);
-      col_value_map[*iter].push_back(values[i]);
+      col_value_map[*iter].push_back(table.get_values_col_row(*iter, i));
     }
     col_value_map["collective"].push_back(table.get_mpi_name());
   }
+}
+
+PGDataTable PGDataTable::get_violation_table() {
+  std::vector<int> col_widths = {25, 15, 15, 20, 10};
+  PGDataTable res("stats", {"collective", "brave_sum", "cautious_sum", "barrier_warnings", "of"});
+  std::vector <std::string> violations;
+  std::vector <std::string> barriers;
+  std::string mode = "";
+
+  for (std::string col_name: col_names) {
+    if (col_name.compare("diff<barrier") == 0) {
+      violations = get_values_for_col_name("violation");
+      barriers = get_values_for_col_name("diff<barrier");
+      mode = "violation";
+      break;
+    }
+    if (col_name.compare("violation") == 0) {
+      violations = get_values_for_col_name("violation");
+      barriers = get_values_for_col_name("mockup");
+      mode = "violation";
+    }
+    if (col_name.compare("fastest_mockup") == 0) {
+      violations = get_values_for_col_name("fastest_mockup");
+      barriers = get_values_for_col_name("fastest_mockup");
+      mode = "fastest";
+    }
+  }
+
+  size_t row_idx = 0;
+  int brave_coll = 0;
+  int cautious_coll = 0;
+  int brave_sum = 0;
+  int cautious_sum = 0;
+  int of_coll = 0;
+  int of_sum = 0;
+  std::string coll_name = "";
+
+  for (std::string violation: violations) {
+
+    if (mode.compare("violation") != 0 || get_values_col_row("mockup", row_idx).compare("default") != 0) {
+      of_coll++;
+    }
+
+    coll_name = get_values_col_row("collective", row_idx);
+
+    if (mode.compare("violation") == 0) {
+      if (violation.compare("") != 0 && violation.compare("1") == 0) {
+        brave_coll++;
+        if (barriers.at(row_idx).back() != '*') {
+          cautious_coll++;
+        }
+      }
+    } else {
+      if (violation.compare("") != 0) {
+        brave_coll++;
+        if (barriers.at(row_idx).back() != '*') {
+          cautious_coll++;
+        }
+      }
+    }
+
+    if (row_idx == (violations.size() - 1) || coll_name.compare(get_values_col_row("collective", ++row_idx)) != 0) {
+      std::unordered_map <std::string, std::string> row;
+      row["collective"] = coll_name;
+      row["brave_sum"] = std::to_string(brave_coll);
+      row["cautious_sum"] = std::to_string(cautious_coll);
+      row["barrier_warnings"] = std::to_string(brave_coll - cautious_coll);
+      row["of"] = std::to_string(of_coll);
+      res.add_row(row);
+      brave_sum += brave_coll, cautious_sum += cautious_coll, of_sum += of_coll;
+      of_coll = 0, brave_coll = 0, cautious_coll = 0;
+    }
+  }
+
+  brave_sum += brave_coll;
+  cautious_sum += cautious_coll;
+
+  std::unordered_map <std::string, std::string> row;
+  row["collective"] = "Sum";
+  row["brave_sum"] = std::to_string(brave_sum);
+  row["cautious_sum"] = std::to_string(cautious_sum);
+  row["barrier_warnings"] = std::to_string(brave_sum - cautious_sum);
+  row["of"] = std::to_string(of_sum);
+  res.add_row(row);
+  res.set_col_widths(col_widths);
+  return res;
+
 }

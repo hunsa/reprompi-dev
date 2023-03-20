@@ -45,6 +45,8 @@ public:
 
   void set_col_names(std::vector <std::string> names);
 
+  PGDataTable get_violation_table();
+
   /**
    * adds one row to table
    */

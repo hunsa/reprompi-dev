@@ -204,7 +204,10 @@ int main(int argc, char *argv[]) {
     }
 
     if (rank == 0) {
+      printer->println_to_cout("Data collected");
+      printer->println_to_cout("################################");
       for(auto comparer_type : options.get_comparer_list()) {
+        printer->println_to_cout("Evaluating data: comparer:" + std::to_string(comparer_type));
         PGDataComparer *comparer = ComparerFactory::create_comparer(comparer_type, options.get_test_type(), mpi_coll, nnodes, ppn);
         comparer->set_barrier_time(barrier_mean);
         comparer->add_data(coll_data);
@@ -213,6 +216,7 @@ int main(int argc, char *argv[]) {
           exit(-1);
         }
       }
+      printer->println_to_cout("################################");
     }
     merge_table_id = 0;
   }

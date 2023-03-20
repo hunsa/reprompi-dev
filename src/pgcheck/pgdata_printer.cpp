@@ -6,7 +6,6 @@
 
 int PGDataPrinter::print_collective(PGDataComparer *comparer, int comparer_type, size_t merge_table_id) {
   PGDataTable table_coll_res = comparer->get_results();
-  std::string output_formatted = table_to_clear_string(table_coll_res);
   std::string output_directory = options.get_output_directory();
 
   std::string filename = "";
@@ -21,6 +20,7 @@ int PGDataPrinter::print_collective(PGDataComparer *comparer, int comparer_type,
 
   // never print raw to cout
   if(typeid(*comparer).name() != typeid(RawComparer).name()) {
+    std::string output_formatted = table_to_clear_string(table_coll_res);
     println_to_cout(output_formatted);
   }
 
@@ -56,21 +56,44 @@ int PGDataPrinter::print_summary() {
       std::string merged_table_string = table_to_clear_string(table);
       size_t comp_name = options.get_comparer_list().at(merge_table_id++);
 
-      std::string filename;
+      std::string merged_table_filename;
+      std::string stats_filename;
 
       if (options.get_allow_mkdir()) {
-        filename = output_directory + comparer_names.at(comp_name) + "/Results";
+        merged_table_filename = output_directory + comparer_names.at(comp_name) + "/Results";
+        stats_filename = output_directory + comparer_names.at(comp_name) + "/Stats";
       } else {
-        filename = output_directory + comparer_names.at(comp_name) + "_Results";
+        merged_table_filename = output_directory + comparer_names.at(comp_name) + "_Results";
+        stats_filename = output_directory + comparer_names.at(comp_name) + "_Stats";
       }
 
 
       if(!output_directory.empty()) {
-        write_string_to_file(merged_table_string, filename + ".txt");
+        write_string_to_file(merged_table_string, merged_table_filename + ".txt");
 
         if (options.get_csv()) {
-          write_string_to_file(table_to_csv_string(table), filename + ".csv");
+          write_string_to_file(table_to_csv_string(table), merged_table_filename + ".csv");
         }
+      }
+
+      // print stats only for violation comparer
+      if (comp_name > 2 && comp_name < 6) {
+        println_to_cout("\n################################");
+        println_to_cout("Violations Statistics for " + comparer_names.at(comp_name));
+
+        std::string stats_clear_string = table_to_clear_string(table.get_violation_table());
+
+        println_to_cout(stats_clear_string);
+
+        if(!output_directory.empty()) {
+          write_string_to_file(stats_clear_string, stats_filename + ".txt");
+
+          if (options.get_csv()) {
+            write_string_to_file(table_to_csv_string(table.get_violation_table()), stats_filename + ".csv");
+          }
+        }
+
+        println_to_cout("################################");
       }
     }
   }
@@ -101,8 +124,7 @@ std::string PGDataPrinter::table_to_clear_string(PGDataTable table) {
   for (int i = 0; i < nb_rows; i++) {
     idx = 0;
     for (auto iter = col_names.begin(); iter != col_names.end(); ++iter) {
-      std::vector <std::string> values = table.get_values_for_col_name(*iter);
-      res << std::setw(table.get_col_width(idx++)) << values[i] << " ";
+      res << std::setw(table.get_col_width(idx++)) << table.get_values_col_row(*iter, i) << " ";
     }
     res << "\n";
   }
@@ -113,8 +135,10 @@ std::string PGDataPrinter::table_to_csv_string(PGDataTable table) {
   std::stringstream res;
   std::string col_delimiter = ",";
   std::string row_delimiter = "\n";
-
   std::vector <std::string> col_names = table.get_col_names();
+  int nb_rows = table.get_col_size();
+
+
   for (auto iter = col_names.begin(); iter != col_names.end(); ++iter) {
     res << *iter;
     if (std::next(iter) != col_names.end()) {
@@ -122,11 +146,10 @@ std::string PGDataPrinter::table_to_csv_string(PGDataTable table) {
     }
   }
   res << row_delimiter;
-  int nb_rows = table.get_col_size();
+
   for (int i = 0; i < nb_rows; i++) {
     for (auto iter = col_names.begin(); iter != col_names.end(); ++iter) {
-      std::vector <std::string> values = table.get_values_for_col_name(*iter);
-      res << values[i];
+      res << table.get_values_col_row(*iter, i);
       if (std::next(iter) != col_names.end()) {
         res << col_delimiter;
       }

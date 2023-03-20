@@ -11,7 +11,7 @@ GroupedViolationComparer::GroupedViolationComparer(int test_type, std::string mp
 
 PGDataTable GroupedViolationComparer::get_results() {
 
-  std::vector <std::string> col_names = {"collective", "count", "N", "ppn", "n", "default_median", "slowdown", "mockup",
+  std::vector <std::string> col_names = {"collective", "count", "N", "ppn", "n", "default_median", "slowdown", "fastest_mockup",
                                          "mockup_median"};
   PGDataTable res(mpi_coll_name, col_names);
   std::map<int, ComparerData> def_res;
@@ -50,7 +50,7 @@ PGDataTable GroupedViolationComparer::get_results() {
 
     if (data.is_violated()) {
       row["slowdown"] = std::to_string(data.get_slowdown());
-      row["mockup"] = data.get_fastest_mockup();
+      row["fastest_mockup"] = data.get_fastest_mockup();
       row["mockup_median"] = std::to_string(data.get_fastest_mockup_median_ms());
       if( has_barrier_time() ) {
         // don't forget, barrier time is in 's'
@@ -60,7 +60,7 @@ PGDataTable GroupedViolationComparer::get_results() {
       }
     } else {
       row["slowdown"] = "";
-      row["mockup"] = "";
+      row["fastest_mockup"] = "";
       row["mockup_median"] = "";
     }
 

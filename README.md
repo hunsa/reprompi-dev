@@ -286,7 +286,7 @@ MPI_Allreduce   --msizes-list=1024,4096,16384 --nrep=500 --proc-sync=roundtime -
 - `-o` | `--output` print evaluations to output folder.
 - `-s` | `--csv` print evaluations as `.csv`-file to output folder.
 - `-m` | `--merge` merge tables of all tested MPI functions and print.
-- `-d` | `--allow-mkdir` create folder for every comparer in the output folder.
+- `-d` | `--allow-mkdir` create folder in the output folder for every comparer.
 - `-t` | `--test` statistical test used for identification of violations against the performance guidelines. Possible values are: TTest(=0), WilcoxonRankSum(=1), and WilcoxonMannWhitney(=2). Default is TTest.
 - `-c` | `--comp-list` a list of comparer seperated by `,`. Possible values are: Simple(=0), AbsRuntime(=1), RelRuntime(=2), Violation(=3), DetailedViolation(=4), GroupedViolation(=5), Raw(=6). Default is Raw.
 
