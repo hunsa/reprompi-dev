@@ -76,19 +76,19 @@ PGDataTable PGDataTable::get_violation_table() {
   std::vector <std::string> barriers;
   std::string mode = "";
 
-  for (std::string col_name: col_names) {
-    if (col_name.compare("diff<barrier") == 0) {
+  for (const std::string& col_name: col_names) {
+    if (col_name =="diff<barrier") {
       violations = get_values_for_col_name("violation");
       barriers = get_values_for_col_name("diff<barrier");
       mode = "violation";
       break;
     }
-    if (col_name.compare("violation") == 0) {
+    if (col_name == "violation") {
       violations = get_values_for_col_name("violation");
       barriers = get_values_for_col_name("mockup");
       mode = "violation";
     }
-    if (col_name.compare("fastest_mockup") == 0) {
+    if (col_name == "fastest_mockup") {
       violations = get_values_for_col_name("fastest_mockup");
       barriers = get_values_for_col_name("fastest_mockup");
       mode = "fastest";
@@ -106,21 +106,21 @@ PGDataTable PGDataTable::get_violation_table() {
 
   for (std::string violation: violations) {
 
-    if (mode.compare("violation") != 0 || get_values_col_row("mockup", row_idx).compare("default") != 0) {
+    if (mode != "violation" || get_values_col_row("mockup", row_idx) != "default") {
       of_coll++;
     }
 
     coll_name = get_values_col_row("collective", row_idx);
 
-    if (mode.compare("violation") == 0) {
-      if (violation.compare("") != 0 && violation.compare("1") == 0) {
+    if (mode == "violation") {
+      if (violation != "" && violation == "1") {
         brave_coll++;
         if (barriers.at(row_idx).back() != '*') {
           cautious_coll++;
         }
       }
     } else {
-      if (violation.compare("") != 0) {
+      if (violation != "") {
         brave_coll++;
         if (barriers.at(row_idx).back() != '*') {
           cautious_coll++;
@@ -128,7 +128,7 @@ PGDataTable PGDataTable::get_violation_table() {
       }
     }
 
-    if (row_idx == (violations.size() - 1) || coll_name.compare(get_values_col_row("collective", ++row_idx)) != 0) {
+    if (row_idx == (violations.size() - 1) || coll_name != get_values_col_row("collective", ++row_idx)) {
       std::unordered_map <std::string, std::string> row;
       row["collective"] = coll_name;
       row["brave_sum"] = std::to_string(brave_coll);

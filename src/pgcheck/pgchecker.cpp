@@ -11,6 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <numeric>
+#include <chrono>
 #include "mpi.h"
 #include <sys/stat.h>
 
@@ -47,6 +48,32 @@
 #include "pgcheck_input.h"
 #include "utils/argv_manager.h"
 #include "utils/statistics_utils.h"
+
+std::string get_runtime_string(long nanoseconds) {
+  std::ostringstream stream;
+  stream << "PGChecker runtime: ";
+  if (nanoseconds >= 60000000000) {
+    long minutes = nanoseconds / 60000000000;
+    long seconds = (nanoseconds - (minutes * 60000000000)) / 1000000000;
+    long remainingNanoseconds = nanoseconds - (minutes * 60000000000) - (seconds * 1000000000);
+    stream << minutes << " min " << seconds << " s " << remainingNanoseconds / 1000000 << " ms";
+  } else if (nanoseconds >= 1000000000) {
+    long seconds = nanoseconds / 1000000000;
+    long remainingNanoseconds = nanoseconds - (seconds * 1000000000);
+    stream << seconds << " s " << remainingNanoseconds / 1000000 << " ms";
+  } else if (nanoseconds >= 1000000) {
+    long milliseconds = nanoseconds / 1000000;
+    long remainingNanoseconds = nanoseconds - (milliseconds * 1000000);
+    stream << milliseconds << " ms " << remainingNanoseconds / 1000 << " µs";
+  } else if (nanoseconds >= 1000) {
+    long microseconds = nanoseconds / 1000;
+    long remainingNanoseconds = nanoseconds - (microseconds * 1000);
+    stream << microseconds << " µs " << remainingNanoseconds << " ns";
+  } else {
+    stream << nanoseconds << " ns";
+  }
+  return stream.str();
+}
 
 static double get_barrier_runtime() {
   double avg_runtime = -1.0;
@@ -94,6 +121,7 @@ int main(int argc, char *argv[]) {
 
   PGCheckOptions options;
   PGDataPrinter *printer = NULL;
+  long pg_checker_runtime = 0;
 
   if (rank == 0) {
     printer = new PGDataPrinter();
@@ -204,6 +232,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (rank == 0) {
+      auto runtime_start = std::chrono::high_resolution_clock::now();
       printer->println_to_cout("Data collected");
       printer->println_to_cout("################################");
       for(auto comparer_type : options.get_comparer_list()) {
@@ -217,13 +246,19 @@ int main(int argc, char *argv[]) {
         }
       }
       printer->println_to_cout("################################");
+      auto runtime_end = std::chrono::high_resolution_clock::now();
+      pg_checker_runtime += std::chrono::duration_cast<std::chrono::nanoseconds>(runtime_end - runtime_start).count();
     }
     merge_table_id = 0;
   }
 
   if (rank == 0) {
+    auto runtime_start = std::chrono::high_resolution_clock::now();
     printer->println_to_cout("\n################################");
     printer->print_summary();
+    auto runtime_end = std::chrono::high_resolution_clock::now();
+    pg_checker_runtime += std::chrono::duration_cast<std::chrono::milliseconds>(runtime_end - runtime_start).count();
+    printer->println_to_cout(get_runtime_string(pg_checker_runtime));
     printer->println_to_cout("################################");
     delete printer;
   }

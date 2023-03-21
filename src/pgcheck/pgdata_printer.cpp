@@ -27,12 +27,7 @@ int PGDataPrinter::print_collective(PGDataComparer *comparer, int comparer_type,
   char * folder_chars = const_cast<char*>(folder_name.c_str());
   if (!output_directory.empty()) {
     if (options.get_allow_mkdir()) {
-      int status = mkdir(folder_chars, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-      if (status != 0) {
-        println_warning_to_cout("folder exists");
-      } else {
-        println_to_cout("folder created");
-      }
+      mkdir(folder_chars, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     }
     if (options.get_csv()) {
       write_string_to_file(table_to_csv_string(table_coll_res), filename + ".csv");
@@ -106,8 +101,16 @@ int PGDataPrinter::print_summary() {
 }
 
 std::string PGDataPrinter::table_to_clear_string(PGDataTable table) {
-  std::stringstream res;
-  std::vector <std::string> col_names = table.get_col_names();
+  const std::vector<std::string>& col_names = table.get_col_names();
+  const int nb_rows = table.get_col_size();
+
+  std::ostringstream res;
+  res.exceptions(std::ios::failbit);
+  res.rdbuf()->pubsetbuf(nullptr, 0);
+  res.precision(10);
+  res << std::fixed;
+  res.exceptions(std::ios::goodbit);
+  res.str().reserve(col_names.size() * 10 + nb_rows * col_names.size() * 20);
 
   if (!table.get_mpi_name().empty()) {
     res << "MPI Collective: " << table.get_mpi_name() << "\n";
@@ -116,15 +119,15 @@ std::string PGDataPrinter::table_to_clear_string(PGDataTable table) {
   }
 
   int idx = 0;
-  for (auto iter = col_names.begin(); iter != col_names.end(); ++iter) {
-    res << std::setw(table.get_col_width(idx++)) << *iter << " ";
+  for (auto col_name = col_names.cbegin(); col_name != col_names.cend(); ++col_name) {
+    res << std::left << std::setw(table.get_col_width(idx++)) << *col_name << " ";
   }
   res << "\n";
-  int nb_rows = table.get_col_size();
-  for (int i = 0; i < nb_rows; i++) {
+
+  for (int i = 0; i != nb_rows; ++i) {
     idx = 0;
-    for (auto iter = col_names.begin(); iter != col_names.end(); ++iter) {
-      res << std::setw(table.get_col_width(idx++)) << table.get_values_col_row(*iter, i) << " ";
+    for (auto col_name = col_names.cbegin(); col_name != col_names.cend(); ++col_name) {
+      res << std::left << std::setw(table.get_col_width(idx++)) << table.get_values_col_row(*col_name, i) << " ";
     }
     res << "\n";
   }
@@ -132,33 +135,37 @@ std::string PGDataPrinter::table_to_clear_string(PGDataTable table) {
 }
 
 std::string PGDataPrinter::table_to_csv_string(PGDataTable table) {
-  std::stringstream res;
-  std::string col_delimiter = ",";
-  std::string row_delimiter = "\n";
-  std::vector <std::string> col_names = table.get_col_names();
-  int nb_rows = table.get_col_size();
+  const std::string col_delimiter = ",";
+  const std::string row_delimiter = "\n";
+  const auto& col_names = table.get_col_names();
+  const int nb_rows = table.get_col_size();
 
+  std::ostringstream res;
+  res.exceptions(std::ios::failbit);
+  res.rdbuf()->pubsetbuf(nullptr, 0);
+  res.precision(10);
+  res << std::fixed;
+  res.exceptions(std::ios::goodbit);
+  res.str().reserve(col_names.size() * 10 + nb_rows * col_names.size() * 20);
 
-  for (auto iter = col_names.begin(); iter != col_names.end(); ++iter) {
-    res << *iter;
-    if (std::next(iter) != col_names.end()) {
+  for (auto col_name = col_names.cbegin(); col_name != col_names.cend(); ++col_name) {
+    res << *col_name;
+    if (std::next(col_name) != col_names.cend()) {
       res << col_delimiter;
     }
   }
   res << row_delimiter;
 
-  for (int i = 0; i < nb_rows; i++) {
-    for (auto iter = col_names.begin(); iter != col_names.end(); ++iter) {
-      res << table.get_values_col_row(*iter, i);
-      if (std::next(iter) != col_names.end()) {
+  for (int i = 0; i != nb_rows; ++i) {
+    for (auto col_name = col_names.cbegin(); col_name != col_names.cend(); ++col_name) {
+      res << table.get_values_col_row(*col_name, i);
+      if (std::next(col_name) != col_names.cend()) {
         res << col_delimiter;
       }
     }
-    // escape last new line
-    if(i == (nb_rows-1)) {
-      continue;
+    if (i != nb_rows - 1) {
+      res << row_delimiter;
     }
-    res << row_delimiter;
   }
   return res.str();
 }
@@ -198,10 +205,11 @@ void PGDataPrinter::print_usage(char *command) {
   std::cout << "USAGE: " << std::string(command) << " -f input_file [options]" << std::endl << std::endl;
   std::cout << "OPTIONS:" << std::endl;
   std::cout << std::setw(36) << std::left << "  ?, -h, --help" << "Display this information." << std::endl;
-  std::cout << std::setw(36) << std::left << "  -c, --comparer {0|1|2|3|4|5}" << "Specify the comparer type (0=Simple|1=Absolute Median|2=Relative Median|3=Violation-Test|4=Detailed Violation-Test|5=Grouped Violation-Test)." << std::endl;
+  std::cout << std::setw(36) << std::left << "  -c, --comp-list={0|1|2|3|4|5|6}" << "Specify the comparer type (0=Simple|1=Absolute Median|2=Relative Median|3=Violation-Test|4=Detailed Violation-Test|5=Grouped Violation-Test|6=Raw Data)." << std::endl;
   std::cout << std::setw(36) << std::left << "  -t, --test {0|1|2}" << "Specify the test type (0=T-Test|1=Wilcoxon-Rank-Sum-Test|2=Wilcoxon-Mann-Whitney)." << std::endl;
   std::cout << std::setw(36) << std::left << "  -o, --output <path>" << "Specify an existing output folder." << std::endl;
   std::cout << std::setw(36) << std::left << "  -m, --merge" << "Additionally results of all collectives are merged into one table." << std::endl;
+  std::cout << std::setw(36) << std::left << "  -d, --allow-mkdir" << "Allow PGChecker to generate folders in the specified output folder" << std::endl;
   std::cout << std::setw(36) << std::left << "  -s, --csv" << "Print results to .csv file. Output directory must be specified. The csv formatted table is never written to the console." << std::endl;
   std::cout << std::setw(36) << std::left << "  -v, --verbose" << "Print all information and results to console." << std::endl;
 }

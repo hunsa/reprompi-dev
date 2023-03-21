@@ -21,7 +21,7 @@ protected:
   bool csv = false;                     // write results in csv format to file
   bool verbose = false;                 // write information and results to console
   bool allow_mkdir = false;             // allow pgchecker to make directories
-  std::vector<int> comparer_list = {6}; // raw data is always written
+  std::vector<int> comparer_list = {5}; // grouped comparer is default
   int test_type = 0;                    // default is t-test
   std::string input_file = "";
   std::string output_directory = "";

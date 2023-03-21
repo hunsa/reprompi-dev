@@ -99,6 +99,8 @@ int PGCheckOptions::parse(int argc, char *argv[]) {
           comp_string.erase(0, pos + delimiter.length());
         }
         comparer_list.push_back(std::stoi(comp_string));
+        comparer_list.erase(std::unique(comparer_list.begin(), comparer_list.end()), comparer_list.end());
+        std::sort(comparer_list.begin(), comparer_list.end());
         break;
     }
   }
