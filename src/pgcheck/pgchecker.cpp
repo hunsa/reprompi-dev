@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
     for (auto &alg_version: pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll)) {
       std::vector <std::string> pgtunelib_argv;
       if (rank == 0) {
-        printer->println_to_cout("\n################################");
+        printer->println_separator_to_cout();
         printer->println_to_cout("Collecting data: " + mod_name + ":" + alg_version);
       }
 
@@ -234,7 +234,7 @@ int main(int argc, char *argv[]) {
     if (rank == 0) {
       auto runtime_start = std::chrono::high_resolution_clock::now();
       printer->println_to_cout("Data collected");
-      printer->println_to_cout("################################");
+      printer->println_separator_to_cout();
       for(auto comparer_type : options.get_comparer_list()) {
         printer->println_to_cout("Evaluating data: comparer:" + std::to_string(comparer_type));
         PGDataComparer *comparer = ComparerFactory::create_comparer(comparer_type, options.get_test_type(), mpi_coll, nnodes, ppn);
@@ -245,7 +245,6 @@ int main(int argc, char *argv[]) {
           exit(-1);
         }
       }
-      printer->println_to_cout("################################");
       auto runtime_end = std::chrono::high_resolution_clock::now();
       pg_checker_runtime += std::chrono::duration_cast<std::chrono::nanoseconds>(runtime_end - runtime_start).count();
     }
@@ -254,12 +253,11 @@ int main(int argc, char *argv[]) {
 
   if (rank == 0) {
     auto runtime_start = std::chrono::high_resolution_clock::now();
-    printer->println_to_cout("\n################################");
     printer->print_summary();
     auto runtime_end = std::chrono::high_resolution_clock::now();
     pg_checker_runtime += std::chrono::duration_cast<std::chrono::milliseconds>(runtime_end - runtime_start).count();
     printer->println_to_cout(get_runtime_string(pg_checker_runtime));
-    printer->println_to_cout("################################");
+    printer->print_separator_to_cout();
     delete printer;
   }
 

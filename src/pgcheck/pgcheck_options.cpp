@@ -93,20 +93,34 @@ int PGCheckOptions::parse(int argc, char *argv[]) {
         std::string delimiter = ",";
         size_t pos = 0;
         std::string token;
+
         while ((pos = comp_string.find(delimiter)) != std::string::npos) {
           token = comp_string.substr(0, pos);
           comparer_list.push_back(std::stoi(token));
           comp_string.erase(0, pos + delimiter.length());
         }
-        comparer_list.push_back(std::stoi(comp_string));
-        comparer_list.erase(std::unique(comparer_list.begin(), comparer_list.end()), comparer_list.end());
-        std::sort(comparer_list.begin(), comparer_list.end());
+
+        if (!comp_string.empty()) {
+          comparer_list.push_back(std::stoi(comp_string));
+        }
+
         break;
     }
   }
 
   optind = 1;
   opterr = 1;
+
+  // comparer 5 is default
+  if (comparer_list.size() < 1) {
+    comparer_list.push_back(5);
+  }
+
+  // unique and sorted comparer list if list has multiple entries
+  if(comparer_list.size() > 1) {
+    comparer_list.erase(std::unique(comparer_list.begin(), comparer_list.end()), comparer_list.end());
+    std::sort(comparer_list.begin(), comparer_list.end());
+  }
 
   // print results to cout if output directory is not present
   struct stat sb;

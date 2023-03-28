@@ -22,6 +22,8 @@ int PGDataPrinter::print_collective(PGDataComparer *comparer, int comparer_type,
   if(typeid(*comparer).name() != typeid(RawComparer).name()) {
     std::string output_formatted = table_to_clear_string(table_coll_res);
     println_to_cout(output_formatted);
+  } else {
+    println_to_cout("Raw Runtime Data was written to file.");
   }
 
   char * folder_chars = const_cast<char*>(folder_name.c_str());
@@ -73,7 +75,7 @@ int PGDataPrinter::print_summary() {
 
       // print stats only for violation comparer
       if (comp_name > 2 && comp_name < 6) {
-        println_to_cout("\n################################");
+        println_separator_to_cout();
         println_to_cout("Violations Statistics for " + comparer_names.at(comp_name));
 
         std::string stats_clear_string = table_to_clear_string(table.get_violation_table());
@@ -87,12 +89,11 @@ int PGDataPrinter::print_summary() {
             write_string_to_file(table_to_csv_string(table.get_violation_table()), stats_filename + ".csv");
           }
         }
-
-        println_to_cout("################################");
       }
     }
   }
 
+  println_separator_to_cout();
   if (!output_directory.empty()) {
     std::cout << "Files have been written to '" << options.get_output_directory() << "'." << std::endl;
   }
@@ -168,6 +169,20 @@ std::string PGDataPrinter::table_to_csv_string(PGDataTable table) {
     }
   }
   return res.str();
+}
+
+void PGDataPrinter::print_separator_to_cout() {
+  if (options.get_verbose()) {
+    char fill_char = '#';
+    std::cout << std::left << std::setfill(fill_char) << std::setw(80) << "" << std::endl;
+  }
+}
+
+void PGDataPrinter::println_separator_to_cout() {
+  if (options.get_verbose()) {
+    char fill_char = '#';
+    std::cout << std::endl << std::left << std::setfill(fill_char) << std::setw(80) << "" << std::endl;
+  }
 }
 
 void PGDataPrinter::println_to_cout(std::string message) {

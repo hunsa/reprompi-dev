@@ -61,6 +61,17 @@ public:
   int print_summary();
 
   /**
+   * prints separator to cout if verbose is enabled
+   */
+  void print_separator_to_cout();
+
+
+  /**
+   * prints separator with newline to cout if verbose is enabled
+   */
+  void println_separator_to_cout();
+
+  /**
    * prints message to cout if verbose is enabled
    */
   void println_to_cout(std::string message);
