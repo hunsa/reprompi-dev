@@ -4,7 +4,7 @@
 
 #include "pgdata_printer.h"
 
-int PGDataPrinter::print_collective(PGDataComparer *comparer, int comparer_type, size_t merge_table_id) {
+int PGDataPrinter::print_collective(std::unique_ptr<PGDataComparer>& comparer, int comparer_type, size_t merge_table_id) {
   PGDataTable table_coll_res = comparer->get_results();
   std::string output_directory = options.get_output_directory();
 

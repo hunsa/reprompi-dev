@@ -239,7 +239,7 @@ int main(int argc, char *argv[]) {
       printer->println_info_to_cout("Collecting Finished:    " + mod_name);
       for(auto comparer_type : options.get_comparer_list()) {
         printer->println_info_to_cout("Evaluating Data:        comparer:" + pgchecker::COMPARER_NAMES.at(comparer_type));
-        PGDataComparer *comparer = ComparerFactory::create_comparer(comparer_type, options.get_test_type(), mpi_coll, nnodes, ppn);
+        std::unique_ptr<PGDataComparer> comparer = ComparerFactory::create_comparer(comparer_type, options.get_test_type(), mpi_coll, nnodes, ppn);
         comparer->set_barrier_time(barrier_mean);
         comparer->add_data(coll_data);
         if (printer->print_collective(comparer, comparer_type, merge_table_id++) != 0) {
