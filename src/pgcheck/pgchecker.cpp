@@ -128,14 +128,14 @@ int main(int argc, char *argv[]) {
     printer = new PGDataPrinter();
   }
 
-  if (!options.parse(argc, argv)) {
+  if (options.parse(argc, argv) != 0) {
     if (rank == 0) {
       printer->print_usage(argv[0]);
     }
 
     MPI_Comm_free(&comm_intranode);
     MPI_Finalize();
-    exit(EXIT_FAILURE);
+    exit(0);
   }
 
   if (rank == 0) {
