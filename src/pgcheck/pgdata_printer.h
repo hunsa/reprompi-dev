@@ -15,6 +15,7 @@
 #include <numeric>
 #include <iostream>
 #include <fstream>
+#include "constants.h"
 
 
 class PGDataPrinter {
@@ -42,8 +43,6 @@ private:
 private:
   PGCheckOptions options;
   std::vector<PGDataTable> merged_table;
-  std::vector <std::string> comparer_names = {"simple", "abs_runtime", "rel_runtime", "violation", "detailed_violation",
-                                            "grouped_violation", "raw"};
 
 public:
   PGDataPrinter() = default;
@@ -75,6 +74,16 @@ public:
    * prints message to cout if verbose is enabled
    */
   void println_to_cout(std::string message);
+
+  /**
+   * prints pgchecker evaluation to cout, text color orange
+   */
+  void print_evaluation_to_cout(std::string message, std::string heading);
+
+  /**
+   * prints info message to cout, text color blue
+   */
+  void println_info_to_cout(std::string message);
 
   /**
    * prints warning message to cout, text color purple

@@ -13,6 +13,7 @@
 #include <numeric>
 #include <chrono>
 #include "mpi.h"
+#include "constants.h"
 #include <sys/stat.h>
 
 #include "reprompi_bench/misc.h"
@@ -51,7 +52,7 @@
 
 std::string get_runtime_string(long nanoseconds) {
   std::ostringstream stream;
-  stream << "PGChecker runtime: ";
+  stream << "PGChecker Runtime:      ";
   if (nanoseconds >= 60000000000) {
     long minutes = nanoseconds / 60000000000;
     long seconds = (nanoseconds - (minutes * 60000000000)) / 1000000000;
@@ -182,7 +183,9 @@ int main(int argc, char *argv[]) {
     std::string mpi_coll = input.get_mpi_collective_for_case_id(case_id);
 
     if (rank == 0) {
-      printer->println_to_cout("Case " + std::to_string(case_id) + ": " + mpi_coll);
+      if (options.get_verbose()) {
+        printer->println_info_to_cout("Case " + std::to_string(case_id) + ": " + mpi_coll);
+      }
     }
 
     auto mod_name = pgtune_interface.get_module_name_for_mpi_collectives(mpi_coll);
@@ -190,8 +193,7 @@ int main(int argc, char *argv[]) {
     for (auto &alg_version: pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll)) {
       std::vector <std::string> pgtunelib_argv;
       if (rank == 0) {
-        printer->println_separator_to_cout();
-        printer->println_to_cout("Collecting data: " + mod_name + ":" + alg_version);
+        printer->println_info_to_cout("Collecting Data:        " + mod_name + ":" + alg_version);
       }
 
       std::string call_options = input.get_call_options_for_case_id(case_id);
@@ -217,6 +219,7 @@ int main(int argc, char *argv[]) {
       pgtune_override_argv_parameter(argc_test, argv_test);
       if (rank == 0) {
         if (options.get_verbose()) {
+          std::cout << "\033[34m" << "[INFO]    " << "\033[0m";
           print_command_line_args(argc_test, argv_test);
         }
       }
@@ -233,10 +236,9 @@ int main(int argc, char *argv[]) {
 
     if (rank == 0) {
       auto runtime_start = std::chrono::high_resolution_clock::now();
-      printer->println_to_cout("Data collected");
-      printer->println_separator_to_cout();
+      printer->println_info_to_cout("Collecting Finished:    " + mod_name);
       for(auto comparer_type : options.get_comparer_list()) {
-        printer->println_to_cout("Evaluating data: comparer:" + std::to_string(comparer_type));
+        printer->println_info_to_cout("Evaluating Data:        comparer:" + pgchecker::COMPARER_NAMES.at(comparer_type));
         PGDataComparer *comparer = ComparerFactory::create_comparer(comparer_type, options.get_test_type(), mpi_coll, nnodes, ppn);
         comparer->set_barrier_time(barrier_mean);
         comparer->add_data(coll_data);
@@ -256,8 +258,7 @@ int main(int argc, char *argv[]) {
     printer->print_summary();
     auto runtime_end = std::chrono::high_resolution_clock::now();
     pg_checker_runtime += std::chrono::duration_cast<std::chrono::milliseconds>(runtime_end - runtime_start).count();
-    printer->println_to_cout(get_runtime_string(pg_checker_runtime));
-    printer->print_separator_to_cout();
+    printer->println_info_to_cout(get_runtime_string(pg_checker_runtime));
     delete printer;
   }
 
