@@ -1,7 +1,25 @@
-//
-// Created by Max on 11/17/22.
-//
+/*  PGChecker - MPI Performance Guidelines Checker
+ *
+ *  Copyright 2023 Sascha Hunold, Maximilian Hagn
+    Research Group for Parallel Computing
+    Faculty of Informatics
+    Vienna University of Technology, Austria
 
+<license>
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+</license>
+*/
 #include "pgdata_table.h"
 
 PGDataTable::PGDataTable(std::string mpi_name, std::vector <std::string> col_names) :
@@ -48,8 +66,8 @@ void PGDataTable::set_col_names(std::vector <std::string> names) {
   col_names = names;
 }
 
-void PGDataTable::add_row(std::unordered_map <std::string, std::string> &row_map) {
-  for (auto &rows: row_map) {
+void PGDataTable::add_row(const std::unordered_map <std::string, std::string> &row_map) {
+  for (auto &rows : row_map) {
     col_value_map[rows.first].push_back(rows.second);
   }
 }
@@ -76,8 +94,8 @@ PGDataTable PGDataTable::get_violation_table() {
   std::vector <std::string> barriers;
   std::string mode = "";
 
-  for (const std::string& col_name: col_names) {
-    if (col_name =="diff<barrier") {
+  for (const std::string &col_name : col_names) {
+    if (col_name == "diff<barrier") {
       violations = get_values_for_col_name("violation");
       barriers = get_values_for_col_name("diff<barrier");
       mode = "violation";
@@ -104,8 +122,7 @@ PGDataTable PGDataTable::get_violation_table() {
   int of_sum = 0;
   std::string coll_name = "";
 
-  for (std::string violation: violations) {
-
+  for (std::string violation : violations) {
     if (mode != "violation" || get_values_col_row("mockup", row_idx) != "default") {
       of_coll++;
     }
@@ -153,5 +170,4 @@ PGDataTable PGDataTable::get_violation_table() {
   res.add_row(row);
   res.set_col_widths(col_widths);
   return res;
-
 }

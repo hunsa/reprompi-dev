@@ -1,6 +1,25 @@
-//
-// Created by Max on 11/16/22.
-//
+/*  PGChecker - MPI Performance Guidelines Checker
+ *
+ *  Copyright 2023 Sascha Hunold, Maximilian Hagn
+    Research Group for Parallel Computing
+    Faculty of Informatics
+    Vienna University of Technology, Austria
+
+<license>
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+</license>
+*/
 
 #include "pgdata_printer.h"
 
@@ -12,22 +31,22 @@ int PGDataPrinter::print_collective(PGDataComparer *comparer, int comparer_type,
   std::string folder_name;
 
   if (options.get_allow_mkdir()) {
-    folder_name = output_directory + pgchecker::COMPARER_NAMES.at(comparer_type) + "/";
+    folder_name = output_directory + CONSTANTS::COMPARER_NAMES.at(comparer_type) + "/";
     filename = folder_name + table_coll_res.get_mpi_name();
   } else {
-    filename = output_directory + pgchecker::COMPARER_NAMES.at(comparer_type) + "_" + table_coll_res.get_mpi_name();
+    filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comparer_type) + "_" + table_coll_res.get_mpi_name();
   }
 
   std::string output_formatted = table_to_clear_string(table_coll_res);
-  std::string comp_clear_name = pgchecker::COMPARER_NAMES.at(comparer_type);
+  std::string comp_clear_name = CONSTANTS::COMPARER_NAMES.at(comparer_type);
   std::transform(comp_clear_name.begin(), comp_clear_name.end(), comp_clear_name.begin(), ::toupper);
 
   // never print raw to cout
-  if(typeid(*comparer).name() != typeid(RawComparer).name()) {
+  if (typeid(*comparer).name() != typeid(RawComparer).name()) {
     print_evaluation_to_cout(output_formatted, "TABLE FOR " + comp_clear_name + " COMPARER");
   }
 
-  char * folder_chars = const_cast<char*>(folder_name.c_str());
+  char *folder_chars = const_cast<char *>(folder_name.c_str());
   if (!output_directory.empty()) {
     if (options.get_allow_mkdir()) {
       mkdir(folder_chars, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -63,30 +82,29 @@ int PGDataPrinter::print_summary() {
       std::string stats_filename;
 
       if (options.get_allow_mkdir()) {
-        merged_table_filename = output_directory + pgchecker::COMPARER_NAMES.at(comp_name) + "/Results";
-        stats_filename = output_directory + pgchecker::COMPARER_NAMES.at(comp_name) + "/Stats";
+        merged_table_filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comp_name) + "/Results";
+        stats_filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comp_name) + "/Stats";
       } else {
-        merged_table_filename = output_directory + pgchecker::COMPARER_NAMES.at(comp_name) + "_Results";
-        stats_filename = output_directory + pgchecker::COMPARER_NAMES.at(comp_name) + "_Stats";
+        merged_table_filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comp_name) + "_Results";
+        stats_filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comp_name) + "_Stats";
       }
 
-      if(!output_directory.empty()) {
+      if (!output_directory.empty()) {
         write_string_to_file(merged_table_string, merged_table_filename + ".txt");
-        println_info_to_cout("Writing Data:           "  + merged_table_filename + ".txt");
+        println_info_to_cout("Writing Data:           " + merged_table_filename + ".txt");
         if (options.get_csv()) {
           write_string_to_file(table_to_csv_string(table), merged_table_filename + ".csv");
-          println_info_to_cout("Writing Data:           "  + merged_table_filename + ".csv");
+          println_info_to_cout("Writing Data:           " + merged_table_filename + ".csv");
         }
       }
 
       // print stats only for violation comparer
       if (comp_name > 2 && comp_name < 6) {
         std::string stats_clear_string = table_to_clear_string(table.get_violation_table());
-        std::string comp_clear_name = pgchecker::COMPARER_NAMES.at(comp_name);
+        std::string comp_clear_name = CONSTANTS::COMPARER_NAMES.at(comp_name);
         std::transform(comp_clear_name.begin(), comp_clear_name.end(), comp_clear_name.begin(), ::toupper);
         print_evaluation_to_cout(stats_clear_string, "VIOLATION COUNT FOR " + comp_clear_name + " COMPARER");
-        if(!output_directory.empty()) {
-
+        if (!output_directory.empty()) {
           println_info_to_cout("Writing Data:           " + stats_filename + ".txt");
           write_string_to_file(stats_clear_string, stats_filename + ".txt");
 
@@ -107,7 +125,7 @@ int PGDataPrinter::print_summary() {
 }
 
 std::string PGDataPrinter::table_to_clear_string(PGDataTable table) {
-  const std::vector<std::string>& col_names = table.get_col_names();
+  const std::vector <std::string> &col_names = table.get_col_names();
   const int nb_rows = table.get_col_size();
 
   std::ostringstream res;
@@ -143,7 +161,7 @@ std::string PGDataPrinter::table_to_clear_string(PGDataTable table) {
 std::string PGDataPrinter::table_to_csv_string(PGDataTable table) {
   const std::string col_delimiter = ",";
   const std::string row_delimiter = "\n";
-  const auto& col_names = table.get_col_names();
+  const auto &col_names = table.get_col_names();
   const int nb_rows = table.get_col_size();
 
   std::ostringstream res;
@@ -199,7 +217,7 @@ void PGDataPrinter::println_to_cout(std::string message) {
 void PGDataPrinter::print_evaluation_to_cout(std::string message, std::string heading) {
   std::cout << std::endl << "\033[33m" << "[EVALUATION | " << heading << "]       " << "\033[0m" << std::endl;
   std::cout << message;
-  std::cout << "\033[33m" << "[EVALUATION | " << heading << "] "<< "\033[0m" << std::endl  << std::endl ;
+  std::cout << "\033[33m" << "[EVALUATION | " << heading << "] " << "\033[0m" << std::endl << std::endl;
 }
 
 void PGDataPrinter::println_info_to_cout(std::string message) {
@@ -207,7 +225,7 @@ void PGDataPrinter::println_info_to_cout(std::string message) {
 }
 
 void PGDataPrinter::println_warning_to_cout(std::string message) {
-  std::cout << "\033[35m" << "[WARNING] " << "\033[0m" << message  << std::endl;
+  std::cout << "\033[35m" << "[WARNING] " << "\033[0m" << message << std::endl;
 }
 
 void PGDataPrinter::println_error_to_cerr(std::string message) {
@@ -235,15 +253,32 @@ void PGDataPrinter::print_usage(char *command) {
   std::cout << "USAGE: " << std::string(command) << " -f input_file [options]" << std::endl << std::endl;
   std::cout << "OPTIONS:" << std::endl;
   std::cout << std::setw(36) << std::left << "  ?, -h, --help" << "Display this information." << std::endl;
-  std::cout << std::setw(36) << std::left << "  -c, --comp-list={0|1|2|3|4|5|6}" << "Specify the comparer type (0=Simple|1=Absolute Median|2=Relative Median|3=Violation-Test|4=Detailed Violation-Test|5=Grouped Violation-Test|6=Raw Data)." << std::endl;
-  std::cout << std::setw(36) << std::left << "  -t, --test {0|1|2}" << "Specify the test type (0=T-Test|1=Wilcoxon-Rank-Sum-Test|2=Wilcoxon-Mann-Whitney)." << std::endl;
-  std::cout << std::setw(36) << std::left << "  -o, --output <path>" << "Specify an existing output folder." << std::endl;
-  std::cout << std::setw(36) << std::left << "  -m, --merge" << "Additionally results of all collectives are merged into one table." << std::endl;
-  std::cout << std::setw(36) << std::left << "  -d, --allow-mkdir" << "Allow PGChecker to generate folders in the specified output folder" << std::endl;
-  std::cout << std::setw(36) << std::left << "  -s, --csv" << "Print results to .csv file. Output directory must be specified. The csv formatted table is never written to the console." << std::endl;
-  std::cout << std::setw(36) << std::left << "  -v, --verbose" << "Print all information and results to console." << std::endl;
+  std::cout << std::setw(36) << std::left << "  -c, --comp-list={0|1|2|3|4|5|6}"
+            << "Specify the comparer type ("
+            << "0=Simple|"
+            << "1=Absolute Median|"
+            << "2=Relative Median|"
+            << "3=Violation-Test|"
+            << "4=Detailed Violation-Test|"
+            << "5=Grouped Violation-Test|"
+            << "6=Raw Data)."
+            << std::endl;
+  std::cout << std::setw(36) << std::left << "  -t, --test {0|1|2}"
+            << "Specify the test type (0=T-Test|1=Wilcoxon-Rank-Sum-Test|2=Wilcoxon-Mann-Whitney)." << std::endl;
+  std::cout << std::setw(36) << std::left << "  -o, --output <path>" << "Specify an existing output folder."
+            << std::endl;
+  std::cout << std::setw(36) << std::left << "  -m, --merge"
+            << "Additionally results of all collectives are merged into one table." << std::endl;
+  std::cout << std::setw(36) << std::left << "  -d, --allow-mkdir"
+            << "Allow PGChecker to generate folders in the specified output folder" << std::endl;
+  std::cout << std::setw(36) << std::left << "  -s, --csv"
+            << "Print results to .csv file. Output directory must be specified. "
+            << "The csv formatted table is never written to the console."
+            << std::endl;
+  std::cout << std::setw(36) << std::left << "  -v, --verbose" << "Print all information and results to console."
+            << std::endl;
 }
 
-void PGDataPrinter::set_options(PGCheckOptions &new_options) {
+void PGDataPrinter::set_options(const PGCheckOptions &new_options) {
   options = new_options;
 }

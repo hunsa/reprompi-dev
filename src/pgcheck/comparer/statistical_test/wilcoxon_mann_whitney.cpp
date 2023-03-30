@@ -1,11 +1,29 @@
-//
-// Created by Max on 12/27/22.
-//
+/*  PGChecker - MPI Performance Guidelines Checker
+ *
+ *  Copyright 2023 Sascha Hunold, Maximilian Hagn
+    Research Group for Parallel Computing
+    Faculty of Informatics
+    Vienna University of Technology, Austria
+
+<license>
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+</license>
+*/
 
 #include "wilcoxon_mann_whitney.h"
 
 double WilcoxonMannWhitney::get_z_value() {
-
   double n = sample_1.size();
   double m = sample_2.size();
   double size_squared = n * m;
@@ -13,14 +31,14 @@ double WilcoxonMannWhitney::get_z_value() {
   double sample_1_rank_sum = 0;
   double sample_2_rank_sum = 0;
 
-  std::vector<rank_element> ranks;
+  std::vector <rank_element> ranks;
 
   for (auto iter = sample_1.begin(); iter != sample_1.end(); ++iter) {
-    ranks.push_back({*iter,1});
+    ranks.push_back({*iter, 1});
   }
 
   for (auto iter = sample_2.begin(); iter != sample_2.end(); ++iter) {
-    ranks.push_back({*iter,2});
+    ranks.push_back({*iter, 2});
   }
 
   std::vector<double> bounded_ranks;
@@ -43,11 +61,8 @@ double WilcoxonMannWhitney::get_z_value() {
         bounded_ranks.push_back(rank - 1);
       }
       bounded_ranks.push_back(rank);
-    }
-      // value is different from previous
-    else {
-      // but previous values shared the same rank
-      if (!bounded_ranks.empty()) {
+    } else {  // value is different from previous
+      if (!bounded_ranks.empty()) {  // but previous values shared the same rank
         double mean_bounded_ranks = statisticsUtils.mean(bounded_ranks);
         for (auto iter = bounded_ranks.begin(); iter != bounded_ranks.end(); ++iter) {
           if (ranks[*iter].sample_id == 1) {
