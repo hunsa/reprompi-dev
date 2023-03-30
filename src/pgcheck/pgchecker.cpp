@@ -152,14 +152,14 @@ int main(int argc, char *argv[]) {
     printer = new PGDataPrinter();
   }
 
-  if (!options.parse(argc, argv)) {
+  if (options.parse(argc, argv) != 0) {
     if (rank == ROOT_PROCESS_RANK) {
       printer->print_usage(argv[0]);
     }
 
     MPI_Comm_free(&comm_intranode);
     MPI_Finalize();
-    return EXIT_FAILURE;
+    exit(0);
   }
 
   if (rank == ROOT_PROCESS_RANK) {
@@ -269,13 +269,9 @@ int main(int argc, char *argv[]) {
     if (rank == ROOT_PROCESS_RANK) {
       auto runtime_start = std::chrono::high_resolution_clock::now();
       printer->println_info_to_cout("Collecting Finished:    " + mod_name);
-      for (auto comparer_type : options.get_comparer_list()) {
-        printer->println_info_to_cout(
-            "Evaluating Data:        comparer:" +
-            CONSTANTS::COMPARER_NAMES.at(comparer_type));
-        PGDataComparer *comparer = ComparerFactory::create_comparer(
-            comparer_type, options.get_test_type(), mpi_coll,
-            node_count, ppn);
+      for(auto comparer_type : options.get_comparer_list()) {
+        printer->println_info_to_cout("Evaluating Data:        comparer:" + pgchecker::COMPARER_NAMES.at(comparer_type));
+        std::unique_ptr<PGDataComparer> comparer = ComparerFactory::create_comparer(comparer_type, options.get_test_type(), mpi_coll, nnodes, ppn);
         comparer->set_barrier_time(barrier_mean);
         comparer->add_data(coll_data);
         if (printer->print_collective(comparer, comparer_type,

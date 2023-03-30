@@ -84,7 +84,7 @@ bool PGCheckOptions::parse(int argc, char *argv[]) {
       case 'h':
       case '?':
       default :
-        return false;
+        return -1;
       case 'f':
         input_file = std::string(optarg);
         break;
@@ -171,5 +171,5 @@ bool PGCheckOptions::parse(int argc, char *argv[]) {
     }
   }
 
-  return true;
+  return 0;
 }
