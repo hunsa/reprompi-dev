@@ -38,6 +38,7 @@
 class ComparerFactory {
 public:
   static std::unique_ptr<PGDataComparer> create_comparer(int comparer_id, int test_type, std::string mpi_coll_name, int nnodes, int ppn);
+  static int get_number_of_comparers();
 };
 
 #endif  // SRC_PGCHECK_COMPARER_COMPARER_FACTORY_H_

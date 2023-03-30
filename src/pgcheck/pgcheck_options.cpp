@@ -22,7 +22,10 @@
 */
 
 #include "pgcheck_options.h"
+#include "comparer/comparer_factory.h"
 #include <filesystem>
+#include <algorithm>
+
 namespace fs = std::filesystem;
 
 bool PGCheckOptions::get_merge_coll_tables() {
@@ -122,6 +125,17 @@ bool PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
 
         if (!comp_string.empty()) {
           comparer_list.push_back(std::stoi(comp_string));
+        }
+
+        int min_elem = *min_element(comparer_list.begin(), comparer_list.end());
+        int max_elem = *max_element(comparer_list.begin(), comparer_list.end());
+
+        if( min_elem < 0 || max_elem >= ComparerFactory::get_number_of_comparers() ) {
+          if( is_root ) {
+            std::cerr << "Error: comparers list invalid, values should be between 0 and "
+                      << ComparerFactory::get_number_of_comparers() - 1 << std::endl;
+            return -1;
+          }
         }
 
         break;

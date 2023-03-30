@@ -52,3 +52,7 @@ ComparerFactory::create_comparer(int comparer_id, int test_type, std::string mpi
   }
   return comparer;
 }
+
+int ComparerFactory::get_number_of_comparers() {
+  return 7;
+}
