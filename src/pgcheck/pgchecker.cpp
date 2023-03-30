@@ -132,7 +132,7 @@ static double get_barrier_runtime() {
 }
 
 int main(int argc, char *argv[]) {
-  int rank, ppn, node_count, comm_size;
+  int rank, ppn, nnodes, comm_size;
   MPI_Comm comm_intranode;
   std::string tmp_dir = "./data";
 
@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
 
   create_intranode_communicator(MPI_COMM_WORLD, &comm_intranode);
   MPI_Comm_size(comm_intranode, &ppn);
-  node_count = comm_size / ppn;
+  nnodes = comm_size / ppn;
 
   PGCheckOptions options;
   PGDataPrinter *printer = NULL;
@@ -270,7 +270,7 @@ int main(int argc, char *argv[]) {
       auto runtime_start = std::chrono::high_resolution_clock::now();
       printer->println_info_to_cout("Collecting Finished:    " + mod_name);
       for(auto comparer_type : options.get_comparer_list()) {
-        printer->println_info_to_cout("Evaluating Data:        comparer:" + pgchecker::COMPARER_NAMES.at(comparer_type));
+        printer->println_info_to_cout("Evaluating Data:        comparer:" + CONSTANTS::COMPARER_NAMES.at(comparer_type));
         std::unique_ptr<PGDataComparer> comparer = ComparerFactory::create_comparer(comparer_type, options.get_test_type(), mpi_coll, nnodes, ppn);
         comparer->set_barrier_time(barrier_mean);
         comparer->add_data(coll_data);
