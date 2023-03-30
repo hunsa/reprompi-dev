@@ -24,14 +24,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <getopt.h>
-#include <time.h>
-#include <sys/stat.h>
 
 #include <iostream>
 #include <fstream>
 #include <numeric>
 #include <chrono>
+#include <filesystem>
 
 #include "mpi.h"
 #include "pgmpi_tune.h"
@@ -69,6 +67,8 @@
 #include "utils/argv_manager.h"
 #include "utils/statistics_utils.h"
 
+namespace fs = std::filesystem;
+
 constexpr auto ROOT_PROCESS_RANK = 0;
 
 std::string get_runtime_string(int64_t nanoseconds) {
@@ -99,15 +99,23 @@ std::string get_runtime_string(int64_t nanoseconds) {
   return stream.str();
 }
 
-static double get_barrier_runtime() {
+static double get_barrier_runtime(PGCheckOptions &options) {
   double avg_runtime = -1.0;
   int rank;
   // run a barrier test
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  auto barrier_options =
+  std::string barrier_options =
       "--calls-list=MPI_Barrier --msizes-list=1 --nrep=500 --proc-sync=roundtime "
-      "--rt-bench-time-ms=2000 --bcast-nrep=1 --rt-barrier-count=0 --output-file=barrier.txt";
+      "--rt-bench-time-ms=2000 --bcast-nrep=1 --rt-barrier-count=0 --output-file=";
+  fs::path outpath = options.get_output_directory();
+  outpath /= "barrier.txt";
+  barrier_options += outpath;
+
+  if (options.is_verbose()) {
+    std::cout << "barrier_options: " << barrier_options << std::endl;
+  }
+
   std::vector <std::string> barrier_argv_vector;
   auto foo = std::vector<std::string>();
   argv::compose_argv_vector("dummy", barrier_options, foo, barrier_argv_vector);
@@ -123,7 +131,7 @@ static double get_barrier_runtime() {
 
   if (rank == 0) {
     auto data = new PGData("MPI_Barrier", "default");
-    data->read_csv_from_file("barrier.txt");
+    data->read_csv_from_file(outpath.string());
     avg_runtime = StatisticsUtils<double>().median(
         data->get_runtimes_for_count(1));
   }
@@ -134,7 +142,6 @@ static double get_barrier_runtime() {
 int main(int argc, char *argv[]) {
   int rank, ppn, nnodes, comm_size;
   MPI_Comm comm_intranode;
-  std::string tmp_dir = "./data";
 
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -152,14 +159,16 @@ int main(int argc, char *argv[]) {
     printer = new PGDataPrinter();
   }
 
-  if (options.parse(argc, argv) != 0) {
+  int ok = options.parse(argc, argv, rank == ROOT_PROCESS_RANK);
+  MPI_Allreduce(MPI_IN_PLACE, &ok, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  if (ok != 0) {
     if (rank == ROOT_PROCESS_RANK) {
       printer->print_usage(argv[0]);
     }
 
     MPI_Comm_free(&comm_intranode);
     MPI_Finalize();
-    exit(0);
+    return 0;
   }
 
   if (rank == ROOT_PROCESS_RANK) {
@@ -171,8 +180,8 @@ int main(int argc, char *argv[]) {
   reprompib_register_caching_modules();
 
   std::ifstream ins(options.get_input_file());
-  if (!ins.good()) {
-    if (rank == ROOT_PROCESS_RANK) {
+  if (rank == ROOT_PROCESS_RANK) {
+    if (!ins.good()) {
       printer->println_error_to_cerr(
           "input file '" + options.get_input_file() + "' cannot be read");
       printer->print_usage(argv[0]);
@@ -181,7 +190,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  double barrier_mean = get_barrier_runtime();
+  double barrier_mean = get_barrier_runtime(options);
   if (rank == ROOT_PROCESS_RANK) {
     printer->println_to_cout(
         "avg barrier [ms]: " + std::to_string(barrier_mean * 1000.0));
@@ -209,7 +218,7 @@ int main(int argc, char *argv[]) {
     std::string mpi_coll = input.get_mpi_collective_for_case_id(case_id);
 
     if (rank == ROOT_PROCESS_RANK) {
-      if (options.get_verbose()) {
+      if (options.is_verbose()) {
         printer->println_info_to_cout(
             "Case " + std::to_string(case_id) + ": " + mpi_coll);
       }
@@ -226,15 +235,18 @@ int main(int argc, char *argv[]) {
       }
 
       std::string call_options = input.get_call_options_for_case_id(case_id);
+
+      //std::string tmp_dir = "./data";
+      std::string tmp_dir = options.get_output_directory();
       std::string tmp_out_file =
           tmp_dir + "/" + "data_" + mpi_coll + "_" + alg_version + ".dat";
-      if (rank == ROOT_PROCESS_RANK) {
-        struct stat sb;
-        stat(tmp_dir.c_str(), &sb);
-        if (!S_ISDIR(sb.st_mode)) {
-          mkdir(tmp_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-        }
-      }
+//      if (rank == ROOT_PROCESS_RANK) {
+//        struct stat sb;
+//        stat(tmp_dir.c_str(), &sb);
+//        if (!S_ISDIR(sb.st_mode)) {
+//          mkdir(tmp_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+//        }
+//      }
 
       pgtunelib_argv.push_back("--calls-list=" + mpi_coll);
       pgtunelib_argv.push_back("--output-file=" + tmp_out_file);
@@ -250,7 +262,7 @@ int main(int argc, char *argv[]) {
 
       pgtune_override_argv_parameter(argc_test, argv_test);
       if (rank == ROOT_PROCESS_RANK) {
-        if (options.get_verbose()) {
+        if (options.is_verbose()) {
           std::cout << "\033[34m" << "[INFO]    " << "\033[0m";
           print_command_line_args(argc_test, argv_test);
         }

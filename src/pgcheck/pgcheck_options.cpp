@@ -22,6 +22,8 @@
 */
 
 #include "pgcheck_options.h"
+#include <filesystem>
+namespace fs = std::filesystem;
 
 bool PGCheckOptions::get_merge_coll_tables() {
   return merge_coll_tables;
@@ -31,13 +33,13 @@ bool PGCheckOptions::get_print_to_csv() {
   return csv;
 }
 
-bool PGCheckOptions::get_verbose() {
+bool PGCheckOptions::is_verbose() {
   return verbose;
 }
 
-bool PGCheckOptions::get_allow_mkdir() {
-  return allow_mkdir;
-}
+//bool PGCheckOptions::get_allow_mkdir() {
+//  return allow_mkdir;
+//}
 
 bool PGCheckOptions::get_csv() {
   return csv;
@@ -63,7 +65,7 @@ std::vector<int> PGCheckOptions::get_comparer_list() {
   return comparer_list;
 }
 
-bool PGCheckOptions::parse(int argc, char *argv[]) {
+bool PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
   int c;
 
   struct option long_opts[] = {
@@ -79,7 +81,7 @@ bool PGCheckOptions::parse(int argc, char *argv[]) {
           {NULL,          0,                 NULL, 0}
       };
 
-  while ((c = getopt_long(argc, argv, ":hmsvf:o:c:t:", long_opts, NULL)) != -1) {
+  while ((c = getopt_long(argc, argv, ":hdmsvf:o:c:t:", long_opts, NULL)) != -1) {
     switch (c) {
       case 'h':
       case '?':
@@ -140,36 +142,43 @@ bool PGCheckOptions::parse(int argc, char *argv[]) {
     std::sort(comparer_list.begin(), comparer_list.end());
   }
 
-  // print results to cout if output directory is not present
-  struct stat sb;
-  if ((stat(output_directory.c_str(), &sb) != 0) && !output_directory.empty()) {
-    std::string not_found_directory = output_directory;
-    output_directory = "";
-    verbose = true;
-
-    if (csv) {
-      csv = false;
-      std::cout << "\033[35m" << "Warning: " << "cannot find directory '" << not_found_directory
-                << "' -> option verbose was enabled, option csv was disabled" << "\033[0m" << std::endl;
+  if( is_root ) {
+    if(output_directory.empty()) {
+      std::cerr << "\033[35m" << "Error: " << "no output directory given, use -o" << "\033[0m" << std::endl;
+      return -1;
     }
-    std::cout << "\033[35m" << "Warning: " << "cannot find directory '" << not_found_directory
-              << "' -> option verbose was enabled" << "\033[0m" << std::endl;
-  }
 
-  // print results to cout if output directory was not specified
-  if (output_directory.empty() && !verbose) {
-    verbose = true;
-    std::cout << "\033[35m" << "Warning: "
-              << "output directory was not specified -> option verbose was enabled and output is written to cout"
-              << "\033[0m" << std::endl;
-  }
-
-  if (!output_directory.empty() && (stat(output_directory.c_str(), &sb) == 0)) {
-    std::string slash = "/";
-    if (!std::equal(slash.rbegin(), slash.rend(), output_directory.rbegin())) {
-      output_directory = output_directory.append("/");
+    fs::path out{output_directory};
+    if (!fs::is_directory(out)) {
+      if (allow_mkdir) {
+        bool okay = fs::create_directory(out);
+        if (!okay) {
+          std::cerr << "\033[35m" << "Error: " << "cannot create directory '" << output_directory << "\033[0m"
+                    << std::endl;
+        }
+      } else {
+        std::cerr << "\033[35m" << "Error: " << "directory '" << output_directory
+                  << "' does not exists. (use -d to force creation of output dir)" << "\033[0m" << std::endl;
+        return -1;
+      }
     }
   }
+
+
+//  // print results to cout if output directory was not specified
+//  if (output_directory.empty() && !verbose) {
+//    verbose = true;
+//    std::cout << "\033[35m" << "Warning: "
+//              << "output directory was not specified -> option verbose was enabled and output is written to cout"
+//              << "\033[0m" << std::endl;
+//  }
+//
+//  if (!output_directory.empty() && (stat(output_directory.c_str(), &sb) == 0)) {
+//    std::string slash = "/";
+//    if (!std::equal(slash.rbegin(), slash.rend(), output_directory.rbegin())) {
+//      output_directory = output_directory.append("/");
+//    }
+//  }
 
   return 0;
 }

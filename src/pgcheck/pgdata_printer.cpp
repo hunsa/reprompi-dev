@@ -30,12 +30,12 @@ int PGDataPrinter::print_collective(std::unique_ptr<PGDataComparer>& comparer, i
   std::string filename = "";
   std::string folder_name;
 
-  if (options.get_allow_mkdir()) {
-    folder_name = output_directory + CONSTANTS::COMPARER_NAMES.at(comparer_type) + "/";
-    filename = folder_name + table_coll_res.get_mpi_name();
-  } else {
-    filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comparer_type) + "_" + table_coll_res.get_mpi_name();
-  }
+//  if (options.get_allow_mkdir()) {
+//    folder_name = output_directory + CONSTANTS::COMPARER_NAMES.at(comparer_type) + "/";
+//    filename = folder_name + table_coll_res.get_mpi_name();
+//  } else {
+  filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comparer_type) + "_" + table_coll_res.get_mpi_name();
+//  }
 
   std::string output_formatted = table_to_clear_string(table_coll_res);
   std::string comp_clear_name = CONSTANTS::COMPARER_NAMES.at(comparer_type);
@@ -46,11 +46,11 @@ int PGDataPrinter::print_collective(std::unique_ptr<PGDataComparer>& comparer, i
     print_evaluation_to_cout(output_formatted, "TABLE FOR " + comp_clear_name + " COMPARER");
   }
 
-  char *folder_chars = const_cast<char *>(folder_name.c_str());
+//  char *folder_chars = const_cast<char *>(folder_name.c_str());
   if (!output_directory.empty()) {
-    if (options.get_allow_mkdir()) {
-      mkdir(folder_chars, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    }
+//    if (options.get_allow_mkdir()) {
+//      mkdir(folder_chars, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+//    }
 
     println_info_to_cout("Writing Data:           " + filename + ".txt");
     write_string_to_file(output_formatted, filename + ".txt");
@@ -81,13 +81,13 @@ int PGDataPrinter::print_summary() {
       std::string merged_table_filename;
       std::string stats_filename;
 
-      if (options.get_allow_mkdir()) {
-        merged_table_filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comp_name) + "/Results";
-        stats_filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comp_name) + "/Stats";
-      } else {
-        merged_table_filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comp_name) + "_Results";
-        stats_filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comp_name) + "_Stats";
-      }
+//      if (options.get_allow_mkdir()) {
+//        merged_table_filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comp_name) + "/Results";
+//        stats_filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comp_name) + "/Stats";
+//      } else {
+      merged_table_filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comp_name) + "_Results";
+      stats_filename = output_directory + CONSTANTS::COMPARER_NAMES.at(comp_name) + "_Stats";
+//      }
 
       if (!output_directory.empty()) {
         write_string_to_file(merged_table_string, merged_table_filename + ".txt");
@@ -195,21 +195,21 @@ std::string PGDataPrinter::table_to_csv_string(PGDataTable table) {
 }
 
 void PGDataPrinter::print_separator_to_cout() {
-  if (options.get_verbose()) {
+  if (options.is_verbose()) {
     char fill_char = '#';
     std::cout << std::left << std::setfill(fill_char) << std::setw(80) << "" << std::endl;
   }
 }
 
 void PGDataPrinter::println_separator_to_cout() {
-  if (options.get_verbose()) {
+  if (options.is_verbose()) {
     char fill_char = '#';
     std::cout << std::endl << std::left << std::setfill(fill_char) << std::setw(80) << "" << std::endl;
   }
 }
 
 void PGDataPrinter::println_to_cout(std::string message) {
-  if (options.get_verbose()) {
+  if (options.is_verbose()) {
     std::cout << message << std::endl;
   }
 }

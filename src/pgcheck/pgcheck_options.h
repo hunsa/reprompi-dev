@@ -51,8 +51,8 @@ class PGCheckOptions {
   PGCheckOptions() = default;
   bool get_merge_coll_tables();
   bool get_print_to_csv();
-  bool get_verbose();
-  bool get_allow_mkdir();
+  bool is_verbose();
+  //bool get_allow_mkdir();
   bool get_csv();
   int get_test_type();
   std::string get_config_message();
@@ -64,6 +64,6 @@ class PGCheckOptions {
    * options are parsed
    * @return true if successful, otherwise false
    */
-  bool parse(int argc, char *argv[]);
+  bool parse(int argc, char *argv[], bool is_root);
 };
 #endif  // SRC_PGCHECK_PGCHECK_OPTIONS_H_

@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.22)
 include(ExternalProject)
 
 SET(PGTUNE_CMAKE_ARGS "")
+set(CMAKE_CXX_STANDARD 17)
 
 find_package(GSL REQUIRED)
 if (GSL_INCLUDE_DIR)
