@@ -25,6 +25,7 @@
 #define SRC_PGCHECK_COMPARER_COMPARER_FACTORY_H_
 
 #include <string>
+#include <memory>
 
 #include "simple_comparer.h"
 #include "violation/violation_comparer.h"
