@@ -9,7 +9,6 @@ set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}")
 
-
 set(INCLUDE_PLATFORM_CONFIG_FILE "${CMAKE_SOURCE_DIR}/platform_files/default.cmake" 
     CACHE STRING "Configure project to use a specific platform file")
 include(${INCLUDE_PLATFORM_CONFIG_FILE})
@@ -372,6 +371,3 @@ SET(CPACK_SOURCE_IGNORE_FILES
 INCLUDE(CPack)
 
 add_custom_target(pack COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
-add_custom_target(web_package ${CMAKE_HOME_DIRECTORY}/create_package.sh ${CPACK_SOURCE_PACKAGE_FILE_NAME} ${CMAKE_HOME_DIRECTORY}/${DIST_ARCHIVE})
-
-
