@@ -25,7 +25,8 @@
 
 namespace fs = std::filesystem;
 
-int PGDataPrinter::print_collective(std::unique_ptr<PGDataComparer>& comparer, int comparer_type, size_t merge_table_id) {
+int
+PGDataPrinter::print_collective(std::unique_ptr <PGDataComparer> &comparer, int comparer_type, size_t merge_table_id) {
   PGDataTable table_coll_res = comparer->get_results();
   std::string output_directory = options.get_output_directory();
 
@@ -71,8 +72,8 @@ int PGDataPrinter::print_summary() {
       size_t comp_name = options.get_comparer_list().at(merge_table_id++);
 
       fs::path outpath = options.get_output_directory();
-      fs::path merged_table_dir = outpath / CONSTANTS::COMPARER_NAMES.at(comp_name) ;
-      fs::path stats_dir        = outpath / CONSTANTS::COMPARER_NAMES.at(comp_name) ;
+      fs::path merged_table_dir = outpath / CONSTANTS::COMPARER_NAMES.at(comp_name);
+      fs::path stats_dir = outpath / CONSTANTS::COMPARER_NAMES.at(comp_name);
 
       fs::create_directory(merged_table_dir);
       fs::create_directory(stats_dir);
@@ -88,7 +89,7 @@ int PGDataPrinter::print_summary() {
       }
 
       // print stats only for violation comparer
-      if (comp_name > 2 && comp_name < 6) {
+      if (comp_name > CONSTANTS::FIRST_VIOLATION_COMPARER && comp_name < CONSTANTS::LAST_VIOLATION_COMPARER) {
         std::string stats_clear_string = table.get_violation_table().to_string();
         std::string comp_clear_name = CONSTANTS::COMPARER_NAMES.at(comp_name);
         std::transform(comp_clear_name.begin(), comp_clear_name.end(), comp_clear_name.begin(), ::toupper);

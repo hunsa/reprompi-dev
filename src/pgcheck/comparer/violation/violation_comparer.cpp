@@ -25,7 +25,7 @@
 
 static std::vector<int> col_widths = {50, 15, 5, 5, 10, 15, 15, 15, 15, 5};
 
-ViolationComparer::ViolationComparer(int test_type, std::string mpi_coll_name, int nnodes, int ppn) :
+ViolationComparer::ViolationComparer(int test_type, const std::string &mpi_coll_name, int nnodes, int ppn) :
     PGDataComparer(mpi_coll_name, nnodes, ppn), test_type(test_type) {}
 
 PGDataTable ViolationComparer::get_results() {
@@ -52,16 +52,16 @@ PGDataTable ViolationComparer::get_results() {
     res.add_row(row);
   }
 
-  for (auto &mdata : mockup2data) {
-    if (mdata.first == "default") {
+  for (auto &mockup_data : mockup2data) {
+    if (mockup_data.first == "default") {
       continue;
     }
-    auto &data = mockup2data.at(mdata.first);
+    auto &data = mockup2data.at(mockup_data.first);
     for (auto &count : data->get_unique_counts()) {
       auto rts = data->get_runtimes_for_count(count);
       ComparerData alt_res(rts);
       std::unordered_map <std::string, std::string> row;
-      row["mockup"] = mdata.first;
+      row["mockup"] = mockup_data.first;
       if (has_barrier_time()) {
         // don't forget, barrier time is in 's'
         if (def_res.at(count).get_median_ms() - alt_res.get_median_ms() < get_barrier_time() * 1000) {

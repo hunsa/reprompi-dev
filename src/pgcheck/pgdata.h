@@ -43,7 +43,7 @@ class PGData {
   std::string mockup_name;
   PGDataTable table;
  public:
-  PGData(std::string mpi_coll_name, std::string mockup_name);
+  PGData(const std::string& mpi_coll_name, const std::string& mockup_name);
   int read_csv_from_file(std::string csv_path);
   std::string get_mockup_name();
   std::vector <std::string> get_columns_names();

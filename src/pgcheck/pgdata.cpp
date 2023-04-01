@@ -23,7 +23,7 @@
 
 #include "pgdata.h"
 
-PGData::PGData(std::string mpi_coll_name, std::string mockup_name) :
+PGData::PGData(const std::string& mpi_coll_name, const std::string& mockup_name) :
     mpi_coll_name(mpi_coll_name),
     mockup_name(mockup_name) {
 }

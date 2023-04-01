@@ -25,7 +25,10 @@
 
 static std::vector<int> col_widths = {25, 15, 5, 5, 5, 15, 10, 50, 15};
 
-GroupedViolationComparer::GroupedViolationComparer(int test_type, std::string mpi_coll_name, int nnodes, int ppn) :
+GroupedViolationComparer::GroupedViolationComparer(int test_type,
+                                                   const std::string &mpi_coll_name,
+                                                   int nnodes,
+                                                   int ppn) :
     PGDataComparer(mpi_coll_name, nnodes, ppn), test_type(test_type) {}
 
 PGDataTable GroupedViolationComparer::get_results() {
@@ -42,17 +45,17 @@ PGDataTable GroupedViolationComparer::get_results() {
     def_res.insert(std::make_pair(count, default_values));
   }
 
-  for (auto &mdata : mockup2data) {
-    if (mdata.first == "default") {
+  for (auto &mockup_data : mockup2data) {
+    if (mockup_data.first == "default") {
       continue;
     }
-    auto &data = mockup2data.at(mdata.first);
+    auto &data = mockup2data.at(mockup_data.first);
     for (auto &count : data->get_unique_counts()) {
       auto rts = data->get_runtimes_for_count(count);
       ComparerData alt_res(rts);
 
       if (def_res.at(count).get_violation(alt_res)) {
-        def_res.at(count).set_fastest_mockup(mdata.first, alt_res.get_median());
+        def_res.at(count).set_fastest_mockup(mockup_data.first, alt_res.get_median());
       }
     }
   }

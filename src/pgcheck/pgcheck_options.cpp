@@ -61,7 +61,7 @@ std::vector<int> PGCheckOptions::get_comparer_list() {
   return comparer_list;
 }
 
-bool PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
+int PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
   int c;
 
   struct option long_opts[] = {
@@ -82,7 +82,7 @@ bool PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
       case 'h':
       case '?':
       default :
-        return -1;
+        return CONSTANTS::FAILURE;
       case 'f':
         input_file = std::string(optarg);
         break;
@@ -108,7 +108,7 @@ bool PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
       case 'c':
         std::string comp_string = optarg;
         std::string delimiter = ",";
-        size_t pos = 0;
+        size_t pos;
         std::string token;
 
         while ((pos = comp_string.find(delimiter)) != std::string::npos) {
@@ -128,7 +128,7 @@ bool PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
           if (is_root) {
             std::cerr << "Error: comparers list invalid, values should be between 0 and "
                       << ComparerFactory::get_number_of_comparers() - 1 << std::endl;
-            return -1;
+            return CONSTANTS::FAILURE;
           }
         }
 
@@ -153,7 +153,7 @@ bool PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
   if (is_root) {
     if (output_directory.empty()) {
       Logger::ERROR("no output directory given, use -o");
-      return -1;
+      return CONSTANTS::FAILURE;
     }
 
     fs::path out{output_directory};
@@ -165,12 +165,12 @@ bool PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
         }
       } else {
         Logger::ERROR("directory '" + output_directory + "' does not exists. (use -d to force creation of output dir)");
-        return -1;
+        return CONSTANTS::FAILURE;
       }
     }
   }
 
-  return 0;
+  return CONSTANTS::SUCCESS;
 }
 
 std::string PGCheckOptions::get_usage_string() {

@@ -24,14 +24,14 @@
 #ifndef SRC_PGCHECK_PGDATA_TABLE_H_
 #define SRC_PGCHECK_PGDATA_TABLE_H_
 
+#include <stdio.h>
+
 #include <vector>
 #include <unordered_map>
 #include <iomanip>
 #include <string>
 #include <iostream>
 #include <numeric>
-
-#include <stdio.h>
 
 class PGDataTable {
  private:
@@ -42,7 +42,7 @@ class PGDataTable {
 
  public:
   PGDataTable() = default;
-  PGDataTable(std::string title, std::vector <std::string> column_names);
+  PGDataTable(const std::string& title, std::vector <std::string> column_names);
   int get_col_width(int index);
   int get_col_size();
   std::string get_title();
@@ -51,8 +51,8 @@ class PGDataTable {
   std::vector <std::string> get_column_names();
   std::vector <std::string> get_values_for_col_name(std::string key);
   std::unordered_map <std::string, std::vector<std::string>> get_col_value_map();
-  void set_col_widths(std::vector<int> widths);
-  void set_column_names(std::vector <std::string> names);
+  void set_col_widths(const std::vector<int>& widths);
+  void set_column_names(const std::vector<std::string>& names);
   PGDataTable get_violation_table();
   /**
    * adds one row to table

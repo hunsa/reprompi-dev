@@ -46,7 +46,9 @@ class TwoSampleTest {
 
  public:
   TwoSampleTest() = default;
+
   virtual ~TwoSampleTest() {}
+
   /**
    * @return critical value based on concrete test subclass
    */
@@ -60,7 +62,7 @@ class TwoSampleTest {
    * @return critical value at index; normal distribution value if sample size >= 25
    */
   double get_critical_value(int sample_size);
-  void set_samples(std::vector<double> def, std::vector<double> alt);
+  void set_samples(const std::vector<double> &def, const std::vector<double> &alt);
 };
 
 #endif  // SRC_PGCHECK_COMPARER_STATISTICAL_TEST_TWO_SAMPLE_TEST_H_

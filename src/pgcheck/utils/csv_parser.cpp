@@ -47,7 +47,6 @@ PGDataTable CSVParser::parse_file(std::string csv_path) {
       int col_idx = 0;
 
       while (iss >> token) {
-        // std::cout << "token: " << token << std::endl;
         row[col_names[col_idx++]] = token;
       }
     }

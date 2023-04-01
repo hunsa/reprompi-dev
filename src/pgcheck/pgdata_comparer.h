@@ -40,18 +40,18 @@ class PGDataComparer {
  protected:
   int nnodes;
   int ppn;
-  double barrier_time_s = -1.0;
+  double barrier_time_s = CONSTANTS::NO_BARRIER_TIME_VALUE;
   std::string mpi_coll_name;
   std::unordered_map<std::string, PGData *> mockup2data;
 
  public:
-  PGDataComparer(std::string mpi_coll_name, int nnodes, int ppn);
+  PGDataComparer(const std::string& mpi_coll_name, int nnodes, int ppn);
 
   virtual ~PGDataComparer() {}
   /**
    * adds map of data to this
    */
-  void add_data(std::unordered_map<std::string, PGData *> data);
+  void add_data(const std::unordered_map<std::string, PGData *>& data);
   virtual PGDataTable get_results() = 0;
   /**
    *

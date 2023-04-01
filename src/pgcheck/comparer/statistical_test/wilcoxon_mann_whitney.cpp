@@ -87,8 +87,8 @@ double WilcoxonMannWhitney::get_z_value() {
 
   if (!bounded_ranks.empty()) {
     double mean_bounded_ranks = statisticsUtils.mean(bounded_ranks);
-    for (auto iter = bounded_ranks.begin(); iter != bounded_ranks.end(); ++iter) {
-      if (ranks[*iter].sample_id == 1) {
+    for (size_t i = 0; i < bounded_ranks.size(); ++i) {
+      if (ranks[bounded_ranks[i]].sample_id == 1) {
         sample_1_rank_sum += mean_bounded_ranks;
       } else {
         sample_2_rank_sum += mean_bounded_ranks;

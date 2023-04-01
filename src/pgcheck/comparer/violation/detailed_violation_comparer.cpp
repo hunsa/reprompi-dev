@@ -25,7 +25,10 @@
 
 static std::vector<int> col_widths = {50, 15, 5, 5, 10, 15, 15, 15, 15, 15, 15, 10, 10, 13, 13};
 
-DetailedViolationComparer::DetailedViolationComparer(int test_type, std::string mpi_coll_name, int nnodes, int ppn) :
+DetailedViolationComparer::DetailedViolationComparer(int test_type,
+                                                     const std::string &mpi_coll_name,
+                                                     int nnodes,
+                                                     int ppn) :
     PGDataComparer(mpi_coll_name, nnodes, ppn), test_type(test_type) {}
 
 PGDataTable DetailedViolationComparer::get_results() {
@@ -42,16 +45,16 @@ PGDataTable DetailedViolationComparer::get_results() {
     def_res.insert(std::make_pair(count, default_values));
   }
 
-  for (auto &mdata : mockup2data) {
-    if (mdata.first == "default") {
+  for (auto &mockup_data : mockup2data) {
+    if (mockup_data.first == "default") {
       continue;
     }
-    auto &data = mockup2data.at(mdata.first);
+    auto &data = mockup2data.at(mockup_data.first);
     for (auto &count : data->get_unique_counts()) {
       auto rts = data->get_runtimes_for_count(count);
       ComparerData alt_res(rts);
       std::unordered_map <std::string, std::string> row;
-      row["mockup"] = mdata.first;
+      row["mockup"] = mockup_data.first;
       row["count"] = std::to_string(count);
       row["N"] = std::to_string(nnodes);
       row["ppn"] = std::to_string(ppn);

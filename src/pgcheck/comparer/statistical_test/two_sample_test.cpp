@@ -41,7 +41,7 @@ double TwoSampleTest::get_z_value() {
   return z_value;
 }
 
-void TwoSampleTest::set_samples(std::vector<double> def, std::vector<double> alt) {
+void TwoSampleTest::set_samples(const std::vector<double>& def, const std::vector<double>& alt) {
   sample_1 = def;
   sample_2 = alt;
 }

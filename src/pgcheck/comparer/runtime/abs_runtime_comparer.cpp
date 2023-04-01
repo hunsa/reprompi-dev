@@ -23,7 +23,7 @@
 
 #include "abs_runtime_comparer.h"
 
-AbsRuntimeComparer::AbsRuntimeComparer(std::string mpi_coll_name, int nnodes, int ppn) :
+AbsRuntimeComparer::AbsRuntimeComparer(const std::string &mpi_coll_name, int nnodes, int ppn) :
     PGDataComparer(mpi_coll_name, nnodes, ppn) {}
 
 PGDataTable AbsRuntimeComparer::get_results() {
@@ -32,13 +32,13 @@ PGDataTable AbsRuntimeComparer::get_results() {
   PGDataTable res(mpi_coll_name, col_names);
   StatisticsUtils<double> statisticsUtils;
 
-  for (auto &mdata : mockup2data) {
-    auto &data = mockup2data.at(mdata.first);
+  for (auto &mockup_data : mockup2data) {
+    auto &data = mockup2data.at(mockup_data.first);
     for (auto &count : data->get_unique_counts()) {
       auto rts = data->get_runtimes_for_count(count);
       std::unordered_map <std::string, std::string> row;
       row["message_size"] = std::to_string(count);
-      row["mockup"] = mdata.first;
+      row["mockup"] = mockup_data.first;
       row["median_ms"] = std::to_string(statisticsUtils.mean(rts) * 1000);
       res.add_row(row);
     }

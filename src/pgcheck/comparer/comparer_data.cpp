@@ -28,9 +28,9 @@ static const double critical_t_values[] = {0, 6.314, 2.919986, 2.353363, 2.13184
                                            1.753050, 1.745884, 1.739607, 1.734064, 1.729133, 1.724718};
 static const double normal_distribution_value = 1.644854;
 
-ComparerData::ComparerData(std::vector<double> rts) : runtimes(rts) {}
+ComparerData::ComparerData(const std::vector<double>& rts) : runtimes(rts) {}
 
-ComparerData::ComparerData(std::vector<double> rts, int test_id) {
+ComparerData::ComparerData(const std::vector<double>& rts, int test_id) {
   runtimes = rts;
   two_sample_test = TwoSampleTestFactory::create_two_sample_test(test_id);
 }
@@ -82,7 +82,7 @@ std::string ComparerData::get_fastest_mockup() {
   return fastest_mockup;
 }
 
-void ComparerData::set_fastest_mockup(std::string mockup, double mockup_median) {
+void ComparerData::set_fastest_mockup(const std::string& mockup, double mockup_median) {
   if (fastest_mockup_median == 0 || mockup_median < fastest_mockup_median) {
     violation = true;
     fastest_mockup = mockup;

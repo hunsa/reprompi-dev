@@ -36,11 +36,11 @@ class ViolationComparer : public PGDataComparer {
   int test_type;
 
  public:
-  ViolationComparer(int test_type, std::string mpi_coll_name, int nnodes, int ppn);
+  ViolationComparer(int test_type, const std::string &mpi_coll_name, int nnodes, int ppn);
   /**
    * @return data table in simple violation format
    */
-  PGDataTable get_results();
+  PGDataTable get_results() override;
 };
 
 #endif  // SRC_PGCHECK_COMPARER_VIOLATION_VIOLATION_COMPARER_H_

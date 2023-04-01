@@ -41,15 +41,15 @@ class WilcoxonRankSum : public TwoSampleTest {
   /**
    * @return critical z value for min sample size
    */
-  double get_critical_value();
+  double get_critical_value() override;
   /**
    * @return z-value for samples
    */
-  double get_z_value();
+  double get_z_value() override;
   /**
    * @return true if z-value value is smaller than critical z-value value
    */
-  bool get_violation();
+  bool get_violation() override;
 };
 
 #endif  // SRC_PGCHECK_COMPARER_STATISTICAL_TEST_WILCOXON_RANK_SUM_H_

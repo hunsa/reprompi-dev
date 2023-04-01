@@ -23,7 +23,7 @@
 
 #include "rel_runtime_comparer.h"
 
-RelRuntimeComparer::RelRuntimeComparer(std::string mpi_coll_name, int nnodes, int ppn) :
+RelRuntimeComparer::RelRuntimeComparer(const std::string &mpi_coll_name, int nnodes, int ppn) :
     PGDataComparer(mpi_coll_name, nnodes, ppn) {}
 
 PGDataTable RelRuntimeComparer::get_results() {
@@ -44,16 +44,16 @@ PGDataTable RelRuntimeComparer::get_results() {
     res.add_row(row);
   }
 
-  for (auto &mdata : mockup2data) {
-    if (mdata.first == "default") {
+  for (auto &mockup_data : mockup2data) {
+    if (mockup_data.first == "default") {
       continue;
     }
-    auto &data = mockup2data.at(mdata.first);
+    auto &data = mockup2data.at(mockup_data.first);
     for (auto &count : data->get_unique_counts()) {
       auto rts = data->get_runtimes_for_count(count);
       std::unordered_map <std::string, std::string> row;
       row["message_size"] = std::to_string(count);
-      row["mockup"] = mdata.first;
+      row["mockup"] = mockup_data.first;
       row["relative_runtime"] = std::to_string(def_res.at(count) / statisticsUtils.median(rts));
       res.add_row(row);
     }

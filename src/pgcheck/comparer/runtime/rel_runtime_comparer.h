@@ -33,11 +33,11 @@
 
 class RelRuntimeComparer : public PGDataComparer {
  public:
-  RelRuntimeComparer(std::string mpi_coll_name, int nnodes, int ppn);
+  RelRuntimeComparer(const std::string &mpi_coll_name, int nnodes, int ppn);
   /**
    * @return data table in message sizes to runtimes relative to default
    */
-  PGDataTable get_results();
+  PGDataTable get_results() override;
 };
 
 #endif  // SRC_PGCHECK_COMPARER_RUNTIME_REL_RUNTIME_COMPARER_H_

@@ -24,18 +24,20 @@
 #ifndef SRC_PGCHECK_PGCHECK_OPTIONS_H_
 #define SRC_PGCHECK_PGCHECK_OPTIONS_H_
 
-#include <iostream>
-#include <string>
-#include <algorithm>
-#include <iomanip>
-#include <vector>
-#include <filesystem>
-
 #include <getopt.h>
 #include <stdio.h>
 #include <sys/stat.h>
+
+#include <iomanip>
+#include <vector>
+#include <filesystem>
+#include <iostream>
+#include <string>
+#include <algorithm>
+
 #include "comparer/comparer_factory.h"
 #include "logger/logger.h"
+#include "constants.h"
 
 class PGCheckOptions {
  private:
@@ -65,8 +67,9 @@ class PGCheckOptions {
    * options are parsed
    * @return true if successful, otherwise false
    */
-  bool parse(int argc, char *argv[], bool is_root);
+  int parse(int argc, char *argv[], bool is_root);
 
   std::string get_usage_string();
 };
+
 #endif  // SRC_PGCHECK_PGCHECK_OPTIONS_H_

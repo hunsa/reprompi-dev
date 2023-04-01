@@ -44,15 +44,12 @@
 
 class PGDataPrinter {
  private:
-
+  PGCheckOptions options;
+  std::vector <PGDataTable> merged_table;
   /**
    * adds the result from collective to table
    */
   void add_table_to_merged_table(PGDataTable data_table, size_t merge_table_id);
-
- private:
-  PGCheckOptions options;
-  std::vector <PGDataTable> merged_table;
 
  public:
   PGDataPrinter() = default;
@@ -60,7 +57,7 @@ class PGDataPrinter {
    * prints result from collective as txt or csv to file or console
    * @return 0 if print was successful
    */
-  int print_collective(std::unique_ptr<PGDataComparer>& comparer, int comparer_type, size_t merge_table_id);
+  int print_collective(std::unique_ptr <PGDataComparer> &comparer, int comparer_type, size_t merge_table_id);
 
   /**
    * prints merged table as txt or csv to file or console

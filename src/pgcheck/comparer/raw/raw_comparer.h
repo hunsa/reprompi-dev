@@ -32,11 +32,11 @@
 
 class RawComparer : public PGDataComparer {
  public:
-  RawComparer(std::string mpi_coll_name, int nnodes, int ppn);
+  RawComparer(const std::string &mpi_coll_name, int nnodes, int ppn);
   /**
    * @return data table in message sizes to runtimes table
    */
-  virtual PGDataTable get_results() override;
+  PGDataTable get_results() override;
 };
 
 #endif  // SRC_PGCHECK_COMPARER_RAW_RAW_COMPARER_H_

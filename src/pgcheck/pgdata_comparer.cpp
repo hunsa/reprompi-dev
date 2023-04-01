@@ -23,7 +23,7 @@
 
 #include "pgdata_comparer.h"
 
-PGDataComparer::PGDataComparer(std::string mpi_coll_name, int nnodes, int ppn) :
+PGDataComparer::PGDataComparer(const std::string& mpi_coll_name, int nnodes, int ppn) :
     nnodes(nnodes), ppn(ppn), mpi_coll_name(mpi_coll_name) {}
 
 bool PGDataComparer::has_barrier_time() {
@@ -34,7 +34,7 @@ double PGDataComparer::get_barrier_time() {
   return barrier_time_s;
 }
 
-void PGDataComparer::add_data(std::unordered_map<std::string, PGData *> data) {
+void PGDataComparer::add_data(const std::unordered_map<std::string, PGData *>& data) {
   mockup2data = data;
 }
 

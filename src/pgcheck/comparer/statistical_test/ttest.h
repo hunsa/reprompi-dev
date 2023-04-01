@@ -32,15 +32,15 @@ class TTest : public TwoSampleTest {
   /**
    * @return critical t-value for degrees of freedom
    */
-  double get_critical_value();
+  double get_critical_value() override;
   /**
    * @return t-test-value for samples
    */
-  double get_z_value();
+  double get_z_value() override;
   /**
    * @return true if t-test-value is smaller than critical t-value
    */
-  bool get_violation();
+  bool get_violation() override;
 };
 
 #endif  // SRC_PGCHECK_COMPARER_STATISTICAL_TEST_TTEST_H_

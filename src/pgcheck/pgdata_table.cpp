@@ -22,7 +22,7 @@
 */
 #include "pgdata_table.h"
 
-PGDataTable::PGDataTable(std::string title, std::vector <std::string> column_names) :
+PGDataTable::PGDataTable(const std::string& title, std::vector <std::string> column_names) :
     title(title), column_names(column_names) {
 }
 
@@ -58,11 +58,11 @@ std::unordered_map <std::string, std::vector<std::string>> PGDataTable::get_col_
   return col_value_map;
 }
 
-void PGDataTable::set_col_widths(std::vector<int> widths) {
+void PGDataTable::set_col_widths(const std::vector<int>& widths) {
   col_widths = widths;
 }
 
-void PGDataTable::set_column_names(std::vector <std::string> names) {
+void PGDataTable::set_column_names(const std::vector <std::string>& names) {
   column_names = names;
 }
 

@@ -37,8 +37,9 @@
 #include "../pgdata_comparer.h"
 
 class ComparerFactory {
-public:
-  static std::unique_ptr<PGDataComparer> create_comparer(int comparer_id, int test_type, std::string mpi_coll_name, int nnodes, int ppn);
+ public:
+  static std::unique_ptr <PGDataComparer>
+  create_comparer(int comparer_id, int test_type, std::string mpi_coll_name, int nnodes, int ppn);
   static int get_number_of_comparers();
 };
 

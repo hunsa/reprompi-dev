@@ -28,7 +28,7 @@
 
 #include "string_utils.h"
 
-const std::string WHITESPACE = " \n\r\t\f\v";
+const char WHITESPACE[] = " \n\r\t\f\v";
 
 std::string ltrim(const std::string &s) {
   size_t start = s.find_first_not_of(WHITESPACE);
@@ -78,11 +78,11 @@ std::vector <std::string> string_split(std::string s, char delimiter) {
 }
 
 std::string get_command_line_args_string(int argc, char* argv[]) {
-  std::stringstream args_stringstream;
-  args_stringstream << "Command-Line Arguments:";
+  std::stringstream args_text;
+  args_text << "Command-Line Arguments:";
   for (int i = 0; i < argc; i++) {
-    args_stringstream << " " << std::string_view(argv[i]);
+    args_text << " " << std::string_view(argv[i]);
   }
 
-  return args_stringstream.str();
+  return args_text.str();
 }

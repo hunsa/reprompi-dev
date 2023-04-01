@@ -72,10 +72,8 @@
 
 namespace fs = std::filesystem;
 
-constexpr auto ROOT_PROCESS_RANK = 0;
-
 static double get_barrier_runtime(PGCheckOptions &options) {
-  double avg_runtime = -1.0;
+  double avg_runtime = CONSTANTS::NO_BARRIER_TIME_VALUE;
   int rank;
   // run a barrier test
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -91,7 +89,7 @@ static double get_barrier_runtime(PGCheckOptions &options) {
 
   std::vector <std::string> barrier_argv_vector;
   auto foo = std::vector<std::string>();
-  argv::compose_argv_vector("dummy", barrier_options, foo, barrier_argv_vector);
+  argv::compose_argv_vector("dummy", barrier_options, foo, &barrier_argv_vector);
   int argc_test = 0;
   char **argv_test;
 
@@ -102,13 +100,13 @@ static double get_barrier_runtime(PGCheckOptions &options) {
   run_collective(argc_test, argv_test);
   argv::free_argv_cstyle(argc_test, argv_test);
 
-  if (rank == 0) {
+  if (rank == CONSTANTS::ROOT_PROCESS_RANK) {
     auto data = new PGData("MPI_Barrier", "default");
     data->read_csv_from_file(outpath.string());
     avg_runtime = StatisticsUtils<double>().median(
         data->get_runtimes_for_count(1));
   }
-  MPI_Bcast(&avg_runtime, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&avg_runtime, 1, MPI_DOUBLE, CONSTANTS::ROOT_PROCESS_RANK, MPI_COMM_WORLD);
   return avg_runtime;
 }
 
@@ -128,20 +126,20 @@ int main(int argc, char *argv[]) {
   PGDataPrinter *printer = NULL;
   std::chrono::nanoseconds pg_checker_runtime(0);
 
-  if (rank == ROOT_PROCESS_RANK) {
+  if (rank == CONSTANTS::ROOT_PROCESS_RANK) {
     printer = new PGDataPrinter();
   }
 
-  int ok = options.parse(argc, argv, rank == ROOT_PROCESS_RANK);
-  MPI_Allreduce(MPI_IN_PLACE, &ok, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-  if (ok != 0) {
+  int parse_status = options.parse(argc, argv, rank == CONSTANTS::ROOT_PROCESS_RANK);
+  MPI_Allreduce(MPI_IN_PLACE, &parse_status, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  if (parse_status == CONSTANTS::FAILURE) {
     Logger::LOG(options.get_usage_string());
     MPI_Comm_free(&comm_intranode);
     MPI_Finalize();
-    return 0;
+    return EXIT_FAILURE;
   }
 
-  if (rank == ROOT_PROCESS_RANK) {
+  if (rank == CONSTANTS::ROOT_PROCESS_RANK) {
     printer->set_options(options);
   }
 
@@ -150,7 +148,7 @@ int main(int argc, char *argv[]) {
   reprompib_register_caching_modules();
 
   std::ifstream ins(options.get_input_file());
-  if (rank == ROOT_PROCESS_RANK) {
+  if (rank == CONSTANTS::ROOT_PROCESS_RANK) {
     if (!ins.good()) {
       Logger::ERROR("input file '" + options.get_input_file() + "' cannot be read");
       Logger::LOG(options.get_usage_string());
@@ -201,7 +199,7 @@ int main(int argc, char *argv[]) {
           "--module=" + mod_name + "=" + "alg:" + alg_version);
       std::vector <std::string> argv_vector;
       argv::compose_argv_vector(argv[0], call_options, pgtunelib_argv,
-                                argv_vector);
+                                &argv_vector);
 
       int argc_test = 0;
       char **argv_test;
@@ -213,14 +211,14 @@ int main(int argc, char *argv[]) {
       run_collective(argc_test, argv_test);
       argv::free_argv_cstyle(argc_test, argv_test);
 
-      if (rank == ROOT_PROCESS_RANK) {
+      if (rank == CONSTANTS::ROOT_PROCESS_RANK) {
         auto *data = new PGData(mpi_coll, alg_version);
         data->read_csv_from_file(tmp_out_file);
         coll_data.insert({alg_version, data});
       }
     }
 
-    if (rank == ROOT_PROCESS_RANK) {
+    if (rank == CONSTANTS::ROOT_PROCESS_RANK) {
       auto runtime_start = std::chrono::high_resolution_clock::now();
       Logger::INFO("Collecting Finished:    " + mod_name);
       for (auto comparer_type : options.get_comparer_list()) {
@@ -233,7 +231,7 @@ int main(int argc, char *argv[]) {
         if (printer->print_collective(comparer, comparer_type,
                                       merge_table_id++) != 0) {
           Logger::ERROR("cannot print results");
-          exit(-1);
+          return EXIT_FAILURE;
         }
       }
       auto runtime_end = std::chrono::high_resolution_clock::now();
@@ -243,7 +241,7 @@ int main(int argc, char *argv[]) {
     merge_table_id = 0;
   }
 
-  if (rank == ROOT_PROCESS_RANK) {
+  if (rank == CONSTANTS::ROOT_PROCESS_RANK) {
     auto runtime_start = std::chrono::high_resolution_clock::now();
     printer->print_summary();
     auto runtime_end = std::chrono::high_resolution_clock::now();

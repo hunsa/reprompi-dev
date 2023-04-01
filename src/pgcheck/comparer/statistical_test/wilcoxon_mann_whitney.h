@@ -50,15 +50,15 @@ class WilcoxonMannWhitney : public TwoSampleTest {
   /**
    * @return critical z-value for min sample size
    */
-  double get_critical_value();
+  double get_critical_value() override;
   /**
    * @return wilcoxon-mann-whitney-test value for samples
    */
-  double get_z_value();
+  double get_z_value() override;
   /**
    * @return true if wilcoxon-mann-whitney-test value is smaller than critical z-value
    */
-  bool get_violation();
+  bool get_violation() override;
 };
 
 #endif  // SRC_PGCHECK_COMPARER_STATISTICAL_TEST_WILCOXON_MANN_WHITNEY_H_

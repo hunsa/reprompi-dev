@@ -37,11 +37,11 @@ class GroupedViolationComparer : public PGDataComparer {
   int test_type;
 
  public:
-  GroupedViolationComparer(int test_type, std::string mpi_coll_name, int nnodes, int ppn);
+  GroupedViolationComparer(int test_type, const std::string &mpi_coll_name, int nnodes, int ppn);
   /**
    * @return data table in grouped violation format
    */
-  PGDataTable get_results();
+  PGDataTable get_results() override;
 };
 
 #endif  // SRC_PGCHECK_COMPARER_VIOLATION_GROUPED_VIOLATION_COMPARER_H_

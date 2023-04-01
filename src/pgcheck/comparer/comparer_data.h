@@ -43,8 +43,8 @@ class ComparerData {
   double get_variance();
 
  public:
-  explicit ComparerData(std::vector<double> rts);
-  ComparerData(std::vector<double> rts, int test_id);
+  explicit ComparerData(const std::vector<double>& rts);
+  ComparerData(const std::vector<double>& rts, int test_id);
   bool is_violated();
   /**
    * @return true if samples violate test hypothesis
@@ -72,7 +72,7 @@ class ComparerData {
   /**
    * overwrites fastest mockup if mockup_median is smaller than current
    */
-  void set_fastest_mockup(std::string mockup, double mockup_median);
+  void set_fastest_mockup(const std::string& mockup, double mockup_median);
 };
 
 #endif  // SRC_PGCHECK_COMPARER_COMPARER_DATA_H_
