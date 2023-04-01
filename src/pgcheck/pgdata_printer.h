@@ -32,12 +32,15 @@
 #include <fstream>
 #include <algorithm>
 #include <string>
+#include <memory>
 
 #include "constants.h"
 #include "pgdata.h"
 #include "comparer/comparer_factory.h"
 #include "comparer/raw/raw_comparer.h"
 #include "pgcheck_options.h"
+#include "logger/logger.h"
+
 
 class PGDataPrinter {
  private:
@@ -75,38 +78,7 @@ class PGDataPrinter {
    * @return 0 if print was successful
    */
   int print_summary();
-  /**
-   * prints separator to cout if verbose is enabled
-   */
-  void print_separator_to_cout();
-  /**
-   * prints separator with newline to cout if verbose is enabled
-   */
-  void println_separator_to_cout();
-  /**
-   * prints message to cout if verbose is enabled
-   */
-  void println_to_cout(std::string message);
-  /**
-   * prints pgchecker evaluation to cout, text color orange
-   */
-  void print_evaluation_to_cout(std::string message, std::string heading);
-  /**
-   * prints info message to cout, text color blue
-   */
-  void println_info_to_cout(std::string message);
-  /**
-   * prints warning message to cout, text color purple
-   */
-  void println_warning_to_cout(std::string message);
-  /**
-   * prints error message to cerr, text color red
-   */
-  void println_error_to_cerr(std::string message);
-  /**
-   * prints usage string
-   */
-  void print_usage(char *command);
+
   void set_options(const PGCheckOptions &new_options);
 };
 

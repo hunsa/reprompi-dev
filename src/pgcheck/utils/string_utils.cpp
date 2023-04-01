@@ -76,3 +76,13 @@ std::vector <std::string> string_split(std::string s, char delimiter) {
   res.push_back(s.substr(pos_start));
   return res;
 }
+
+std::string get_command_line_args_string(int argc, char* argv[]) {
+  std::stringstream args_stringstream;
+  args_stringstream << "Command-Line Arguments:";
+  for (int i = 0; i < argc; i++) {
+    args_stringstream << " " << std::string_view(argv[i]);
+  }
+
+  return args_stringstream.str();
+}

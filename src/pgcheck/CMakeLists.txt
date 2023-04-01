@@ -98,8 +98,10 @@ add_executable(pgchecker
         comparer/runtime/abs_runtime_comparer.cpp
         comparer/runtime/rel_runtime_comparer.cpp
         comparer/raw/raw_comparer.cpp
+        logger/logger.cpp
         pgcheck_input.cpp
         utils/string_utils.cpp
+        utils/time_utils.cpp
         utils/argv_manager.cpp
 
         ${SRC_DIR}/benchmark_job.c

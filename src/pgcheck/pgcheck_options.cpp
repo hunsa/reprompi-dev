@@ -22,9 +22,6 @@
 */
 
 #include "pgcheck_options.h"
-#include "comparer/comparer_factory.h"
-#include <filesystem>
-#include <algorithm>
 
 namespace fs = std::filesystem;
 
@@ -39,10 +36,6 @@ bool PGCheckOptions::get_print_to_csv() {
 bool PGCheckOptions::is_verbose() {
   return verbose;
 }
-
-//bool PGCheckOptions::get_allow_mkdir() {
-//  return allow_mkdir;
-//}
 
 bool PGCheckOptions::get_csv() {
   return csv;
@@ -72,17 +65,17 @@ bool PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
   int c;
 
   struct option long_opts[] = {
-          {"help",        no_argument,       NULL, 'h'},
-          {"merge",       no_argument,       NULL, 'm'},
-          {"csv",         no_argument,       NULL, 's'},
-          {"verbose",     no_argument,       NULL, 'v'},
-          {"allow-mkdir", no_argument,       NULL, 'd'},
-          {"input",       required_argument, NULL, 'f'},
-          {"output",      required_argument, NULL, 'o'},
-          {"test",        required_argument, NULL, 't'},
-          {"comp-list",   required_argument, NULL, 'c'},
-          {NULL,          0,                 NULL, 0}
-      };
+      {"help",        no_argument,       NULL, 'h'},
+      {"merge",       no_argument,       NULL, 'm'},
+      {"csv",         no_argument,       NULL, 's'},
+      {"verbose",     no_argument,       NULL, 'v'},
+      {"allow-mkdir", no_argument,       NULL, 'd'},
+      {"input",       required_argument, NULL, 'f'},
+      {"output",      required_argument, NULL, 'o'},
+      {"test",        required_argument, NULL, 't'},
+      {"comp-list",   required_argument, NULL, 'c'},
+      {NULL,          0,                 NULL, 0}
+  };
 
   while ((c = getopt_long(argc, argv, ":hdmsvf:o:c:t:", long_opts, NULL)) != -1) {
     switch (c) {
@@ -105,11 +98,12 @@ bool PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
       case 's':
         csv = true;
         break;
-      case 'v':
-        verbose = true;
-        break;
       case 'd':
         allow_mkdir = true;
+        break;
+      case 'v':
+        verbose = true;
+        Logger::Logger::set_verbose_level(Logger::Level::VERBOSE);
         break;
       case 'c':
         std::string comp_string = optarg;
@@ -130,8 +124,8 @@ bool PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
         int min_elem = *min_element(comparer_list.begin(), comparer_list.end());
         int max_elem = *max_element(comparer_list.begin(), comparer_list.end());
 
-        if( min_elem < 0 || max_elem >= ComparerFactory::get_number_of_comparers() ) {
-          if( is_root ) {
+        if (min_elem < 0 || max_elem >= ComparerFactory::get_number_of_comparers()) {
+          if (is_root) {
             std::cerr << "Error: comparers list invalid, values should be between 0 and "
                       << ComparerFactory::get_number_of_comparers() - 1 << std::endl;
             return -1;
@@ -156,9 +150,9 @@ bool PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
     std::sort(comparer_list.begin(), comparer_list.end());
   }
 
-  if( is_root ) {
-    if(output_directory.empty()) {
-      std::cerr << "\033[35m" << "Error: " << "no output directory given, use -o" << "\033[0m" << std::endl;
+  if (is_root) {
+    if (output_directory.empty()) {
+      Logger::ERROR("no output directory given, use -o");
       return -1;
     }
 
@@ -167,32 +161,46 @@ bool PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
       if (allow_mkdir) {
         bool okay = fs::create_directory(out);
         if (!okay) {
-          std::cerr << "\033[35m" << "Error: " << "cannot create directory '" << output_directory << "\033[0m"
-                    << std::endl;
+          Logger::ERROR("cannot create directory '" + output_directory + "'");
         }
       } else {
-        std::cerr << "\033[35m" << "Error: " << "directory '" << output_directory
-                  << "' does not exists. (use -d to force creation of output dir)" << "\033[0m" << std::endl;
+        Logger::ERROR("directory '" + output_directory + "' does not exists. (use -d to force creation of output dir)");
         return -1;
       }
     }
   }
 
-
-//  // print results to cout if output directory was not specified
-//  if (output_directory.empty() && !verbose) {
-//    verbose = true;
-//    std::cout << "\033[35m" << "Warning: "
-//              << "output directory was not specified -> option verbose was enabled and output is written to cout"
-//              << "\033[0m" << std::endl;
-//  }
-//
-//  if (!output_directory.empty() && (stat(output_directory.c_str(), &sb) == 0)) {
-//    std::string slash = "/";
-//    if (!std::equal(slash.rbegin(), slash.rend(), output_directory.rbegin())) {
-//      output_directory = output_directory.append("/");
-//    }
-//  }
-
   return 0;
+}
+
+std::string PGCheckOptions::get_usage_string() {
+  std::stringstream usage;
+  usage << "USAGE: " << "./bin/pgchecker" << " -f input_file [options]" << std::endl << std::endl;
+  usage << "OPTIONS:" << std::endl;
+  usage << std::setw(36) << std::left << "  ?, -h, --help" << "Display this information." << std::endl;
+  usage << std::setw(36) << std::left << "  -c, --comp-list={0|1|2|3|4|5|6}"
+        << "Specify the comparer type ("
+        << "0=Simple|"
+        << "1=Absolute Median|"
+        << "2=Relative Median|"
+        << "3=Violation-Test|"
+        << "4=Detailed Violation-Test|"
+        << "5=Grouped Violation-Test|"
+        << "6=Raw Data)."
+        << std::endl;
+  usage << std::setw(36) << std::left << "  -t, --test {0|1|2}"
+        << "Specify the test type (0=T-Test|1=Wilcoxon-Rank-Sum-Test|2=Wilcoxon-Mann-Whitney)." << std::endl;
+  usage << std::setw(36) << std::left << "  -o, --output <path>" << "Specify an existing output folder."
+        << std::endl;
+  usage << std::setw(36) << std::left << "  -m, --merge"
+        << "Additionally results of all collectives are merged into one table." << std::endl;
+  usage << std::setw(36) << std::left << "  -d, --allow-mkdir"
+        << "Allow PGChecker to generate folders in the specified output folder" << std::endl;
+  usage << std::setw(36) << std::left << "  -s, --csv"
+        << "Print results to .csv file. Output directory must be specified. "
+        << "The csv formatted table is never written to the console."
+        << std::endl;
+  usage << std::setw(36) << std::left << "  -v, --verbose" << "Print all information and results to console."
+        << std::endl;
+  return usage.str();
 }

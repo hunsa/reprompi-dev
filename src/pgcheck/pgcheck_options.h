@@ -29,11 +29,13 @@
 #include <algorithm>
 #include <iomanip>
 #include <vector>
+#include <filesystem>
 
 #include <getopt.h>
-#include <string.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include "comparer/comparer_factory.h"
+#include "logger/logger.h"
 
 class PGCheckOptions {
  private:
@@ -52,7 +54,6 @@ class PGCheckOptions {
   bool get_merge_coll_tables();
   bool get_print_to_csv();
   bool is_verbose();
-  //bool get_allow_mkdir();
   bool get_csv();
   int get_test_type();
   std::string get_config_message();
@@ -65,5 +66,7 @@ class PGCheckOptions {
    * @return true if successful, otherwise false
    */
   bool parse(int argc, char *argv[], bool is_root);
+
+  std::string get_usage_string();
 };
 #endif  // SRC_PGCHECK_PGCHECK_OPTIONS_H_

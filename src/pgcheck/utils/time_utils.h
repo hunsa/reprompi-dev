@@ -21,26 +21,13 @@
 </license>
 */
 
-#ifndef SRC_PGCHECK_UTILS_STRING_UTILS_H_
-#define SRC_PGCHECK_UTILS_STRING_UTILS_H_
+#ifndef SRC_PGCHECK_UTILS_TIME_UTILS_H_
+#define SRC_PGCHECK_UTILS_TIME_UTILS_H_
 
-#include <string>
-#include <vector>
+#include <chrono>
 #include <sstream>
-#include <string_view>
+#include <string>
 
-std::string ltrim(const std::string &s);
-std::string rtrim(const std::string &s);
-std::string trim(const std::string &s);
-std::vector <std::string> string_split(std::string s, char delimiter);
-std::string get_command_line_args_string(int argc, char* argv[]);
+std::string duration_to_string(std::chrono::nanoseconds duration);
 
-template<typename T>
-T fromString(const std::string &str) {
-  std::istringstream ss(str);
-  T ret;
-  ss >> ret;
-  return ret;
-}
-
-#endif  // SRC_PGCHECK_UTILS_STRING_UTILS_H_
+#endif  // SRC_PGCHECK_UTILS_TIME_UTILS_H_

@@ -66,38 +66,13 @@
 #include "comparer/comparer_factory.h"
 #include "utils/argv_manager.h"
 #include "utils/statistics_utils.h"
+#include "utils/string_utils.h"
+#include "utils/time_utils.h"
+#include "logger/logger.h"
 
 namespace fs = std::filesystem;
 
 constexpr auto ROOT_PROCESS_RANK = 0;
-
-std::string get_runtime_string(int64_t nanoseconds) {
-  std::ostringstream stream;
-  stream << "PGChecker Runtime:      ";
-  if (nanoseconds >= 60000000000) {
-    int64_t minutes = nanoseconds / 60000000000;
-    int64_t seconds = (nanoseconds - (minutes * 60000000000)) / 1000000000;
-    int64_t remainingNanoseconds =
-        nanoseconds - (minutes * 60000000000) - (seconds * 1000000000);
-    stream << minutes << " min " << seconds << " s "
-           << remainingNanoseconds / 1000000 << " ms";
-  } else if (nanoseconds >= 1000000000) {
-    int64_t seconds = nanoseconds / 1000000000;
-    int64_t remainingNanoseconds = nanoseconds - (seconds * 1000000000);
-    stream << seconds << " s " << remainingNanoseconds / 1000000 << " ms";
-  } else if (nanoseconds >= 1000000) {
-    int64_t milliseconds = nanoseconds / 1000000;
-    int64_t remainingNanoseconds = nanoseconds - (milliseconds * 1000000);
-    stream << milliseconds << " ms " << remainingNanoseconds / 1000 << " µs";
-  } else if (nanoseconds >= 1000) {
-    int64_t microseconds = nanoseconds / 1000;
-    int64_t remainingNanoseconds = nanoseconds - (microseconds * 1000);
-    stream << microseconds << " µs " << remainingNanoseconds << " ns";
-  } else {
-    stream << nanoseconds << " ns";
-  }
-  return stream.str();
-}
 
 static double get_barrier_runtime(PGCheckOptions &options) {
   double avg_runtime = -1.0;
@@ -112,9 +87,7 @@ static double get_barrier_runtime(PGCheckOptions &options) {
   outpath /= "barrier.txt";
   barrier_options += outpath;
 
-  if (options.is_verbose()) {
-    std::cout << "barrier_options: " << barrier_options << std::endl;
-  }
+  Logger::INFO_VERBOSE("Command-Line Barrier:   " + barrier_options);
 
   std::vector <std::string> barrier_argv_vector;
   auto foo = std::vector<std::string>();
@@ -153,7 +126,7 @@ int main(int argc, char *argv[]) {
 
   PGCheckOptions options;
   PGDataPrinter *printer = NULL;
-  int64_t pg_checker_runtime = 0;
+  std::chrono::nanoseconds pg_checker_runtime(0);
 
   if (rank == ROOT_PROCESS_RANK) {
     printer = new PGDataPrinter();
@@ -162,10 +135,7 @@ int main(int argc, char *argv[]) {
   int ok = options.parse(argc, argv, rank == ROOT_PROCESS_RANK);
   MPI_Allreduce(MPI_IN_PLACE, &ok, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
   if (ok != 0) {
-    if (rank == ROOT_PROCESS_RANK) {
-      printer->print_usage(argv[0]);
-    }
-
+    Logger::LOG(options.get_usage_string());
     MPI_Comm_free(&comm_intranode);
     MPI_Finalize();
     return 0;
@@ -182,28 +152,21 @@ int main(int argc, char *argv[]) {
   std::ifstream ins(options.get_input_file());
   if (rank == ROOT_PROCESS_RANK) {
     if (!ins.good()) {
-      printer->println_error_to_cerr(
-          "input file '" + options.get_input_file() + "' cannot be read");
-      printer->print_usage(argv[0]);
-      fflush(stdout);
+      Logger::ERROR("input file '" + options.get_input_file() + "' cannot be read");
+      Logger::LOG(options.get_usage_string());
       return EXIT_FAILURE;
     }
   }
 
   double barrier_mean = get_barrier_runtime(options);
-  if (rank == ROOT_PROCESS_RANK) {
-    printer->println_to_cout(
-        "avg barrier [ms]: " + std::to_string(barrier_mean * 1000.0));
-  }
+  Logger::INFO("Average Barrier Time:   " + std::to_string(barrier_mean * 1000.0) + "ms");
 
   PGInput input(options.get_input_file());
 
   std::string csv_conf = "./external/src/pgtunelib-build/pgmpi_conf.csv";
   std::ifstream ifs(csv_conf);
   if (!ifs.good()) {
-    if (rank == ROOT_PROCESS_RANK) {
-      printer->println_error_to_cerr("cannot find '" + csv_conf + "'");
-    }
+    Logger::ERROR("cannot find '" + csv_conf + "'");
     return EXIT_FAILURE;
   }
 
@@ -217,36 +180,20 @@ int main(int argc, char *argv[]) {
   for (int case_id = 0; case_id < input.get_number_of_test_cases(); case_id++) {
     std::string mpi_coll = input.get_mpi_collective_for_case_id(case_id);
 
-    if (rank == ROOT_PROCESS_RANK) {
-      if (options.is_verbose()) {
-        printer->println_info_to_cout(
-            "Case " + std::to_string(case_id) + ": " + mpi_coll);
-      }
-    }
+    Logger::INFO_VERBOSE("Case " + std::to_string(case_id) + ": " + mpi_coll);
 
     auto mod_name = pgtune_interface.get_module_name_for_mpi_collectives(
         mpi_coll);
     std::unordered_map < std::string, PGData * > coll_data;
     for (auto &alg_version : pgtune_interface.get_available_implementations_for_mpi_collectives(mpi_coll)) {
       std::vector <std::string> pgtunelib_argv;
-      if (rank == ROOT_PROCESS_RANK) {
-        printer->println_info_to_cout(
-            "Collecting Data:        " + mod_name + ":" + alg_version);
-      }
+      Logger::INFO("Collecting Data:        " + mod_name + ":" + alg_version);
 
       std::string call_options = input.get_call_options_for_case_id(case_id);
 
-      //std::string tmp_dir = "./data";
       std::string tmp_dir = options.get_output_directory();
       std::string tmp_out_file =
           tmp_dir + "/" + "data_" + mpi_coll + "_" + alg_version + ".dat";
-//      if (rank == ROOT_PROCESS_RANK) {
-//        struct stat sb;
-//        stat(tmp_dir.c_str(), &sb);
-//        if (!S_ISDIR(sb.st_mode)) {
-//          mkdir(tmp_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-//        }
-//      }
 
       pgtunelib_argv.push_back("--calls-list=" + mpi_coll);
       pgtunelib_argv.push_back("--output-file=" + tmp_out_file);
@@ -261,12 +208,7 @@ int main(int argc, char *argv[]) {
       argv::convert_vector_to_argv_cstyle(argv_vector, &argc_test, &argv_test);
 
       pgtune_override_argv_parameter(argc_test, argv_test);
-      if (rank == ROOT_PROCESS_RANK) {
-        if (options.is_verbose()) {
-          std::cout << "\033[34m" << "[INFO]    " << "\033[0m";
-          print_command_line_args(argc_test, argv_test);
-        }
-      }
+      Logger::INFO_VERBOSE(get_command_line_args_string(argc_test, argv_test));
 
       run_collective(argc_test, argv_test);
       argv::free_argv_cstyle(argc_test, argv_test);
@@ -280,21 +222,23 @@ int main(int argc, char *argv[]) {
 
     if (rank == ROOT_PROCESS_RANK) {
       auto runtime_start = std::chrono::high_resolution_clock::now();
-      printer->println_info_to_cout("Collecting Finished:    " + mod_name);
-      for(auto comparer_type : options.get_comparer_list()) {
-        printer->println_info_to_cout("Evaluating Data:        comparer:" + CONSTANTS::COMPARER_NAMES.at(comparer_type));
-        std::unique_ptr<PGDataComparer> comparer = ComparerFactory::create_comparer(comparer_type, options.get_test_type(), mpi_coll, nnodes, ppn);
+      Logger::INFO("Collecting Finished:    " + mod_name);
+      for (auto comparer_type : options.get_comparer_list()) {
+        Logger::INFO("Evaluating Data:        comparer:" + CONSTANTS::COMPARER_NAMES.at(comparer_type));
+        std::unique_ptr <PGDataComparer> comparer = ComparerFactory::create_comparer(comparer_type,
+                                                                                     options.get_test_type(), mpi_coll,
+                                                                                     nnodes, ppn);
         comparer->set_barrier_time(barrier_mean);
         comparer->add_data(coll_data);
         if (printer->print_collective(comparer, comparer_type,
                                       merge_table_id++) != 0) {
-          printer->println_error_to_cerr("cannot print results");
+          Logger::ERROR("cannot print results");
           exit(-1);
         }
       }
       auto runtime_end = std::chrono::high_resolution_clock::now();
       pg_checker_runtime += std::chrono::duration_cast<std::chrono::nanoseconds>(
-          runtime_end - runtime_start).count();
+          runtime_end - runtime_start);
     }
     merge_table_id = 0;
   }
@@ -303,9 +247,9 @@ int main(int argc, char *argv[]) {
     auto runtime_start = std::chrono::high_resolution_clock::now();
     printer->print_summary();
     auto runtime_end = std::chrono::high_resolution_clock::now();
-    pg_checker_runtime += std::chrono::duration_cast<std::chrono::milliseconds>(
-        runtime_end - runtime_start).count();
-    printer->println_info_to_cout(get_runtime_string(pg_checker_runtime));
+    pg_checker_runtime += std::chrono::duration_cast<std::chrono::nanoseconds>(
+        runtime_end - runtime_start);
+    Logger::INFO("PGChecker Runtime:      " + duration_to_string(pg_checker_runtime));
     delete printer;
   }
 
