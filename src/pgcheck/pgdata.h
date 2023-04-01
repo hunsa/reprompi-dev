@@ -36,6 +36,7 @@
 #include "utils/string_utils.h"
 #include "utils/csv_parser.h"
 #include "pgdata_table.h"
+#include "constants.h"
 
 class PGData {
  private:

@@ -31,7 +31,8 @@ PGData::PGData(const std::string& mpi_coll_name, const std::string& mockup_name)
 int PGData::read_csv_from_file(std::string csv_path) {
   CSVParser *parser = new CSVParser();
   table = parser->parse_file(csv_path);
-  return 0;
+  delete parser;
+  return CONSTANTS::SUCCESS;
 }
 
 std::string PGData::get_mockup_name() {
