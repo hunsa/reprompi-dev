@@ -42,7 +42,7 @@
 class CSVParser {
  public:
   CSVParser() = default;
-  ~CSVParser();
+  ~CSVParser() {};
   PGDataTable parse_file(std::string csv_path);
 };
 
