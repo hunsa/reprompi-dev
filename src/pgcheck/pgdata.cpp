@@ -39,7 +39,7 @@ std::string PGData::get_mockup_name() {
 }
 
 std::vector <std::string> PGData::get_columns_names() {
-  return table.get_col_names();
+  return table.get_column_names();
 }
 
 std::vector<int> PGData::get_unique_counts() {

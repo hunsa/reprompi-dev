@@ -35,24 +35,24 @@
 
 class PGDataTable {
  private:
-  std::string mpi_name;
+  std::string title;
   std::vector<int> col_widths;
-  std::vector <std::string> col_names;
+  std::vector <std::string> column_names;
   std::unordered_map <std::string, std::vector<std::string>> col_value_map;
 
  public:
   PGDataTable() = default;
-  PGDataTable(std::string mpi_name, std::vector <std::string> col_names);
+  PGDataTable(std::string title, std::vector <std::string> column_names);
   int get_col_width(int index);
   int get_col_size();
-  std::string get_mpi_name();
+  std::string get_title();
   std::string get_values_col_row(std::string col, int row);
   std::vector<int> get_col_widths();
-  std::vector <std::string> get_col_names();
+  std::vector <std::string> get_column_names();
   std::vector <std::string> get_values_for_col_name(std::string key);
   std::unordered_map <std::string, std::vector<std::string>> get_col_value_map();
   void set_col_widths(std::vector<int> widths);
-  void set_col_names(std::vector <std::string> names);
+  void set_column_names(std::vector <std::string> names);
   PGDataTable get_violation_table();
   /**
    * adds one row to table
@@ -63,6 +63,14 @@ class PGDataTable {
    * adds column collective name to table this
    */
   void add_table(PGDataTable table);
+  /**
+ * @return table formatted for txt or console as string
+ */
+  std::string to_string();
+  /**
+   * @return table formatted for csv file as string
+   */
+  std::string to_csv_string();
 };
 
 #endif  // SRC_PGCHECK_PGDATA_TABLE_H_

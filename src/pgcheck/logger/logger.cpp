@@ -70,4 +70,10 @@ void Logger::evaluation_block(const std::string &heading, const std::string &mes
     std::cout << "\033[33m" << "[EVALUATION | " << heading << "] " << "\033[0m" << std::endl << std::endl;
   }
 }
+
+void Logger::write_file(const std::string &message, const std::string &filename) {
+  std::ofstream file(filename);
+  file << message << std::endl;
+  file.close();
+}
 }  // namespace Logger

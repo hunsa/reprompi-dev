@@ -27,6 +27,7 @@
 #include <string>
 #include <ostream>
 #include <iostream>
+#include <fstream>
 
 #include "mpi.h"
 
@@ -52,6 +53,7 @@ class Logger {
   void warn(const std::string& message);
   void error(const std::string& message);
   void evaluation_block(const std::string& header, const std::string& message);
+  void write_file(const std::string& message, const std::string& filename);
 
  private:
   Logger() {}
@@ -70,5 +72,6 @@ class Logger {
 #define WARN(message) LOGGER.warn(message)
 #define ERROR(message) LOGGER.error(message)
 #define EVAL_BLOCK(header, message) LOGGER.evaluation_block(header, message)
+#define FILE(message, filename) LOGGER.write_file(message, filename)
 
 #endif  // SRC_PGCHECK_LOGGER_LOGGER_H_

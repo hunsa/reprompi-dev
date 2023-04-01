@@ -30,7 +30,7 @@ PGDataTable CSVParser::parse_file(std::string csv_path) {
   std::string line;
 
   std::vector <std::string> col_names = {"test", "nrep", "count", "runtime_sec"};
-  table_res.set_col_names(col_names);
+  table_res.set_column_names(col_names);
   bool first = true;
 
   while (std::getline(infile, line)) {

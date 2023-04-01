@@ -22,8 +22,8 @@
 */
 #include "pgdata_table.h"
 
-PGDataTable::PGDataTable(std::string mpi_name, std::vector <std::string> col_names) :
-    mpi_name(mpi_name), col_names(col_names) {
+PGDataTable::PGDataTable(std::string title, std::vector <std::string> column_names) :
+    title(title), column_names(column_names) {
 }
 
 int PGDataTable::get_col_width(int index) {
@@ -31,19 +31,19 @@ int PGDataTable::get_col_width(int index) {
 }
 
 int PGDataTable::get_col_size() {
-  return col_value_map.at(col_names[0]).size();
+  return col_value_map.at(column_names[0]).size();
 }
 
-std::string PGDataTable::get_mpi_name() {
-  return mpi_name;
+std::string PGDataTable::get_title() {
+  return title;
 }
 
 std::vector<int> PGDataTable::get_col_widths() {
   return col_widths;
 }
 
-std::vector <std::string> PGDataTable::get_col_names() {
-  return col_names;
+std::vector <std::string> PGDataTable::get_column_names() {
+  return column_names;
 }
 
 std::vector <std::string> PGDataTable::get_values_for_col_name(std::string key) {
@@ -62,8 +62,8 @@ void PGDataTable::set_col_widths(std::vector<int> widths) {
   col_widths = widths;
 }
 
-void PGDataTable::set_col_names(std::vector <std::string> names) {
-  col_names = names;
+void PGDataTable::set_column_names(std::vector <std::string> names) {
+  column_names = names;
 }
 
 void PGDataTable::add_row(const std::unordered_map <std::string, std::string> &row_map) {
@@ -73,17 +73,17 @@ void PGDataTable::add_row(const std::unordered_map <std::string, std::string> &r
 }
 
 void PGDataTable::add_table(PGDataTable table) {
-  if (col_names[0] != "collective") {
-    col_names.insert(col_names.begin(), "collective");
+  if (column_names[0] != "collective") {
+    column_names.insert(column_names.begin(), "collective");
     col_widths.insert(col_widths.begin(), 20);
   }
 
   int nb_rows = table.get_col_size();
   for (int i = 0; i < nb_rows; i++) {
-    for (auto iter = col_names.rbegin(); iter != (col_names.rend() - 1); ++iter) {
+    for (auto iter = column_names.rbegin(); iter != (column_names.rend() - 1); ++iter) {
       col_value_map[*iter].push_back(table.get_values_col_row(*iter, i));
     }
-    col_value_map["collective"].push_back(table.get_mpi_name());
+    col_value_map["collective"].push_back(table.get_title());
   }
 }
 
@@ -94,7 +94,7 @@ PGDataTable PGDataTable::get_violation_table() {
   std::vector <std::string> barriers;
   std::string mode = "";
 
-  for (const std::string &col_name : col_names) {
+  for (const std::string &col_name : column_names) {
     if (col_name == "diff<barrier") {
       violations = get_values_for_col_name("violation");
       barriers = get_values_for_col_name("diff<barrier");
@@ -120,7 +120,7 @@ PGDataTable PGDataTable::get_violation_table() {
   int cautious_sum = 0;
   int of_coll = 0;
   int of_sum = 0;
-  std::string coll_name = "";
+  std::string coll_name;
 
   for (std::string violation : violations) {
     if (mode != "violation" || get_values_col_row("mockup", row_idx) != "default") {
@@ -170,4 +170,73 @@ PGDataTable PGDataTable::get_violation_table() {
   res.add_row(row);
   res.set_col_widths(col_widths);
   return res;
+}
+
+std::string PGDataTable::to_string() {
+  const int nb_rows = get_col_size();
+
+  std::ostringstream res;
+  res.exceptions(std::ios::failbit);
+  res.rdbuf()->pubsetbuf(nullptr, 0);
+  res.precision(10);
+  res << std::fixed;
+  res.exceptions(std::ios::goodbit);
+  res.str().reserve(column_names.size() * 10 + nb_rows * column_names.size() * 20);
+
+  if (!title.empty()) {
+    res << "MPI Collective: " << title << "\n";
+  } else {
+    res << "MPI All Results " << "\n";
+  }
+
+  int idx = 0;
+  for (auto col_name = column_names.cbegin(); col_name != column_names.cend(); ++col_name) {
+    res << std::left << std::setw(get_col_width(idx++)) << *col_name << " ";
+  }
+  res << "\n";
+
+  for (int i = 0; i != nb_rows; ++i) {
+    idx = 0;
+    for (auto col_name = column_names.cbegin(); col_name != column_names.cend(); ++col_name) {
+      res << std::left << std::setw(get_col_width(idx++)) << get_values_col_row(*col_name, i) << " ";
+    }
+    res << "\n";
+  }
+  return res.str();
+}
+
+std::string PGDataTable::to_csv_string() {
+  const std::string col_delimiter = ",";
+  const std::string row_delimiter = "\n";
+
+  const int nb_rows = get_col_size();
+
+  std::ostringstream res;
+  res.exceptions(std::ios::failbit);
+  res.rdbuf()->pubsetbuf(nullptr, 0);
+  res.precision(10);
+  res << std::fixed;
+  res.exceptions(std::ios::goodbit);
+  res.str().reserve(column_names.size() * 10 + nb_rows * column_names.size() * 20);
+
+  for (auto col_name = column_names.cbegin(); col_name != column_names.cend(); ++col_name) {
+    res << *col_name;
+    if (std::next(col_name) != column_names.cend()) {
+      res << col_delimiter;
+    }
+  }
+  res << row_delimiter;
+
+  for (int i = 0; i != nb_rows; ++i) {
+    for (auto col_name = column_names.cbegin(); col_name != column_names.cend(); ++col_name) {
+      res << get_values_col_row(*col_name, i);
+      if (std::next(col_name) != column_names.cend()) {
+        res << col_delimiter;
+      }
+    }
+    if (i != nb_rows - 1) {
+      res << row_delimiter;
+    }
+  }
+  return res.str();
 }

@@ -44,18 +44,7 @@
 
 class PGDataPrinter {
  private:
-  /**
-   * @return table formatted for txt or console as string
-   */
-  std::string table_to_clear_string(PGDataTable data_result);
-  /**
-   * @return table formatted for csv file as string
-   */
-  std::string table_to_csv_string(PGDataTable data_result);
-  /**
-   * writes text to new file with filename
-   */
-  void write_string_to_file(std::string text, std::string filename);
+
   /**
    * adds the result from collective to table
    */
