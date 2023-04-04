@@ -90,7 +90,7 @@ void print_help(char* testname) {
 
 
 void init_parameters(reprompib_drift_test_opts_t* opts_p, char* name) {
-  opts_p->n_rep = 0;
+  opts_p->n_rep = 10;
   opts_p->steps = 0;
   opts_p->print_procs_ratio = 0;
   strcpy(opts_p->testname,name);
