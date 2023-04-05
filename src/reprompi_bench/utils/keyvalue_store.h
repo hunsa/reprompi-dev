@@ -24,6 +24,10 @@
 #ifndef REPROMPIB_KEYVALUE_STORE_H_
 #define REPROMPIB_KEYVALUE_STORE_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct entry_s {
   char* key;
   char* value;
@@ -52,6 +56,10 @@ int reprompib_dict_get_nkeys(const reprompib_dictionary_t* hashtable);
 int reprompib_dict_has_key(const reprompib_dictionary_t* hashtable, const char *key);
 
 void reprompib_print_dictionary(const reprompib_dictionary_t* hashtable, FILE* f);
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* REPROMPIB_KEYVALUE_STORE_H_ */
