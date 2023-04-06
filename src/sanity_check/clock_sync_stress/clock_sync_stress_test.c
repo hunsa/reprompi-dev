@@ -24,17 +24,19 @@
 // avoid getsubopt bug
 #define _XOPEN_SOURCE 500
 
+#include <stdlib.h>
 #include <stdio.h>
 #include "mpi.h"
 
 #include "reprompi_bench/sync/clock_sync/synchronization.h"
-
+#include "reprompi_bench/sync/time_measurement.h"
 
 int main(int argc, char* argv[]) {
     int rank, size;
     int master_rank = 0;
     reprompib_sync_module_t clock_sync;
-    int rep = 10;
+    int rep = 100;
+    int time_reps = 10000;
 
     MPI_Init(&argc, &argv);
 
@@ -45,6 +47,16 @@ int main(int argc, char* argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
+    if( argc < 3 ) {
+        if( rank == 0 ) {
+            printf("usage: %s [rep sync] [rep clock checks]\n", argv[0]);
+        }
+        exit(1);
+    } else {
+        rep = atoi(argv[1]);
+        time_reps = atoi(argv[2]);
+    }
+
     if( rank == master_rank ) {
         printf("init sync\n");
         fflush(stdout);
@@ -53,15 +65,28 @@ int main(int argc, char* argv[]) {
 
     for(int i=0; i<rep; i++) {
         if( rank == master_rank ) {
-            printf("start sync\n");
+            printf("s");
             fflush(stdout);
         }
         clock_sync.sync_clocks();
+        for(int j=0; j<time_reps; j++) {
+            clock_sync.get_global_time(get_time());
+            if( rank == master_rank ) {
+                printf(".");
+                fflush(stdout);
+            }
+        }
+
         if( rank == master_rank ) {
-            printf("end sync\n");
+            printf("e");
             fflush(stdout);
         }
     }
+    if( rank == master_rank ) {
+        printf("\n");
+        fflush(stdout);
+    }
+
 
 
     if( rank == master_rank ) {
