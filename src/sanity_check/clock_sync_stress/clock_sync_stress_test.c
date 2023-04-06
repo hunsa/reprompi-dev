@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
             printf("usage: %s [rep sync] [rep clock checks]\n", argv[0]);
         }
         MPI_Finalize();
-        exit(1);
+        exit(0);
     } else {
         rep = atoi(argv[1]);
         time_reps = atoi(argv[2]);
@@ -72,10 +72,10 @@ int main(int argc, char* argv[]) {
         clock_sync.sync_clocks();
         for(int j=0; j<time_reps; j++) {
             clock_sync.get_global_time(get_time());
-            if( rank == master_rank ) {
-                printf(".");
-                fflush(stdout);
-            }
+//            if( rank == master_rank ) {
+//                printf(".");
+//                fflush(stdout);
+//            }
         }
 
         if( rank == master_rank ) {
