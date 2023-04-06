@@ -40,10 +40,6 @@ int main(int argc, char* argv[]) {
 
     MPI_Init(&argc, &argv);
 
-    reprompib_register_sync_modules();
-
-    reprompib_init_sync_module(argc, argv, &clock_sync);
-
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -56,7 +52,12 @@ int main(int argc, char* argv[]) {
     } else {
         rep = atoi(argv[1]);
         time_reps = atoi(argv[2]);
+        //printf("%d: rep=%d time_reps=%d\n", rank, rep, time_reps);
     }
+
+    reprompib_register_sync_modules();
+
+    reprompib_init_sync_module(argc, argv, &clock_sync);
 
     if( rank == master_rank ) {
         printf("init sync\n");
