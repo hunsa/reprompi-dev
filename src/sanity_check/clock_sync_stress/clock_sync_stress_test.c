@@ -51,6 +51,7 @@ int main(int argc, char* argv[]) {
         if( rank == 0 ) {
             printf("usage: %s [rep sync] [rep clock checks]\n", argv[0]);
         }
+        MPI_Finalize();
         exit(1);
     } else {
         rep = atoi(argv[1]);
