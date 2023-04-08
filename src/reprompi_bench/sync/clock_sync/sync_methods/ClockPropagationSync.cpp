@@ -19,7 +19,9 @@
 #include "log/zf_log.h"
 
 
-ClockPropagationSync::ClockPropagationSync() {
+
+ClockPropagationSync::ClockPropagationSync(ClockType clock_type) : clock_type(clock_type)
+{
 }
 
 ClockPropagationSync::~ClockPropagationSync() {
@@ -90,7 +92,6 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
     int current_offset = sizeof(int);
     last_clock = initialize_local_clock();
     for(int i=0; i<nb_types; i++) {
-      //int type_id = reinterpret_cast<int*>(buf+current_offset)[0];
       int type_id = reinterpret_cast<int*>(buf+current_offset)[0];
       ZF_LOGV("%d: type_id(%d): %d", my_rank, i, type_id);
 
@@ -139,4 +140,15 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
   ZF_LOGV("%d: sync clocks propagation END", my_rank);
 
   return retClock;
+}
+
+GlobalClock* ClockPropagationSync::create_global_dummy_clock(MPI_Comm comm, Clock& c) {
+  if( clock_type == ClockType::CLOCK_OFFSET ) {
+    return new GlobalClockOffset(c, 0.0);
+  } else if ( clock_type == ClockType::CLOCK_LM ) {
+    return new GlobalClockLM(c, 0.0, 0.0);
+  } else {
+    ZF_LOGE("ERROR: unknown clock type");
+    return new GlobalClockOffset(c, 0.0);
+  }
 }

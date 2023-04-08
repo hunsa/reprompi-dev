@@ -78,3 +78,7 @@ GlobalClock* JKClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
    }
    return new GlobalClockLM(c, slope, intercept);
 }
+
+GlobalClock* JKClockSync::create_global_dummy_clock(MPI_Comm comm, Clock& c) {
+  return new GlobalClockLM(c, 0.0, 0.0);
+}

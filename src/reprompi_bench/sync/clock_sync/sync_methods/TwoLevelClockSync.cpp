@@ -13,13 +13,13 @@
 #include "TwoLevelClockSync.h"
 
 #include "reprompi_bench/sync/clock_sync/clocks/GlobalClockLM.h"
-#include "reprompi_bench/sync/clock_sync/clocks/GlobalClockOffset.h"
+
 
 //#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
 #define ZF_LOG_LEVEL ZF_LOG_WARN
 #include "log/zf_log.h"
 
-TwoLevelClockSync::TwoLevelClockSync(ClockSync *syncInterNode, ClockSync *syncIntraNode) :
+TwoLevelClockSync::TwoLevelClockSync(BaseClockSync *syncInterNode, BaseClockSync *syncIntraNode) :
     syncInterNode(syncInterNode), syncIntraNode(syncIntraNode) {
 
   this->comm_internode = MPI_COMM_NULL;
@@ -85,12 +85,12 @@ GlobalClock* TwoLevelClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) 
       global_clock1 = syncInterNode->synchronize_all_clocks(comm_internode, c);
     } else {
       ZF_LOGV("%d: sync1 dummy", my_rank);
-      global_clock1 = new GlobalClockLM(c, 0.0, 0.0);
+      global_clock1 = syncInterNode->create_global_dummy_clock(comm_internode, c);
     }
   } else {
     // dummy clock
     ZF_LOGV("%d: sync1 dummy", my_rank);
-    global_clock1 = new GlobalClockLM(c, 0.0, 0.0);
+    global_clock1 = syncInterNode->create_global_dummy_clock(comm_internode, c);
   }
 
 #if ZF_LOG_LEVEL == ZF_LOG_VERBOSE

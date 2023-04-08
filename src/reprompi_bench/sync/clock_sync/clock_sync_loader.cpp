@@ -12,10 +12,11 @@
 #include "reprompi_bench/sync/clock_sync/clock_offset_algs/PingpongClockOffsetAlg.h"
 #include "reprompi_bench/sync/clock_sync/clock_offset_algs/SKaMPIClockOffsetAlg.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HierarchicalClockSync.h"
-#include "reprompi_bench/sync/clock_sync/sync_methods/SKaMPIClockSync.h"
+#include "reprompi_bench/sync/clock_sync/sync_methods/offset/SKaMPIClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCA2ClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCA3ClockSync.h"
+#include "reprompi_bench/sync/clock_sync/sync_methods/offset/HCA3OffsetClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/ClockPropagationSync.h"
 #include "reprompi_bench/sync/clock_sync/clock_sync_common.h"
 #include "reprompi_bench/sync/clock_sync/clock_sync_lib.h"
@@ -77,8 +78,8 @@ static ClockOffsetAlg* instantiate_clock_offset_alg(std::vector<std::string> &to
   return offset_alg;
 }
 
-ClockSync* ClockSyncLoader::instantiate_clock_sync(const char *param_name) {
-  ClockSync* ret_sync = NULL;
+BaseClockSync* ClockSyncLoader::instantiate_clock_sync(const char *param_name) {
+  BaseClockSync* ret_sync = NULL;
   char *alg_str;
   reprompib_dictionary_t *dict = get_global_param_store();
   int rank;
@@ -164,8 +165,35 @@ ClockSync* ClockSyncLoader::instantiate_clock_sync(const char *param_name) {
               } else {
                   ZF_LOGE("format error sync alg '%s'", sync_alg.c_str());
               }
+          } else if (sync_alg == "hca3offset") {
+            if (tokens.size() >= 1) {
+              ClockOffsetAlg *offset_alg = instantiate_clock_offset_alg(tokens);
+              if (offset_alg != NULL) {
+                ret_sync = new HCA3OffsetClockSync(offset_alg);
+              } else {
+                ZF_LOGE("problem with format of hca3offset clock offset alg\nuse hca3offset@offsetalg_format");
+
+              }
+            } else {
+              ZF_LOGE("problem with format of hca3offset clock offset alg: sync alg '%s'\nuse hca3offset@offsetalg_format", sync_alg.c_str());
+            }
           } else if (sync_alg == "prop") {
-              ret_sync = new ClockPropagationSync();
+              // topoalg2:prop@0   offset only
+              // topoalg2:prop@1   linear model
+              if (tokens.size() >= 1) {
+                int prop_type = atoi(tokens[0].c_str());
+                if( prop_type == 0 ) {
+                  ret_sync = new ClockPropagationSync(ClockPropagationSync::ClockType::CLOCK_OFFSET);
+                } else if( prop_type == 1) {
+                  ret_sync = new ClockPropagationSync(ClockPropagationSync::ClockType::CLOCK_LM);
+                } else {
+                  ZF_LOGE("problem with format of prop clock sync: prop@0 or prop@1");
+                  exit(1);
+                }
+              } else {
+                ZF_LOGE("problem with format of prop clock sync: prop@0 or prop@1");
+              }
+
           } else {
               ZF_LOGE("unknown clock sync alg '%s'", sync_alg.c_str());
           }

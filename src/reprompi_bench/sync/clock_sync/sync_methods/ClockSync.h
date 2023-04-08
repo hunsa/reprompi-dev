@@ -14,10 +14,20 @@ class ClockSync {
 //	Clock* local_clock;
 
 public:
-
   virtual GlobalClock* synchronize_all_clocks(MPI_Comm comm, Clock& c) = 0;
   virtual ~ClockSync() {};
 
+};
+
+class BaseClockSync : public ClockSync {
+public:
+  virtual GlobalClock* create_global_dummy_clock(MPI_Comm comm, Clock& c) = 0;
+  virtual ~BaseClockSync() {};
+};
+
+class ComposedClockSync : public ClockSync {
+public:
+  virtual ~ComposedClockSync() {};
 };
 
 class LinModel {

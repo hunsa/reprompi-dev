@@ -14,15 +14,20 @@
  * propagate that model to all other processes in this same communicator
  */
 
-class ClockPropagationSync: public ClockSync {
-
+class ClockPropagationSync: public BaseClockSync {
 
 public:
-  ClockPropagationSync();
+  enum class ClockType { CLOCK_OFFSET, CLOCK_LM };
+
+  ClockPropagationSync(ClockType clock_type);
   ~ClockPropagationSync();
 
   GlobalClock* synchronize_all_clocks(MPI_Comm comm, Clock& c);
-  GlobalClock* get_dummy_global_clock(Clock &c);
+  GlobalClock* create_global_dummy_clock(MPI_Comm comm, Clock& c);
+
+private:
+  ClockType clock_type;
+
 };
 
 #endif

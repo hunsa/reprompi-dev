@@ -222,8 +222,9 @@ ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCAClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCA2ClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCA3ClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/SKaMPIClockSync.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/TwoLevelClockSync.cpp
+${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/offset/SKaMPIClockSync.cpp
+${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/offset/HCA3OffsetClockSync.cpp
 
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/LinearModelFitterStandard.cpp
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/LinearModelFitterDebug.cpp

@@ -19,7 +19,9 @@
 #define ZF_LOG_LEVEL ZF_LOG_WARN
 #include "log/zf_log.h"
 
-HierarchicalClockSync::HierarchicalClockSync(ClockSync *syncInterNode, ClockSync *syncSocket, ClockSync *syncOnSocket) :
+HierarchicalClockSync::HierarchicalClockSync(BaseClockSync *syncInterNode,
+                                             BaseClockSync *syncSocket,
+                                             BaseClockSync *syncOnSocket) :
     syncInterNode(syncInterNode), syncSocket(syncSocket), syncOnSocket(syncOnSocket) {
 
   this->comm_internode = MPI_COMM_NULL;

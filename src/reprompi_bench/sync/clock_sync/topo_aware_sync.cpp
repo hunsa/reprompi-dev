@@ -36,7 +36,7 @@
 #include "reprompi_bench/sync/clock_sync/clock_sync_lib.h"
 #include "reprompi_bench/sync/clock_sync/clock_sync_loader.hpp"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HierarchicalClockSync.h"
-#include "reprompi_bench/sync/clock_sync/sync_methods/SKaMPIClockSync.h"
+#include "reprompi_bench/sync/clock_sync/sync_methods/offset/SKaMPIClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCA2ClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCA3ClockSync.h"

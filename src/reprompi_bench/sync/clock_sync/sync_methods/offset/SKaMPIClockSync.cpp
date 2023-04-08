@@ -74,5 +74,9 @@ GlobalClock* SKaMPIClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
   return new GlobalClockOffset(c, tds[0]);
 }
 
+GlobalClock* SKaMPIClockSync::create_global_dummy_clock(MPI_Comm comm, Clock& c) {
+  return new GlobalClockOffset(c, 0.0);
+}
+
 
 

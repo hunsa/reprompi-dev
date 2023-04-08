@@ -10,8 +10,8 @@
 class TwoLevelClockSync: public ClockSync {
 
 private:
-  ClockSync *syncInterNode;
-  ClockSync *syncIntraNode;
+  BaseClockSync *syncInterNode;
+  BaseClockSync *syncIntraNode;
 
   MPI_Comm comm_internode;
   MPI_Comm comm_intranode;
@@ -21,7 +21,7 @@ private:
   void initialized_communicators(MPI_Comm comm);
 
 public:
-  TwoLevelClockSync(ClockSync *syncInterNode, ClockSync *syncIntraNode);
+  TwoLevelClockSync(BaseClockSync *syncInterNode, BaseClockSync *syncIntraNode);
   ~TwoLevelClockSync();
 
   GlobalClock* synchronize_all_clocks(MPI_Comm comm, Clock& c);

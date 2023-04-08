@@ -36,7 +36,7 @@
 #include "reprompi_bench/sync/clock_sync/clock_sync_lib.h"
 #include "reprompi_bench/sync/clock_sync/clock_sync_loader.hpp"
 #include "reprompi_bench/sync/clock_sync/sync_methods/TwoLevelClockSync.h"
-#include "reprompi_bench/sync/clock_sync/sync_methods/SKaMPIClockSync.h"
+#include "reprompi_bench/sync/clock_sync/sync_methods/offset/SKaMPIClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCA2ClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCA3ClockSync.h"
@@ -85,8 +85,8 @@ static void topo_print_sync_parameters(FILE* f)
 
 static void topo_init_module(int argc, char** argv) {
   int use_default = 0;
-  ClockSync *alg1;
-  ClockSync *alg2;
+  BaseClockSync *alg1;
+  BaseClockSync *alg2;
   ClockSyncLoader loader;
 
   alg1 = loader.instantiate_clock_sync("topoalg1");
@@ -114,7 +114,7 @@ static void topo_init_module(int argc, char** argv) {
 
     clock_sync = new TwoLevelClockSync(
       new HCA3ClockSync(new SKaMPIClockOffsetAlg(10,100), 500, false),
-      new ClockPropagationSync());
+      new ClockPropagationSync(ClockPropagationSync::ClockType::CLOCK_LM));
   }
 
 }

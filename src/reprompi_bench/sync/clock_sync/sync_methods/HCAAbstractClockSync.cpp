@@ -140,4 +140,7 @@ int HCAAbstractClockSync::my_pow_2(int exp) {
   return (int) pow(2.0, (double) exp);
 }
 
+GlobalClock* HCAAbstractClockSync::create_global_dummy_clock(MPI_Comm comm, Clock& c) {
+  return new GlobalClockLM(c, 0.0, 0.0);
+}
 

@@ -12,9 +12,9 @@
 class HierarchicalClockSync: public ClockSync {
 
 private:
-  ClockSync *syncInterNode;
-  ClockSync *syncSocket;
-  ClockSync *syncOnSocket;
+  BaseClockSync *syncInterNode;
+  BaseClockSync *syncSocket;
+  BaseClockSync *syncOnSocket;
 
   MPI_Comm comm_internode;
   MPI_Comm comm_intranode;
@@ -26,7 +26,7 @@ private:
   void initialized_communicators(MPI_Comm comm);
 
 public:
-  HierarchicalClockSync(ClockSync *syncInterNode, ClockSync *syncSocket, ClockSync *syncOnSocket); //, SyncConfiguration& conf);
+  HierarchicalClockSync(BaseClockSync *syncInterNode, BaseClockSync *syncSocket, BaseClockSync *syncOnSocket); //, SyncConfiguration& conf);
   ~HierarchicalClockSync();
 
   GlobalClock* synchronize_all_clocks(MPI_Comm comm, Clock& c);

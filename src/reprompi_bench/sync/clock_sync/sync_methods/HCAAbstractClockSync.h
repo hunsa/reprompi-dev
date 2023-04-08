@@ -16,7 +16,7 @@
 
 #include "ClockSync.h"
 
-class HCAAbstractClockSync: public ClockSync {
+class HCAAbstractClockSync: public BaseClockSync {
 
 private:
 
@@ -41,6 +41,7 @@ public:
   ~HCAAbstractClockSync();
 
   virtual GlobalClock* synchronize_all_clocks(MPI_Comm comm, Clock& c) = 0;
+  GlobalClock* create_global_dummy_clock(MPI_Comm comm, Clock& c);
 };
 
 

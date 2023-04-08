@@ -43,7 +43,7 @@
 #include "reprompi_bench/sync/clock_sync/clock_offset_algs/SKaMPIClockOffsetAlg.h"
 
 #include "reprompi_bench/sync/clock_sync/sync_methods/ClockSync.h"
-#include "reprompi_bench/sync/clock_sync/sync_methods/SKaMPIClockSync.h"
+#include "reprompi_bench/sync/clock_sync/sync_methods/offset/SKaMPIClockSync.h"
 #include "reprompi_bench/misc.h"
 
 //#define ZF_LOG_LEVEL ZF_LOG_VERBOSE

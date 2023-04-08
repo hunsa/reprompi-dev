@@ -13,7 +13,7 @@
 class ClockSyncLoader {
 
 public:
-  ClockSync* instantiate_clock_sync(const char *param_name);
+  BaseClockSync* instantiate_clock_sync(const char *param_name);
 
 };
 

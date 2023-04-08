@@ -7,7 +7,7 @@
 #include "reprompi_bench/sync/clock_sync/clocks/GlobalClockLM.h"
 
 
-class JKClockSync: public ClockSync {
+class JKClockSync: public BaseClockSync {
 
 private:
   int n_fitpoints; /* --fitpoints */
@@ -19,6 +19,7 @@ public:
   ~JKClockSync();
 
   GlobalClock* synchronize_all_clocks(MPI_Comm comm, Clock& c);
+  GlobalClock* create_global_dummy_clock(MPI_Comm comm, Clock& c);
 };
 
 #endif /*  REPROMPIB_JKCLOCKSYNC_CLASS_H_  */
