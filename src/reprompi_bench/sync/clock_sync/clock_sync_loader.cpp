@@ -52,9 +52,9 @@ static ClockOffsetAlg* instantiate_clock_offset_alg(std::vector<std::string> &to
   ClockOffsetAlg *offset_alg = NULL;
 
   if( tokens[0] == "skampi_offset" ) {
-    // skampi_offset,min_nb_ping_pongs,nb_ping_pongs
+    // skampi_offset@min_nb_ping_pongs@nb_ping_pongs
     if( tokens.size() != 3 ) {
-      ZF_LOGE("number of parameters to ClockOffsetAlg wrong (!=3)");
+      ZF_LOGE("number of parameters to ClockOffsetAlg wrong (!=3)\nskampi_offset@min_nb_ping_pongs@nb_ping_pongs");
     } else {
       int min_nb_ping_pongs = atoi(tokens[1].c_str());
       int nb_ping_pongs     = atoi(tokens[2].c_str());
