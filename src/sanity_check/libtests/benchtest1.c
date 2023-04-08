@@ -64,12 +64,12 @@ int main(int argc, char *argv[]) {
       proc_sync.start_sync(MPI_COMM_WORLD);
 
       //@ measure_timestamp t1
-      t1[reprompib_nrep_index] = get_time();
+      t1[reprompib_nrep_index] = REPROMPI_get_time();
 
       MPI_Bcast(send_buffer, cnts[i], MPI_BYTE, 0, MPI_COMM_WORLD);
 
       //@ measure_timestamp t2
-      t2[reprompib_nrep_index] = get_time();
+      t2[reprompib_nrep_index] = REPROMPI_get_time();
 
       //@stop_measurement_loop
       is_invalid = proc_sync.stop_sync(MPI_COMM_WORLD);

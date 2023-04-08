@@ -41,7 +41,7 @@ def generate_stop_sync(indent):
 
 
 def generate_measure_timestamp(ts, indent):
-    code = [ "%s[%s] = get_time();" % (ts, NREP_INDEX_VAR_NAME) ]
+    code = [ "%s[%s] = REPROMPI_get_time();" % (ts, NREP_INDEX_VAR_NAME) ]
     return format_code(code, indent)
 
 

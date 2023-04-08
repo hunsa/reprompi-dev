@@ -207,7 +207,7 @@ void reprompib_initialize_benchmark(int argc, char* argv[],
   reprompib_register_proc_sync_modules();
 
   // initialize time measurement functions
-  init_timer();
+  REPROMPI_init_timer();
 
   //initialize dictionary
   reprompib_init_dictionary(&params_dict, HASHTABLE_SIZE);
