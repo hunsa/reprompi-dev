@@ -104,9 +104,9 @@ int main(int argc, char* argv[]) {
   }
 
   for (step = 0; step < nreps; step++) {
-    start_time = get_time();
+    start_time = REPROMPI_get_time();
     nanosleep(&sleep_time, NULL);
-    local_runtimes[step] = get_time() - start_time;
+    local_runtimes[step] = REPROMPI_get_time() - start_time;
   }
 
   if (print_all && my_rank == master_rank) {
