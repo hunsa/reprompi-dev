@@ -127,6 +127,7 @@ void reprompib_register_sync_modules(void) {
   register_hca_module(&(sync_modules[sync_module_idx++]));
   register_hca2_module(&(sync_modules[sync_module_idx++]));
   register_hca3_module(&(sync_modules[sync_module_idx++]));
+  register_hca3_offset_module(&(sync_modules[sync_module_idx++]));
 #ifdef HAVE_HWLOC
   register_topo_aware_sync1_module(&(sync_modules[sync_module_idx++]));
 #endif
