@@ -49,6 +49,7 @@ static const sync_type_t clock_sync_options[] = {
         { "HCA", REPROMPI_CLOCKSYNC_HCA},
         { "HCA2", REPROMPI_CLOCKSYNC_HCA2},
         { "HCA3", REPROMPI_CLOCKSYNC_HCA3},
+        { "HCA3O", REPROMPI_CLOCKSYNC_HCA3_OFFSET},
         { "JK", REPROMPI_CLOCKSYNC_JK },
         { "SKaMPI", REPROMPI_CLOCKSYNC_SKAMPI },
 #ifdef HAVE_HWLOC

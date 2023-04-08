@@ -38,7 +38,8 @@
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCAClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCA2ClockSync.h"
 #include "reprompi_bench/sync/clock_sync/sync_methods/HCA3ClockSync.h"
-#include "reprompi_bench/misc.h"
+#include "reprompi_bench/sync/clock_sync/sync_methods/offset/HCA3OffsetClockSync.h"
+//#include "reprompi_bench/misc.h"
 
 
 //#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
@@ -185,6 +186,37 @@ static void hca3_print_sync_parameters(FILE* f)
   fprintf (f, "#@clocksync=HCA3\n");
 }
 
+/******************************
+ *
+ * HCA3_Offset
+ *
+ */
+
+static void hca3_offset_init_module(int argc, char** argv) {
+    ClockSyncLoader loader;
+
+    global_clock = NULL;
+    local_clock = initialize_local_clock();
+
+    clock_sync = loader.instantiate_clock_sync("alg");
+    if( clock_sync != NULL ) {
+        // now we make sure it's really an HCA3Offset instance
+        if( dynamic_cast<HCA3OffsetClockSync*>(clock_sync) == NULL ) {
+            ZF_LOGE("instantiated clock sync is not of type HCA3OffsetClockSync. aborting..");
+            exit(1);
+        }
+    } else {
+        ZF_LOGV("using default hca3offset clock sync");
+        clock_sync = new HCA3OffsetClockSync(new SKaMPIClockOffsetAlg(5,20));
+    }
+
+}
+
+static void hca3_offset_print_sync_parameters(FILE* f)
+{
+    fprintf (f, "#@clocksync=HCA3O\n");
+}
+
 
 extern "C"
 void register_hca_module(reprompib_sync_module_t *sync_mod) {
@@ -230,6 +262,22 @@ void register_hca3_module(reprompib_sync_module_t *sync_mod) {
 
   sync_mod->get_global_time = get_normalized_time;
   sync_mod->print_sync_info = hca3_print_sync_parameters;
+}
+
+
+extern "C"
+void register_hca3_offset_module(reprompib_sync_module_t *sync_mod) {
+    sync_mod->name = (char*)std::string("HCA3O").c_str();
+    sync_mod->clocksync = REPROMPI_CLOCKSYNC_HCA3_OFFSET;
+    sync_mod->init_module = hca3_offset_init_module;
+    sync_mod->cleanup_module = hca_cleanup_module;
+    sync_mod->sync_clocks = synchronize_clocks;
+
+    sync_mod->init_sync = default_init_synchronization;
+    sync_mod->finalize_sync = default_finalize_synchronization;
+
+    sync_mod->get_global_time = get_normalized_time;
+    sync_mod->print_sync_info = hca3_offset_print_sync_parameters;
 }
 
 
