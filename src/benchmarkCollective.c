@@ -203,9 +203,9 @@ void run_collective(int argc, char **argv) {
     while(1) {
       proc_sync.start_sync(MPI_COMM_WORLD);
 
-      tstart_sec[i] = get_time();
+      tstart_sec[i] = REPROMPI_get_time();
       collective_calls[job.call_index].collective_call(&coll_params);
-      tend_sec[i] = get_time();
+      tend_sec[i] = REPROMPI_get_time();
 
       is_invalid = proc_sync.stop_sync(MPI_COMM_WORLD);
       if (is_invalid == REPROMPI_INVALID_MEASUREMENT) {

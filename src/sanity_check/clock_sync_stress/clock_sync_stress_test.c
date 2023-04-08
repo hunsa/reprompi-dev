@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
         }
         clock_sync.sync_clocks();
         for(int j=0; j<time_reps; j++) {
-            clock_sync.get_global_time(get_time());
+            clock_sync.get_global_time(REPROMPI_get_time());
 //            if( rank == master_rank ) {
 //                printf(".");
 //                fflush(stdout);

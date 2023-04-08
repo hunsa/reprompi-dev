@@ -306,7 +306,7 @@ int main(int argc, char* argv[]) {
     parse_drift_test_options(&opts, argc, argv);
 
     reprompib_init_sync_module(argc, argv, &clock_sync);
-    init_timer();
+  REPROMPI_init_timer();
 
     n_wait_steps = 2;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -320,16 +320,16 @@ int main(int argc, char* argv[]) {
 
     print_initial_settings(argc, argv, opts, clock_sync.print_sync_info);
 
-    runtime_s = get_time();
+    runtime_s = REPROMPI_get_time();
     clock_sync.init_sync();
 
     clock_sync.sync_clocks();
-    runtime_s = get_time() - runtime_s;
+    runtime_s = REPROMPI_get_time() - runtime_s;
 
     Number_ping_pongs = opts.n_rep;
 
     if (my_rank == master_rank) {
-      double target_time = get_time() + ((double)opts.steps);
+      double target_time = REPROMPI_get_time() + ((double)opts.steps);
       int first_iter = 1;
 
       printf ("#@sync_duration=%14.9f\n", runtime_s);
@@ -344,10 +344,10 @@ int main(int argc, char* argv[]) {
         }
       }
 
-      //printf("target_time=%14.9f, cur_time=%14.9f\n", target_time, get_time());
+      //printf("target_time=%14.9f, cur_time=%14.9f\n", target_time, REPROMPI_get_time());
       // wait until 's' seconds are done
       do {
-        double cur_time = get_time();
+        double cur_time = REPROMPI_get_time();
         if( cur_time >= target_time ) {
           if( first_iter == 1 ) {
             // we were late.. report a warning
@@ -464,10 +464,10 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
    to define the initial td_min and td_max with INFINITY and NINFINITY */
   if (my_rank == ref_rank) {
 
-    s_last = clock_sync->get_global_time(get_time());
+    s_last = clock_sync->get_global_time(REPROMPI_get_time());
     MPI_Send(&s_last, 1, MPI_DOUBLE, client_rank, pp_tag, comm);
     MPI_Recv(&t_last, 1, MPI_DOUBLE, client_rank, pp_tag, comm, &status);
-    s_now = clock_sync->get_global_time(get_time());
+    s_now = clock_sync->get_global_time(REPROMPI_get_time());
     MPI_Send(&s_now, 1, MPI_DOUBLE, client_rank, pp_tag, comm);
 
     td_min = t_last - s_now;
@@ -477,10 +477,10 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
     //other_global_id = ref_rank;
 
     MPI_Recv(&s_last, 1, MPI_DOUBLE, ref_rank, pp_tag, comm, &status);
-    t_last = clock_sync->get_global_time(get_time());
+    t_last = clock_sync->get_global_time(REPROMPI_get_time());
     MPI_Send(&t_last, 1, MPI_DOUBLE, ref_rank, pp_tag, comm);
     MPI_Recv(&s_now, 1, MPI_DOUBLE, ref_rank, pp_tag, comm, &status);
-    t_now = clock_sync->get_global_time(get_time());
+    t_now = clock_sync->get_global_time(REPROMPI_get_time());
 
     td_min = s_last - t_last;
     td_min = repro_max(td_min, s_now - t_now);
@@ -497,7 +497,7 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
       }
 
       s_last = s_now;
-      s_now = clock_sync->get_global_time(get_time());
+      s_now = clock_sync->get_global_time(REPROMPI_get_time());
 
       td_min = repro_max(td_min, t_last - s_now);
       td_max = repro_min(td_max, t_last - s_last);
@@ -521,7 +521,7 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
       MPI_Send(&t_now, 1, MPI_DOUBLE, ref_rank, pp_tag, comm);
       MPI_Recv(&s_last, 1, MPI_DOUBLE, ref_rank, pp_tag, comm, &status);
       t_last = t_now;
-      t_now = clock_sync->get_global_time(get_time());
+      t_now = clock_sync->get_global_time(REPROMPI_get_time());
 
       if (s_last < 0.0) {
         break;

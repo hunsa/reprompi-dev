@@ -204,7 +204,7 @@ void estimate_all_rtts(int master_rank, int other_rank, const int n_pingpongs,
 
         /* warm up */
         for (i = 0; i < RTT_WARMUP_ROUNDS; i++) {
-            tmp = get_time();
+            tmp = REPROMPI_get_time();
             MPI_Send(&tmp, 1, MPI_DOUBLE, other_rank, 0, MPI_COMM_WORLD);
             MPI_Recv(&tmp, 1, MPI_DOUBLE, other_rank, 0, MPI_COMM_WORLD, &stat);
         }
@@ -212,11 +212,11 @@ void estimate_all_rtts(int master_rank, int other_rank, const int n_pingpongs,
         rtts = (double*) malloc(n_pingpongs * sizeof(double));
 
         for (i = 0; i < n_pingpongs; i++) {
-            tstart = get_time();
+            tstart = REPROMPI_get_time();
             MPI_Send(&tstart, 1, MPI_DOUBLE, other_rank, 0, MPI_COMM_WORLD);
             MPI_Recv(&tremote, 1, MPI_DOUBLE, other_rank, 0, MPI_COMM_WORLD,
                     &stat);
-            rtts[i] = get_time() - tstart;
+            rtts[i] = REPROMPI_get_time() - tstart;
         }
 
     } else if (my_rank == other_rank) {
@@ -226,14 +226,14 @@ void estimate_all_rtts(int master_rank, int other_rank, const int n_pingpongs,
         for (i = 0; i < RTT_WARMUP_ROUNDS; i++) {
             MPI_Recv(&tmp, 1, MPI_DOUBLE, master_rank, 0, MPI_COMM_WORLD,
                     &stat);
-            tmp = get_time();
+            tmp = REPROMPI_get_time();
             MPI_Send(&tmp, 1, MPI_DOUBLE, master_rank, 0, MPI_COMM_WORLD);
         }
 
         for (i = 0; i < n_pingpongs; i++) {
             MPI_Recv(&troot, 1, MPI_DOUBLE, master_rank, 0, MPI_COMM_WORLD,
                     &stat);
-            tlocal = get_time();
+            tlocal = REPROMPI_get_time();
             MPI_Send(&tlocal, 1, MPI_DOUBLE, master_rank, 0, MPI_COMM_WORLD);
         }
     }
@@ -440,7 +440,7 @@ int main(int argc, char* argv[]) {
     parse_drift_test_options(&opts, argc, argv);
 
     reprompib_init_sync_module(argc, argv, &clock_sync);
-    init_timer();
+  REPROMPI_init_timer();
 
     n_wait_steps = opts.steps + 1;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -477,11 +477,11 @@ int main(int argc, char* argv[]) {
 
     print_initial_settings(argc, argv, opts, clock_sync.print_sync_info);
 
-    runtime_s = get_time();
+    runtime_s = REPROMPI_get_time();
     clock_sync.init_sync();
 
     clock_sync.sync_clocks();
-    runtime_s = get_time() - runtime_s;
+    runtime_s = REPROMPI_get_time() - runtime_s;
 
     if (my_rank == master_rank) {
         printf ("#@sync_duration=%14.9f\n", runtime_s);
@@ -501,7 +501,7 @@ int main(int argc, char* argv[]) {
                         // normalized according to the synchronization method
                         // (for JK, SKaMPI, on the root process global_time  = local_time)
                         all_local_times[step * ntestprocs * opts.n_rep + index * opts.n_rep + i] =
-                            clock_sync.get_global_time(get_time()) - rtts_s[index] / 2;
+                                clock_sync.get_global_time(REPROMPI_get_time()) - rtts_s[index] / 2;
                         all_global_times[step * ntestprocs * opts.n_rep
                                          + index * opts.n_rep + i] = time_msg[1];
 
@@ -528,7 +528,7 @@ int main(int argc, char* argv[]) {
                 MPI_Recv(&time_msg[0], 2, MPI_DOUBLE, master_rank, 0,
                     MPI_COMM_WORLD, &stat);
 
-                local_time = get_time();
+                local_time = REPROMPI_get_time();
                 global_time = clock_sync.get_global_time(local_time);
                 time_msg[0] = local_time;
                 time_msg[1] = global_time;

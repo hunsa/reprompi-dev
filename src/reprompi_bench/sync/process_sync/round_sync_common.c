@@ -30,14 +30,14 @@ double measure_bcast_runtime(MPI_Comm comm, reprompi_roundsync_bcast_params_t *p
   int master_rank = 0;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-  bcast_runtime = get_time(); // that's just used as a dummy here
+  bcast_runtime = REPROMPI_get_time(); // that's just used as a dummy here
   bcast_times = (double*) calloc(parameters->bcast_n_rep, sizeof(double));
 
   for (i = 0; i < parameters->bcast_n_rep; i++) {
     MPI_Barrier(MPI_COMM_WORLD);
-    bcast_times[i] = get_time();
+    bcast_times[i] = REPROMPI_get_time();
     ReproMPI_Bcast(&bcast_runtime, 1, MPI_DOUBLE, master_rank, MPI_COMM_WORLD);
-    bcast_times[i] = get_time() - bcast_times[i];
+    bcast_times[i] = REPROMPI_get_time() - bcast_times[i];
   }
 
   gsl_sort(bcast_times, 1, parameters->bcast_n_rep);

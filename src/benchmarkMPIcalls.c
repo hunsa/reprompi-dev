@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
   reprompib_register_proc_sync_modules();
   reprompib_register_caching_modules();
 
-  init_timer();
+    REPROMPI_init_timer();
 
   run_collective(argc, argv);
 

@@ -28,9 +28,9 @@
 extern "C" {
 #endif
 
-void init_timer(void);
+void REPROMPI_init_timer(void);
 
-double get_time(void);
+double REPROMPI_get_time(void);
 
 void print_time_parameters(FILE *f);
 

@@ -51,7 +51,7 @@ double wtime;
 struct timespec ts;
 #endif
 
-void init_timer(void) {
+void REPROMPI_init_timer(void) {
 #ifdef RDTSC_CALIBRATION
     uint64_t timerfreq = 0;
     HRT_INIT(0 /* do not print */, timerfreq);
@@ -59,7 +59,7 @@ void init_timer(void) {
 #endif
 }
 
-inline double get_time(void) {
+inline double REPROMPI_get_time(void) {
 #ifdef ENABLE_RDTSCP
     return (double)rdtscp()/FREQ_HZ;
 #elif ENABLE_RDTSC

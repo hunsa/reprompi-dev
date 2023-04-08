@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
     }
 
     for (step = 0; step < n_wait_steps; step++) {
-        rdtsc_times[step] = get_time();
+        rdtsc_times[step] = REPROMPI_get_time();
         wtime_times[step] = MPI_Wtime();
 
         // wait 1 second

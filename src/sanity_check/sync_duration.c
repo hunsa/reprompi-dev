@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     reprompib_register_sync_modules();
     reprompib_init_sync_module(argc, argv, &clock_sync);
 
-    init_timer();
+  REPROMPI_init_timer();
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -88,11 +88,11 @@ int main(int argc, char* argv[]) {
 
     print_initial_settings(argc, argv, clock_sync.print_sync_info);
 
-    runtime_s = get_time();
-    init_timer();
+    runtime_s = REPROMPI_get_time();
+  REPROMPI_init_timer();
     clock_sync.init_sync();
     clock_sync.sync_clocks();
-    runtime_s = get_time() - runtime_s;
+    runtime_s = REPROMPI_get_time() - runtime_s;
 
     clock_sync.finalize_sync();
     MPI_Gather(&runtime_s, 1, MPI_DOUBLE, all_runtimes, 1, MPI_DOUBLE, 0,
