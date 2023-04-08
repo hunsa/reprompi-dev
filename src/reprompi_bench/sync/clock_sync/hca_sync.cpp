@@ -59,9 +59,11 @@ static ClockSync* clock_sync;
 static Clock* local_clock;
 static GlobalClock* global_clock;
 
-
 static void synchronize_clocks(void) {
-  global_clock = clock_sync->synchronize_all_clocks(MPI_COMM_WORLD, *(local_clock));
+    if( global_clock != NULL ) {
+        delete global_clock;
+    }
+    global_clock = clock_sync->synchronize_all_clocks(MPI_COMM_WORLD, *(local_clock));
 }
 
 static double get_normalized_time(double local_time) {

@@ -55,6 +55,9 @@ static GlobalClock* global_clock;
 
 
 static void topo_synchronize_clocks(void) {
+  if( global_clock != NULL ) {
+    delete global_clock;
+  }
   global_clock = clock_sync->synchronize_all_clocks(MPI_COMM_WORLD, *(local_clock));
 }
 

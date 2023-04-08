@@ -36,6 +36,9 @@ TwoLevelClockSync::~TwoLevelClockSync() {
   if( comm_intranode != MPI_COMM_NULL ) {
     MPI_Comm_free(&comm_intranode);
   }
+
+  delete syncInterNode;
+  delete syncIntraNode;
 }
 
 void TwoLevelClockSync::initialized_communicators(MPI_Comm comm) {

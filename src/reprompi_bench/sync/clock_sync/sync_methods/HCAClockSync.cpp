@@ -42,7 +42,7 @@ GlobalClock* HCAClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
 //  double *rtts_s;
 //  int n_pingpongs = 1000;
   int max_power_two, nrounds_step1;
-  LinModel *linear_models, *tmp_linear_models;
+  //LinModel *linear_models, *tmp_linear_models;
   int running_power;
   int other_rank;
 //  double current_rtt;
@@ -66,8 +66,8 @@ GlobalClock* HCAClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
   nrounds_step1 = floor(log2((double) nprocs));
   max_power_two = (int) pow(2.0, (double) nrounds_step1);
 
-  linear_models = new LinModel[nprocs];
-  tmp_linear_models = new LinModel[nprocs];
+  LinModel linear_models[nprocs];
+  LinModel tmp_linear_models[nprocs];
 
   MPI_Type_create_struct(2, blocklen, disp, dtype, &mpi_lm_t);
   MPI_Type_commit(&mpi_lm_t);
@@ -196,6 +196,7 @@ GlobalClock* HCAClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
   }
 
   MPI_Comm_rank(MPI_COMM_WORLD, &master_rank);
+  MPI_Type_free(&mpi_lm_t);
   //printf("[rank %d] rank=%d s=%f i=%f nprocs=%d\n",master_rank, my_rank, lm.slope, lm.intercept,nprocs );
   return new GlobalClockLM(c, lm.slope, lm.intercept);
 }

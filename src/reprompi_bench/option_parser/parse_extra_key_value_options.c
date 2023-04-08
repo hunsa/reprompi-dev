@@ -70,8 +70,8 @@ static void parse_keyvalue_list(char* args, reprompib_dictionary_t* dict) {
     int ok;
 
     save_str = (char*) malloc(STRING_SIZE * sizeof(char));
-    kv_str = (char*) malloc(STRING_SIZE * sizeof(char));
-    s = save_str;
+    kv_str   = (char*) malloc(STRING_SIZE * sizeof(char));
+    s    = save_str;
     kv_s = kv_str;
 
     /* Parse the list of message sizes */

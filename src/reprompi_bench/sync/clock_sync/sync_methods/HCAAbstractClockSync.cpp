@@ -16,6 +16,7 @@ HCAAbstractClockSync::HCAAbstractClockSync(ClockOffsetAlg *offsetAlg, int n_fitp
 }
 
 HCAAbstractClockSync::~HCAAbstractClockSync() {
+    delete offset_alg;
 }
 
 

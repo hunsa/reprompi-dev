@@ -103,9 +103,9 @@ static entry_t *ht_newpair(const char* key, const char* value) {
     return NULL;
   }
 
-  newpair->key = strdup(key);
+  newpair->key   = strdup(key);
   newpair->value = strdup(value);
-  newpair->next = NULL;
+  newpair->next  = NULL;
 
   return newpair;
 }
@@ -303,6 +303,7 @@ int reprompib_dict_has_key(const reprompib_dictionary_t* hashtable, const char *
   ret = reprompib_get_value_from_dict(hashtable, key, &value);
   if (ret == 0) {
     found_key = 1;
+    free(value);
   }
   return found_key;
 }
