@@ -13,12 +13,12 @@ GettimeClock::~GettimeClock() {
 }
 
 double GettimeClock::get_time(void) {
-  if( clock_type == GettimeClock::LocalClockType::CLOCK_REALTIME ) {
+  if( clock_type == GettimeClock::LocalClockType::LOCAL_CLOCK_REALTIME ) {
     if( clock_gettime( CLOCK_REALTIME, &ts) == -1 ) {
       perror( "clock gettime" );
       exit( EXIT_FAILURE );
     }
-  } else if( clock_type == GettimeClock::LocalClockType::CLOCK_MONOTONIC ) {
+  } else if( clock_type == GettimeClock::LocalClockType::LOCAL_CLOCK_MONOTONIC ) {
     if( clock_gettime( CLOCK_MONOTONIC, &ts) == -1 ) {
       perror( "clock gettime" );
       exit( EXIT_FAILURE );

@@ -47,9 +47,9 @@ Clock* initialize_local_clock(void) {
 #elif ENABLE_RDTSC
   local_clock = new RdtscClock();
 #elif ENABLE_GETTIME_REALTIME
-  local_clock = new GettimeClock(GettimeClock::LocalClockType::CLOCK_REALTIME);
+  local_clock = new GettimeClock(GettimeClock::LocalClockType::LOCAL_CLOCK_REALTIME);
 #elif ENABLE_GETTIME_MONOTONIC
-  local_clock = new GettimeClock(GettimeClock::LocalClockType::CLOCK_MONOTONIC);
+  local_clock = new GettimeClock(GettimeClock::LocalClockType::LOCAL_CLOCK_MONOTONIC);
 #else
   local_clock = new MPIClock();
 #endif

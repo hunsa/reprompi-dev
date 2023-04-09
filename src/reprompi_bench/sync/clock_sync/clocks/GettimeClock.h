@@ -12,7 +12,7 @@ class GettimeClock : public Clock {
 
 public:
 
-  enum class LocalClockType { CLOCK_REALTIME, CLOCK_MONOTONIC };
+  enum class LocalClockType { LOCAL_CLOCK_REALTIME, LOCAL_CLOCK_MONOTONIC };
 
   GettimeClock(LocalClockType clock_type);
   ~GettimeClock();
