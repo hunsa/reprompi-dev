@@ -99,6 +99,19 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
 
       switch(type_id) {
       case 0: {
+        // GlobalClockOffset
+        double *data = reinterpret_cast<double*>(buf+current_offset);
+        double clock_offset  = data[0];
+
+        ZF_LOGV("%d: recv glockoff (%g)", my_rank, clock_offset);
+
+        retClock = new GlobalClockOffset((Clock&)(*last_clock), clock_offset);
+        last_clock = retClock;
+
+        current_offset += sizeof(double);
+        break;
+      }
+      case 1: {
         // GlobalClockLM
         double *data = reinterpret_cast<double*>(buf+current_offset);
         double clock_slope  = data[0];
@@ -110,19 +123,6 @@ GlobalClock* ClockPropagationSync::synchronize_all_clocks(MPI_Comm comm, Clock& 
         last_clock = retClock;
 
         current_offset += 2*sizeof(double);
-        break;
-      }
-      case 1: {
-        // GlobalClockOffset
-        double *data = reinterpret_cast<double*>(buf+current_offset);
-        double clock_offset  = data[0];
-
-        ZF_LOGV("%d: recv glockoff (%g)", my_rank, clock_offset);
-
-        retClock = new GlobalClockOffset((Clock&)(*last_clock), clock_offset);
-        last_clock = retClock;
-
-        current_offset += sizeof(double);
         break;
       }
       default: {

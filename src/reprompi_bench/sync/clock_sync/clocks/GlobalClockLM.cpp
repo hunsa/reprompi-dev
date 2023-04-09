@@ -61,7 +61,7 @@ void GlobalClockLM::flatten_clock(char *buf, char *offset, char* end_pointer) {
   end_pointer -= this->get_flattened_this_clock_size_in_bytes();
 
   int *data_int= reinterpret_cast<int*>(end_pointer);
-  data_int[0] = 0;
+  data_int[0] = 1;
 
   double *data_place = reinterpret_cast<double*>(end_pointer+sizeof(int));
   data_place[0] = this->slope;
