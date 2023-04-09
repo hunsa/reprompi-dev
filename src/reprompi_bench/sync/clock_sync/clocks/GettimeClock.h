@@ -11,7 +11,10 @@
 class GettimeClock : public Clock {
 
 public:
-  GettimeClock();
+
+  enum class LocalClockType { CLOCK_REALTIME, CLOCK_MONOTONIC };
+
+  GettimeClock(LocalClockType clock_type);
   ~GettimeClock();
 
   double get_time(void);
@@ -20,6 +23,7 @@ public:
 private:
   double wtime;
   struct timespec ts;
+  LocalClockType clock_type;
 };
 
 

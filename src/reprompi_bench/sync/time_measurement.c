@@ -29,7 +29,7 @@
 #include "rdtsc.h"
 #endif
 
-#if defined ENABLE_GETTIME_REALTIME
+#if defined(ENABLE_GETTIME_REALTIME) || defined(ENABLE_GETTIME_MONOTONIC)
 #include <time.h>
 #include <stdlib.h>
 #endif
@@ -46,7 +46,7 @@ const double FREQ_HZ=2300*1.0e6;
 #endif
 #endif
 
-#if defined(ENABLE_GETTIME_REALTIME)
+#if defined(ENABLE_GETTIME_REALTIME) || defined(ENABLE_GETTIME_MONOTONIC)
 double wtime;
 struct timespec ts;
 #endif
@@ -71,6 +71,13 @@ inline double REPROMPI_get_time(void) {
     }
     wtime = (double)(ts.tv_nsec) / 1.0e+9 + ts.tv_sec;
     return wtime;
+#elif ENABLE_GETTIME_MONOTONIC
+  if( clock_gettime( CLOCK_MONOTONIC, &ts) == -1 ) {
+      perror( "clock gettime" );
+      exit( EXIT_FAILURE );
+    }
+    wtime = (double)(ts.tv_nsec) / 1.0e+9 + ts.tv_sec;
+    return wtime;
 #else
     return PMPI_Wtime();
 #endif
@@ -88,9 +95,11 @@ void print_time_parameters(FILE* f) {
     fprintf(f, "#@frequency_hz=%lf\n", FREQ_HZ);
 #elif ENABLE_GETTIME_REALTIME
     strcpy(clock, "clock_gettime_REALTIME");
+#elif ENABLE_GETTIME_REALTIME
+  strcpy(clock, "clock_gettime_MONOTONIC");
 #endif
     fprintf(f, "#@clock=%s\n", clock);
-#if !defined(ENABLE_RDTSCP) && !defined(ENABLE_RDTSC) && !defined(ENABLE_GETTIME_REALTIME)
+#if !defined(ENABLE_RDTSCP) && !defined(ENABLE_RDTSC) && !defined(ENABLE_GETTIME_REALTIME) && !defined(ENABLE_GETTIME_MONOTONIC)
     fprintf(f, "#@clock_tick=%1.10f\n", MPI_Wtick());
 #endif
 }

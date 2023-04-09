@@ -12,7 +12,7 @@
 #include <reprompi_bench/sync/clock_sync/clocks/RdtscpClock.h>
 #elif ENABLE_RDTSC
 #include <reprompi_bench/sync/clock_sync/clocks/RdtscClock.h>
-#elif ENABLE_GETTIME_REALTIME
+#elif defined(ENABLE_GETTIME_REALTIME) || defined(ENABLE_GETTIME_MONOTONIC)
 #include <reprompi_bench/sync/clock_sync/clocks/GettimeClock.h>
 #else
 #include <reprompi_bench/sync/clock_sync/clocks/MPIClock.h>
@@ -47,7 +47,9 @@ Clock* initialize_local_clock(void) {
 #elif ENABLE_RDTSC
   local_clock = new RdtscClock();
 #elif ENABLE_GETTIME_REALTIME
-  local_clock = new GettimeClock();
+  local_clock = new GettimeClock(GettimeClock::LocalClockType::CLOCK_REALTIME);
+#elif ENABLE_GETTIME_MONOTONIC
+  local_clock = new GettimeClock(GettimeClock::LocalClockType::CLOCK_MONOTONIC);
 #else
   local_clock = new MPIClock();
 #endif
