@@ -306,7 +306,7 @@ int main(int argc, char* argv[]) {
     parse_drift_test_options(&opts, argc, argv);
 
     reprompib_init_sync_module(argc, argv, &clock_sync);
-  REPROMPI_init_timer();
+    REPROMPI_init_timer();
 
     n_wait_steps = 2;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
