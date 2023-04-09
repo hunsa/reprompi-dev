@@ -41,7 +41,9 @@ int GlobalClockOffset::get_flattened_clock_size_in_bytes() {
 }
 
 int GlobalClockOffset::get_flattened_this_clock_size_in_bytes() {
-  return sizeof(double);
+  // type (GlobalClockOffset int = 0)
+  // actual clock offset (double)
+  return sizeof(int)+sizeof(double);
 }
 
 void GlobalClockOffset::flatten_clock(char *buf, char *offset, char* end_pointer) {
