@@ -19,3 +19,4 @@ external/
 .idea/
 bin/
 src/pgtunelib-stamp/
+src/version.h

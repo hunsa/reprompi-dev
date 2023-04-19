@@ -1,15 +1,15 @@
 
 cmake_minimum_required(VERSION 3.0)
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
-   
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake_modules/")
+
 project(reprompi)
 
-set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
+set(SRC_DIR "${PROJECT_SOURCE_DIR}/src")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}")
 
-set(INCLUDE_PLATFORM_CONFIG_FILE "${CMAKE_SOURCE_DIR}/platform_files/default.cmake" 
+set(INCLUDE_PLATFORM_CONFIG_FILE "${PROJECT_SOURCE_DIR}/platform_files/default.cmake"
     CACHE STRING "Configure project to use a specific platform file")
 include(${INCLUDE_PLATFORM_CONFIG_FILE})
 
@@ -56,7 +56,7 @@ option(ENABLE_PGMPI "Use PGMPI" off)
 
 if (ENABLE_PGMPI)
     find_package(PGMPI)
-    
+
     if(NOT PGMPI_FOUND)
         message(STATUS "PGMPI not found. Skipping the generation of PGMPI-linked benchmark binaries.")
     endif(NOT PGMPI_FOUND)
@@ -112,7 +112,7 @@ endif()
 ####################################
 set(HWLOC_LIBRARY_DEFAULT_PATH "" CACHE STRING  "Specify the path of the HWLOC library")
 
-find_package(Hwloc REQUIRED)
+find_package(Hwloc)
 if (HWLOC_INCLUDE_DIR)
 message (STATUS "HWLOC INCLUDES: ${HWLOC_INCLUDE_DIR}")
 SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DHAVE_HWLOC")
@@ -248,6 +248,14 @@ ${SRC_DIR}/log/zf_log.c
 #${SRC_DIR}/reprompi_bench/misc.c
 )
 
+set(CLOCKSYNC_HEADER_FILES
+${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_sync_common.h
+${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_sync_lib.h
+${SRC_DIR}/reprompi_bench/sync/clock_sync/synchronization.h
+)
+
+set(CLOCKSYNC_HEADER_DIR ${SRC_DIR})
+
 if(ENABLE_RDTSC)
     SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_RDTSC")
     set(CLOCKSYNC_SRC_FILES
@@ -306,7 +314,7 @@ if (ENABLE_PGMPI)
         TARGET_LINK_LIBRARIES(mpibenchmark_pgmpicli ${PGMPI_CLI_LIBRARIES} ${COMMON_LIBRARIES} synclib)
         SET_TARGET_PROPERTIES(mpibenchmark_pgmpicli PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
         SET_TARGET_PROPERTIES(mpibenchmark_pgmpicli PROPERTIES LINKER_LANGUAGE CXX )
-        
+
         add_executable(mpibenchmark_pgmpituned
         ${REPROMPIBENCH_FILES}
         )
@@ -316,8 +324,8 @@ if (ENABLE_PGMPI)
     endif(PGMPI_FOUND)
 
 endif (ENABLE_PGMPI)
-    
-    
+
+
 if (COMPILE_SANITY_CHECK_TESTS)
     ADD_SUBDIRECTORY(${SRC_DIR}/sanity_check)
 endif()
