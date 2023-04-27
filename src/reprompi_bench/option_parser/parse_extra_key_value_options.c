@@ -114,6 +114,7 @@ void reprompib_parse_extra_key_value_options(reprompib_dictionary_t* dict, int a
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
+    optind = 1;	// reset optind to enable option re-parsing, especially if we are not the first ones
     opterr = 0;
     while (1) {
         /* getopt_long stores the option index here. */
