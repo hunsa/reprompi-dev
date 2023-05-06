@@ -59,7 +59,7 @@ void print_command_line_args(int argc, char* argv[]) {
 
     if (my_rank == OUTPUT_ROOT_PROC) {
         int i;
-        printf("Command-Line Arguments:");
+        printf("#Command-Line Arguments:");
         for (i = 0; i < argc; i++) {
             printf(" %s", argv[i]);
         }
