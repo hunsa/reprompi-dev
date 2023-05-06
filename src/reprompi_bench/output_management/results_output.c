@@ -103,7 +103,8 @@ void print_results_header(const reprompib_bench_print_info_t* print_info,
 
       if (verbose == 1) {
 //#ifdef ENABLE_WINDOWSYNC
-        if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {
+        //if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {
+        if ( print_info->clock_sync->clocksync != REPROMPI_CLOCKSYNC_NONE ) {
           fprintf(f, "%14s %14s %14s %14s \n", "loc_tstart_sec", "loc_tend_sec", "gl_tstart_sec", "gl_tend_sec");
         }
         else {
