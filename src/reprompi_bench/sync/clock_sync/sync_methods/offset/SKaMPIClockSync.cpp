@@ -13,7 +13,7 @@
 
 SKaMPIClockSync::SKaMPIClockSync(ClockOffsetAlg *offsetAlg) {
   this->offset_alg = offsetAlg;
-  this->tds = NULL;
+  this->tds = nullptr;
 }
 
 SKaMPIClockSync::~SKaMPIClockSync() {
@@ -27,7 +27,7 @@ GlobalClock* SKaMPIClockSync::synchronize_all_clocks(MPI_Comm comm, Clock& c) {
   int my_rank, np;
   int i;
   double* tmp_tds;
-  ClockOffset* offset = NULL;
+  ClockOffset* offset = nullptr;
 
   MPI_Comm_rank(comm, &my_rank);
   MPI_Comm_size(comm, &np);
