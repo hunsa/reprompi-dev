@@ -60,49 +60,57 @@ void print_initial_settings(int argc, char* argv[],
 
 int main(int argc, char* argv[]) {
     int my_rank, nprocs, p;
-    int master_rank;
-    double runtime_s;
     reprompib_st_opts_t opts;
     reprompib_sync_module_t clock_sync;
     FILE* f;
 
     double *all_runtimes = NULL;
+    double *runtimes;
+    double start_time;
 
-    /* start up MPI */
     MPI_Init(&argc, &argv);
-    master_rank = 0;
 
     parse_test_options(&opts, argc, argv);
 
     reprompib_register_sync_modules();
     reprompib_init_sync_module(argc, argv, &clock_sync);
 
-  REPROMPI_init_timer();
+    REPROMPI_init_timer();
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
-    if (my_rank == master_rank) {
-        all_runtimes = (double*) calloc(nprocs, sizeof(double));
+    if (my_rank == OUTPUT_ROOT_PROC) {
+        all_runtimes = (double*) calloc(nprocs * opts.n_rep, sizeof(double));
     }
+    runtimes = (double*) calloc(opts.n_rep, sizeof(double));
 
     print_initial_settings(argc, argv, clock_sync.print_sync_info);
 
-    runtime_s = REPROMPI_get_time();
-  REPROMPI_init_timer();
     clock_sync.init_sync();
-    clock_sync.sync_clocks();
-    runtime_s = REPROMPI_get_time() - runtime_s;
+    //REPROMPI_init_timer();
+
+    for(int i=0; i<opts.n_rep; i++) {
+        MPI_Barrier(MPI_COMM_WORLD);
+        start_time = REPROMPI_get_time();
+        clock_sync.sync_clocks();
+        runtimes[i] = REPROMPI_get_time() - start_time;
+        //printf("%d: time[%d]=%g\n", my_rank, i, runtimes[i]);
+    }
 
     clock_sync.finalize_sync();
-    MPI_Gather(&runtime_s, 1, MPI_DOUBLE, all_runtimes, 1, MPI_DOUBLE, 0,
-            MPI_COMM_WORLD);
+    MPI_Gather(runtimes, opts.n_rep, MPI_DOUBLE, all_runtimes, opts.n_rep, MPI_DOUBLE,
+               OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
+
+    free(runtimes);
 
     f = stdout;
-    if (my_rank == master_rank) {
-        fprintf(f, "p runtime\n");
-        for (p = 0; p < nprocs; p++) {
-            fprintf(f, "%3d %14.9f\n", p, all_runtimes[p]);
+    if (my_rank == OUTPUT_ROOT_PROC) {
+        fprintf(f, "  i    p    runtime\n");
+        for(int i=0; i<opts.n_rep; i++) {
+          for (p = 0; p < nprocs; p++) {
+            fprintf(f, "%3d %4d %14.9f\n", i, p, all_runtimes[p*opts.n_rep + i]);
+          }
         }
 
         free(all_runtimes);
