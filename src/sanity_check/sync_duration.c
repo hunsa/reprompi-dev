@@ -59,7 +59,7 @@ void print_initial_settings(int argc, char* argv[],
 
 
 int main(int argc, char* argv[]) {
-    int my_rank, nprocs;
+    int my_rank;
     reprompib_st_opts_t opts;
     reprompib_sync_module_t clock_sync;
     FILE* f;
@@ -77,15 +77,16 @@ int main(int argc, char* argv[]) {
 
     REPROMPI_init_timer();
 
-    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD,&my_rank);
+    //MPI_Comm_size(MPI_COMM_WORLD,&nprocs);
 
 //    if (my_rank == OUTPUT_ROOT_PROC) {
 //        max_runtimes = (double*) calloc(nprocs * opts.n_rep, sizeof(double));
 //    }
-    runtimes = (double*) calloc(opts.n_rep, sizeof(double));
 
     print_initial_settings(argc, argv, clock_sync.print_sync_info);
+
+    runtimes = (double*) calloc(opts.n_rep, sizeof(double));
 
     clock_sync.init_sync();
     //REPROMPI_init_timer();
@@ -99,8 +100,13 @@ int main(int argc, char* argv[]) {
     }
 
     clock_sync.finalize_sync();
-    MPI_Reduce(MPI_IN_PLACE, runtimes, opts.n_rep, MPI_DOUBLE,
-               MPI_MAX, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
+    if( my_rank == OUTPUT_ROOT_PROC ) {
+      MPI_Reduce(MPI_IN_PLACE, runtimes, opts.n_rep, MPI_DOUBLE,
+                 MPI_MAX, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
+    } else {
+      MPI_Reduce(runtimes, runtimes, opts.n_rep, MPI_DOUBLE,
+                 MPI_MAX, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
+    }
 
     f = stdout;
     if (my_rank == OUTPUT_ROOT_PROC) {
