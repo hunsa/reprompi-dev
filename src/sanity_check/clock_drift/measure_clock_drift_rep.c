@@ -161,7 +161,7 @@ void print_initial_settings(int argc, char* argv[], reprompib_drift_test_opts_t 
         fprintf(f, "\n");
         fprintf(f, "#@nrep=%d\n", opts.reps);
         fprintf(f, "#@npp=%d\n", opts.npp);
-        fprintf(f, "#@timerres=%14.9f\n", MPI_Wtick());
+        fprintf(f, "#@timerres=%.9f\n", MPI_Wtick());
 
         print_time_parameters(f);
         print_sync_info(f);
@@ -239,13 +239,13 @@ int main(int argc, char* argv[]) {
     f = stdout;
     if (my_rank == master_rank) {
 
-      fprintf(f,"%4s %3s %14s\n", "nrep", "p", "min_diff");
+      fprintf(f,"%4s %5s %14s\n", "nrep", "p", "min_diff");
 
       for(int i=0; i<opts.reps; i++) {
         for (index = 0; index < ntestprocs; index++) {
           p = testprocs_list[index];
           min_drift = all_global_times[i * ntestprocs + index];
-          fprintf(f, "%3d %3d %14.9f\n", i, p, fabs(min_drift));
+          fprintf(f, "%4d %5d %14.9f\n", i, p, fabs(min_drift));
         }
       }
 
