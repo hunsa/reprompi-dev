@@ -239,13 +239,13 @@ int main(int argc, char* argv[]) {
     f = stdout;
     if (my_rank == master_rank) {
 
-      fprintf(f,"%14s %3s %14s\n", "wait_time_s", "p", "min_diff");
+      fprintf(f,"%4s %3s %14s\n", "nrep", "p", "min_diff");
 
       for(int i=0; i<opts.reps; i++) {
         for (index = 0; index < ntestprocs; index++) {
           p = testprocs_list[index];
           min_drift = all_global_times[i * ntestprocs + index];
-          fprintf(f, "%14.9f %3d %14.9f\n", 0.0f, p, fabs(min_drift));
+          fprintf(f, "%3d %3d %14.9f\n", i, p, fabs(min_drift));
         }
       }
 
