@@ -44,15 +44,15 @@
 
 
 typedef struct opt {
-  long n_rep; /* --nrep */
-  int steps;  /* --steps */
+  int npp;    /* --npp number of ping pongs */
+  int reps;   /* --reps number of clock sync tests */
   char testname[256];
   double print_procs_ratio;  /* --print-procs-ratio */
 } reprompib_drift_test_opts_t;
 
 static const struct option default_long_options[] = {
-    { "nrep", required_argument, 0, 'n' },
-    { "steps", required_argument, 0, 's' },
+    { "npp", required_argument, 0, 'n' },
+    { "nrep", required_argument, 0, 'r' },
     { "print-procs-ratio", required_argument, 0, 'p' },
     { "help", no_argument, 0, 'h' },
     { 0, 0, 0, 0 }
@@ -71,23 +71,23 @@ void print_help(char* testname) {
 
         printf("options:\n");
         printf("%-40s %-40s\n", "-h", "print this help");
-        printf("%-40s %-40s\n", "--steps",
-                    "set the number of 1s steps to wait after sync (default: 0)");
-        printf("%-40s %-40s\n", "--nrep=<nrep>",
+        printf("%-40s %-40s\n", "--nrep",
+                    "number of repetitions (default: 1)");
+        printf("%-40s %-40s\n", "--npp=<int>",
                     "set the number of ping-pong rounds between two processes to measure offset");
         printf("%-40s %-40s\n", "--print-procs-ratio",
         "set the fraction of the total processes to be tested for clock drift. If print-procs-ratio=0, only the last rank and the rank with the largest power of two are tested (default: 0)");
 
-        printf("\nEXAMPLES: mpirun -np 4 %s --nrep=2 --clock-sync=HCA2 --print-procs-ratio=0.1\n", testname);
-        printf("\nEXAMPLES: mpirun -np 4 %s --nrep=2 --clock-sync=HCA2 --steps=5 --print-procs-ratio=0.1\n", testname);
+        printf("\nEXAMPLES: mpirun -np 4 %s --npp=2 --nrep=1 --clock-sync=HCA2 --print-procs-ratio=0.1\n", testname);
+        printf("\nEXAMPLES: mpirun -np 4 %s --npp=2 --nrep=2 --clock-sync=HCA2 --steps=5 --print-procs-ratio=0.1\n", testname);
         printf("\n\n");
     }
 }
 
 
 void init_parameters(reprompib_drift_test_opts_t* opts_p, char* name) {
-  opts_p->n_rep = 10;
-  opts_p->steps = 0;
+  opts_p->npp = 10;
+  opts_p->reps = 1;
   opts_p->print_procs_ratio = 0;
   strcpy(opts_p->testname,name);
 }
@@ -113,8 +113,8 @@ int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char
             break;
 
         switch (c) {
-        case 's': /* here only two steps, the first after sync and the second after 's' seconds */
-            opts_p->steps = atoi(optarg);
+        case 'r':
+            opts_p->reps = atoi(optarg);
             break;
         case 'p': /* fraction of processes for which to measure the drift (normal distribution)
                    if print_procs_ratio==0, print only the largest power of two and the last rank
@@ -122,7 +122,7 @@ int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char
             opts_p->print_procs_ratio = atof(optarg);
             break;
         case 'n': /* number of repetitions (pingpongs) */
-            opts_p->n_rep = atol(optarg);
+            opts_p->npp = atol(optarg);
             break;
         case 'h':
             print_help(opts_p->testname);
@@ -132,9 +132,6 @@ int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char
         }
     }
 
-    if (opts_p->steps < 0) {
-      reprompib_print_error_and_exit("Invalid number of steps (should be >=0)");
-    }
     if (opts_p->print_procs_ratio < 0 || opts_p->print_procs_ratio > 1) {
       reprompib_print_error_and_exit("Invalid process ratio (should be a number between 0 and 1)");
     }
@@ -162,8 +159,8 @@ void print_initial_settings(int argc, char* argv[], reprompib_drift_test_opts_t 
             fprintf(f, " %s", argv[i]);
         }
         fprintf(f, "\n");
-        fprintf(f, "#@nrep=%ld\n", opts.n_rep);
-        fprintf(f, "#@steps=%d\n", opts.steps);
+        fprintf(f, "#@nrep=%d\n", opts.reps);
+        fprintf(f, "#@npp=%d\n", opts.npp);
         fprintf(f, "#@timerres=%14.9f\n", MPI_Wtick());
 
         print_time_parameters(f);
@@ -182,11 +179,6 @@ int main(int argc, char* argv[]) {
     double  min_drift;
     double *all_global_times = NULL;
 
-    //int step;
-    int n_wait_steps = 0;
-    //double wait_time_s = 1;
-    //struct timespec sleep_time;
-    double runtime_s;
     int ntestprocs;
     int* testprocs_list;
     int index;
@@ -202,72 +194,36 @@ int main(int argc, char* argv[]) {
     reprompib_init_sync_module(argc, argv, &clock_sync);
     REPROMPI_init_timer();
 
-    n_wait_steps = 2;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
 
     generate_test_process_list(opts.print_procs_ratio, &testprocs_list, &ntestprocs);
 
     if (my_rank == master_rank) {
-      all_global_times = (double*) calloc(ntestprocs * n_wait_steps, sizeof(double));
+      all_global_times = (double*) calloc(ntestprocs * opts.reps, sizeof(double));
     }
 
     print_initial_settings(argc, argv, opts, clock_sync.print_sync_info);
 
-    runtime_s = REPROMPI_get_time();
     clock_sync.init_sync();
 
-    clock_sync.sync_clocks();
-    runtime_s = REPROMPI_get_time() - runtime_s;
+    Number_ping_pongs = opts.npp;
 
-    Number_ping_pongs = opts.n_rep;
+    for (int i = 0; i < opts.reps; i++) {
+      clock_sync.sync_clocks();
 
-    if (my_rank == master_rank) {
-      double target_time = REPROMPI_get_time() + ((double)opts.steps);
-      int first_iter = 1;
+      if (my_rank == master_rank) {
 
-      printf ("#@sync_duration=%14.9f\n", runtime_s);
-
-      int offset = 0;
-
-      // measure once
-      for (index = 0; index < ntestprocs; index++) {
-        p = testprocs_list[index];    // select the process to exchange pingpongs with
-        if (p != master_rank) {
-          all_global_times[offset * ntestprocs + index] = SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &clock_sync);
-        }
-      }
-
-      //printf("target_time=%14.9f, cur_time=%14.9f\n", target_time, REPROMPI_get_time());
-      // wait until 's' seconds are done
-      do {
-        double cur_time = REPROMPI_get_time();
-        if( cur_time >= target_time ) {
-          if( first_iter == 1 ) {
-            // we were late.. report a warning
-            printf ("#@LATE_WARNING=%d\n", opts.steps);
+        // measure once
+        for (index = 0; index < ntestprocs; index++) {
+          p = testprocs_list[index];    // select the process to exchange pingpongs with
+          if (p != master_rank) {
+            all_global_times[i * ntestprocs + index] = SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p,
+                                                                                        &clock_sync);
           }
-          break;
-        } else {
-          first_iter = 0;
         }
-      } while( 1 );
 
-      // measure again
-      offset = 1;
-      for (index = 0; index < ntestprocs; index++) {
-        p = testprocs_list[index];    // select the process to exchange pingpongs with
-        if (p != master_rank) {
-          all_global_times[offset * ntestprocs + index] = SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &clock_sync);
-        }
-      }
-
-
-    } else {
-      int i;
-
-      for(i=0; i<n_wait_steps; i++) {
-        // measure twice (n_wait_steps should be 2)
+      } else {
         for (index = 0; index < ntestprocs; index++) {
           p = testprocs_list[index];    // make sure the current rank is in the test list
           if (my_rank == p) {
@@ -275,26 +231,22 @@ int main(int argc, char* argv[]) {
           }
         }
       }
+
     }
-    clock_sync.finalize_sync();
+
+    clock_sync.finalize_sync() ;
 
     f = stdout;
     if (my_rank == master_rank) {
-      int offset = 0;
 
       fprintf(f,"%14s %3s %14s\n", "wait_time_s", "p", "min_diff");
 
-      for (index = 0; index < ntestprocs; index++) {
-        p = testprocs_list[index];
-        min_drift = all_global_times[offset * ntestprocs + index];
-        fprintf(f, "%14.9f %3d %14.9f\n", 0.0f, p, fabs(min_drift));
-      }
-
-      offset = 1;
-      for (index = 0; index < ntestprocs; index++) {
-        p = testprocs_list[index];
-        min_drift = all_global_times[offset * ntestprocs + index];
-        fprintf(f, "%14.9f %3d %14.9f\n", (double)opts.steps, p, fabs(min_drift));
+      for(int i=0; i<opts.reps; i++) {
+        for (index = 0; index < ntestprocs; index++) {
+          p = testprocs_list[index];
+          min_drift = all_global_times[i * ntestprocs + index];
+          fprintf(f, "%14.9f %3d %14.9f\n", 0.0f, p, fabs(min_drift));
+        }
       }
 
       free(all_global_times);
