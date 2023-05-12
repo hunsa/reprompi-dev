@@ -282,19 +282,19 @@ int main(int argc, char* argv[]) {
     if (my_rank == master_rank) {
       int offset = 0;
 
-      fprintf(f,"%14s %3s %14s\n", "wait_time_s", "p", "min_diff");
+      fprintf(f,"%14s %7s %14s\n", "wait_time_s", "p", "min_diff");
 
       for (index = 0; index < ntestprocs; index++) {
         p = testprocs_list[index];
         min_drift = all_global_times[offset * ntestprocs + index];
-        fprintf(f, "%14.9f %3d %14.9f\n", 0.0f, p, fabs(min_drift));
+        fprintf(f, "%14.9f %7d %14.9f\n", 0.0f, p, fabs(min_drift));
       }
 
       offset = 1;
       for (index = 0; index < ntestprocs; index++) {
         p = testprocs_list[index];
         min_drift = all_global_times[offset * ntestprocs + index];
-        fprintf(f, "%14.9f %3d %14.9f\n", (double)opts.steps, p, fabs(min_drift));
+        fprintf(f, "%14.9f %7d %14.9f\n", (double)opts.steps, p, fabs(min_drift));
       }
 
       free(all_global_times);
