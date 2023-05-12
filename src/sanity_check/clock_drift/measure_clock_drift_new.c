@@ -44,14 +44,14 @@
 
 
 typedef struct opt {
-  long n_rep; /* --nrep */
+  int npp;   /* number of ping-pongs */
   int steps;  /* --steps */
   char testname[256];
   double print_procs_ratio;  /* --print-procs-ratio */
 } reprompib_drift_test_opts_t;
 
 static const struct option default_long_options[] = {
-    { "nrep", required_argument, 0, 'n' },
+    { "npp", required_argument, 0, 'n' },
     { "steps", required_argument, 0, 's' },
     { "print-procs-ratio", required_argument, 0, 'p' },
     { "help", no_argument, 0, 'h' },
@@ -73,20 +73,20 @@ void print_help(char* testname) {
         printf("%-40s %-40s\n", "-h", "print this help");
         printf("%-40s %-40s\n", "--steps",
                     "set the number of 1s steps to wait after sync (default: 0)");
-        printf("%-40s %-40s\n", "--nrep=<nrep>",
+        printf("%-40s %-40s\n", "--npp=<int>",
                     "set the number of ping-pong rounds between two processes to measure offset");
         printf("%-40s %-40s\n", "--print-procs-ratio",
         "set the fraction of the total processes to be tested for clock drift. If print-procs-ratio=0, only the last rank and the rank with the largest power of two are tested (default: 0)");
 
-        printf("\nEXAMPLES: mpirun -np 4 %s --nrep=2 --clock-sync=HCA2 --print-procs-ratio=0.1\n", testname);
-        printf("\nEXAMPLES: mpirun -np 4 %s --nrep=2 --clock-sync=HCA2 --steps=5 --print-procs-ratio=0.1\n", testname);
+        printf("\nEXAMPLES: mpirun -np 4 %s --npp=10 --clock-sync=HCA2 --print-procs-ratio=0.1\n", testname);
+        printf("\nEXAMPLES: mpirun -np 4 %s --npp=10 --clock-sync=HCA2 --steps=5 --print-procs-ratio=0.1\n", testname);
         printf("\n\n");
     }
 }
 
 
 void init_parameters(reprompib_drift_test_opts_t* opts_p, char* name) {
-  opts_p->n_rep = 10;
+  opts_p->npp = 10;
   opts_p->steps = 0;
   opts_p->print_procs_ratio = 0;
   strcpy(opts_p->testname,name);
@@ -122,7 +122,7 @@ int parse_drift_test_options(reprompib_drift_test_opts_t* opts_p, int argc, char
             opts_p->print_procs_ratio = atof(optarg);
             break;
         case 'n': /* number of repetitions (pingpongs) */
-            opts_p->n_rep = atol(optarg);
+            opts_p->npp = atol(optarg);
             break;
         case 'h':
             print_help(opts_p->testname);
@@ -162,9 +162,9 @@ void print_initial_settings(int argc, char* argv[], reprompib_drift_test_opts_t 
             fprintf(f, " %s", argv[i]);
         }
         fprintf(f, "\n");
-        fprintf(f, "#@nrep=%ld\n", opts.n_rep);
+        fprintf(f, "#@npp=%d\n", opts.npp);
         fprintf(f, "#@steps=%d\n", opts.steps);
-        fprintf(f, "#@timerres=%14.9f\n", MPI_Wtick());
+        fprintf(f, "#@timerres=%.9f\n", MPI_Wtick());
 
         print_time_parameters(f);
         print_sync_info(f);
@@ -220,13 +220,13 @@ int main(int argc, char* argv[]) {
     clock_sync.sync_clocks();
     runtime_s = REPROMPI_get_time() - runtime_s;
 
-    Number_ping_pongs = opts.n_rep;
+    Number_ping_pongs = opts.npp;
 
     if (my_rank == master_rank) {
       double target_time = REPROMPI_get_time() + ((double)opts.steps);
       int first_iter = 1;
 
-      printf ("#@sync_duration=%14.9f\n", runtime_s);
+      printf ("#@sync_duration=%.9f\n", runtime_s);
 
       int offset = 0;
 
