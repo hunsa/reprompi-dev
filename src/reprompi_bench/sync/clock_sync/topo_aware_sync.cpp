@@ -82,9 +82,9 @@ static void topo_print_sync_parameters(FILE* f)
 
 static void topo_init_module(int argc, char** argv) {
   int use_default = 0;
-  ClockSync *alg1;
-  ClockSync *alg2;
-  ClockSync *alg3;
+  BaseClockSync *alg1;
+  BaseClockSync *alg2;
+  BaseClockSync *alg3;
   ClockSyncLoader loader;
 
 
@@ -116,7 +116,7 @@ static void topo_init_module(int argc, char** argv) {
     clock_sync = new HierarchicalClockSync(
       new HCA3ClockSync(new SKaMPIClockOffsetAlg(10,100), 500, false),
       new HCA3ClockSync(new SKaMPIClockOffsetAlg(10,100), 500, false),
-      new ClockPropagationSync());
+      new ClockPropagationSync(ClockPropagationSync::ClockType::CLOCK_LM));
 
     //new HCA3ClockSync(new PingpongClockOffsetAlg(), 1000, 100),
     //new ClockPropagationSync(),

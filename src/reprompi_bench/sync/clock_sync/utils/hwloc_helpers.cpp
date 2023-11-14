@@ -14,7 +14,7 @@ int get_socket_id(void) {
   hwloc_bitmap_t set;
   int err;
   int my_rank;
-  int socket_id;
+  unsigned int socket_id;
 
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
