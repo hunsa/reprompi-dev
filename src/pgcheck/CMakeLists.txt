@@ -38,7 +38,7 @@ if (OFFLINE_BUILD_MODE)
     message(STATUS "disable git pull")
     ExternalProject_Add(pgtunelib
             GIT_REPOSITORY git@github.com:hunsa/pgmpitunelib.git
-            GIT_TAG pgcheck
+            GIT_TAG master
             GIT_SUBMODULES submodules/mpi-lane-collectives
             ${GIT_SUBMODULES_CIRCULANTS}
             CMAKE_ARGS -DINCLUDE_PLATFORM_CONFIG_FILE=${ABS_INCLUDE_PLATFORM_CONFIG_FILE} ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
@@ -50,7 +50,7 @@ else()
     message(STATUS "enable git pull")
     ExternalProject_Add(pgtunelib
             GIT_REPOSITORY git@github.com:hunsa/pgmpitunelib.git
-            GIT_TAG pgcheck
+            GIT_TAG master
             GIT_SUBMODULES submodules/mpi-lane-collectives
             ${GIT_SUBMODULES_CIRCULANTS}
             CMAKE_ARGS -DINCLUDE_PLATFORM_CONFIG_FILE=${ABS_INCLUDE_PLATFORM_CONFIG_FILE} ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
