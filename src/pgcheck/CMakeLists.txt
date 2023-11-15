@@ -37,7 +37,7 @@ endif()
 if (OFFLINE_BUILD_MODE)
     message(STATUS "disable git pull")
     ExternalProject_Add(pgtunelib
-            GIT_REPOSITORY git@github.com:hunsa/pgmpitunelib-private.git
+            GIT_REPOSITORY git@github.com:hunsa/pgmpitunelib.git
             GIT_TAG pgcheck
             GIT_SUBMODULES submodules/mpi-lane-collectives
             ${GIT_SUBMODULES_CIRCULANTS}
@@ -49,7 +49,7 @@ if (OFFLINE_BUILD_MODE)
 else()
     message(STATUS "enable git pull")
     ExternalProject_Add(pgtunelib
-            GIT_REPOSITORY git@github.com:hunsa/pgmpitunelib-private.git
+            GIT_REPOSITORY git@github.com:hunsa/pgmpitunelib.git
             GIT_TAG pgcheck
             GIT_SUBMODULES submodules/mpi-lane-collectives
             ${GIT_SUBMODULES_CIRCULANTS}
