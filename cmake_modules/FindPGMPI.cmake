@@ -1,5 +1,7 @@
 # - Find the PGMPI library
 #
+# You can set PGMPI_LIBRARY_DEFAULT_PATH
+#
 # This module sets the following variables:
 #  PGMPI_FOUND - set to true if both PGMPI libraries are found
 #  PGMPI_CLI_LIBRARIES   - full path to the CLI library
