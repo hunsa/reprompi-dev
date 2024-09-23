@@ -585,6 +585,14 @@ void print_summary(FILE* f,
                     if (nreps > 0) {
                       value = maxRuntimes_sec[nreps-1];
                     }
+                  } else if (strcmp(s->name, "var") == 0) {
+                    if (nreps > 0) {
+                      value = gsl_stats_variance(maxRuntimes_sec, 1, nreps);
+                    }
+                  } else if (strcmp(s->name, "stddev") == 0) {
+                    if (nreps > 0) {
+                      value = gsl_stats_sd(maxRuntimes_sec, 1, nreps);
+                    }
                   }
                   fprintf(f, "  %.10f ", value);
                 }

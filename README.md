@@ -85,7 +85,7 @@ mpirun -np 4 ./bin/mpibenchmark --calls-list=MPI_Bcast,MPI_Allgather
 
   - `--nrep=<nrep>` set number of experiment repetitions
   - `--summary=<args>` list of comma-separated data summarizing
-    methods (mean, median, min, max), e.g., `--summary=mean,max`
+    methods (mean, median, min, max, var, stddev), e.g., `--summary=mean,max`
 
 
 ## Supported Collective Operations:
