@@ -41,16 +41,20 @@ enum reprompi_summary_opts {
     MASK_PRINT_MEAN = 0x01,
     MASK_PRINT_MEDIAN = 0x02,
     MASK_PRINT_MIN = 0x04,
-    MASK_PRINT_MAX = 0x08
+    MASK_PRINT_MAX = 0x08,
+    MASK_PRINT_VAR = 0x10,
+    MASK_PRINT_DEV = 0x20
 };
-static const int N_SUMMARY_METHODS = 4;
+static const int N_SUMMARY_METHODS = 6;
 
-static char* const summary_opts[] = { "mean", "median", "min", "max", NULL};
+static char* const summary_opts[] = { "mean", "median", "min", "max", "var", "stddev", NULL};
 static summary_method_info_t summary_methods[] = {
     { MASK_PRINT_MEAN, "mean" },
     { MASK_PRINT_MEDIAN, "median" },
     { MASK_PRINT_MIN, "min" },
-    { MASK_PRINT_MAX, "max" }
+    { MASK_PRINT_MAX, "max" },
+    { MASK_PRINT_VAR, "var" },
+    { MASK_PRINT_DEV, "stddev" }
 };
 
 enum reprompi_common_getopt_ids {
@@ -106,7 +110,7 @@ static void parse_summary_list(char* subopts, reprompib_options_t* opts_p) {
                 opts_p->print_summary_methods |= reprompib_get_summary_method(index)->mask;
             }
             else {
-              reprompib_print_error_and_exit("Invalid list of summary methods (--summary=<list of comma-separated methods> [min, max, mean, median])");
+              reprompib_print_error_and_exit("Invalid list of summary methods (--summary=<list of comma-separated methods> [min, max, mean, median, var, stddev])");
             }
         }
     }
