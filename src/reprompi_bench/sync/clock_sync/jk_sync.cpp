@@ -32,7 +32,7 @@
 #include <mpi.h>
 
 #include "reprompi_bench/sync/clock_sync/clocks/Clock.h"
-#include "reprompi_bench/sync/clock_sync/clocks/RdtscpClock.h"
+//#include "reprompi_bench/sync/clock_sync/clocks/RdtscpClock.h"
 #include "reprompi_bench/sync/clock_sync/clocks/GlobalClockOffset.h"
 #include "reprompi_bench/sync/clock_sync/clock_sync_loader.hpp"
 #include "reprompi_bench/sync/clock_sync/clock_sync_common.h"

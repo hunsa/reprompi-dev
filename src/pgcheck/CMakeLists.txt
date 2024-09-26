@@ -39,8 +39,8 @@ if (OFFLINE_BUILD_MODE)
     ExternalProject_Add(pgtunelib
             GIT_REPOSITORY https://github.com/hunsa/pgmpitunelib
             GIT_TAG master
-            GIT_SUBMODULES submodules/mpi-lane-collectives
-            ${GIT_SUBMODULES_CIRCULANTS}
+            #GIT_SUBMODULES submodules/mpi-lane-collectives
+            #${GIT_SUBMODULES_CIRCULANTS}
             CMAKE_ARGS -DINCLUDE_PLATFORM_CONFIG_FILE=${ABS_INCLUDE_PLATFORM_CONFIG_FILE} ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
             PREFIX ${CMAKE_SOURCE_DIR}/external/
             DOWNLOAD_COMMAND ""
@@ -51,8 +51,8 @@ else()
     ExternalProject_Add(pgtunelib
             GIT_REPOSITORY https://github.com/hunsa/pgmpitunelib
             GIT_TAG master
-            GIT_SUBMODULES submodules/mpi-lane-collectives
-            ${GIT_SUBMODULES_CIRCULANTS}
+            #GIT_SUBMODULES submodules/mpi-lane-collectives
+            #${GIT_SUBMODULES_CIRCULANTS}
             CMAKE_ARGS -DINCLUDE_PLATFORM_CONFIG_FILE=${ABS_INCLUDE_PLATFORM_CONFIG_FILE} ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
             PREFIX ${CMAKE_SOURCE_DIR}/external/
     )
