@@ -71,6 +71,7 @@
 #include "logger/logger.h"
 
 namespace fs = std::filesystem;
+const std::string PGCHECKER_ENV_CSV = "PGCHECKER_CSV";
 
 static double get_barrier_runtime(PGCheckOptions &options) {
   double avg_runtime = CONSTANTS::NO_BARRIER_TIME_VALUE;
@@ -161,7 +162,25 @@ int main(int argc, char *argv[]) {
 
   PGInput input(options.get_input_file());
 
-  std::string csv_conf = "./external/src/pgtunelib-build/pgmpi_conf.csv";
+  std::string csv_conf;
+
+  if (getenv(PGCHECKER_ENV_CSV.c_str()) == nullptr) {
+    Logger::WARN("Environment variable '" + PGCHECKER_ENV_CSV + "' is not set, trying \"pgmpi_conf.csv\" in current working directory");
+    csv_conf = "pgmpi_conf.csv";
+    if (!fs::exists(csv_conf)) {
+      Logger::ERROR("cannot find '" + csv_conf + "'");
+      return EXIT_FAILURE;
+    } 
+  } else {
+    csv_conf = getenv(PGCHECKER_ENV_CSV.c_str());
+    if (!fs::exists(csv_conf)) {
+      Logger::ERROR("Environment variable '" + PGCHECKER_ENV_CSV + "' points to a non-existing file");
+      return EXIT_FAILURE;
+    }
+  }
+
+  Logger::INFO("Using configuration file: " + csv_conf);  
+
   std::ifstream ifs(csv_conf);
   if (!ifs.good()) {
     Logger::ERROR("cannot find '" + csv_conf + "'");

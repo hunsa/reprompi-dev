@@ -21,6 +21,7 @@
 </license>
 */
 #include "pgdata_table.h"
+#include <sstream>
 
 PGDataTable::PGDataTable(const std::string& title, std::vector <std::string> column_names) :
     title(title), column_names(column_names) {

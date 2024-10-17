@@ -32,7 +32,8 @@ static int Allreduce_bitwise_commutative(const void *sendbuf, void *recvbuf, int
 static int RemproMPI_Bcast_binomial(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm);
 
 
-inline unsigned int flp2(unsigned int n) {
+//inline unsigned int flp2(unsigned int n) {
+unsigned int flp2(unsigned int n) {
   n = (n | n >> 1);
   n = (n | n >> 2);
   n = (n | n >> 4);

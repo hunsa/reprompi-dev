@@ -1,17 +1,20 @@
 
 cmake_minimum_required(VERSION 3.22)
 
+include(FetchContent)
 include(ExternalProject)
+include(GNUInstallDirs)
 
 SET(PGTUNE_CMAKE_ARGS "")
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_MACOSX_RPATH 1)
 
 find_package(GSL REQUIRED)
-if (GSL_INCLUDE_DIR)
-    message (STATUS "GSL INCLUDES: ${GSL_INCLUDE_DIR}")
-else(GSL_INCLUDE_DIR)
+if (GSL_INCLUDE_DIRS)
+    message (STATUS "GSL INCLUDES: ${GSL_INCLUDE_DIRS}")
+else(GSL_INCLUDE_DIRS)
     message (FATAL_ERROR "GSL libraries not found.")
-endif(GSL_INCLUDE_DIR)
+endif(GSL_INCLUDE_DIRS)
 
 INCLUDE_DIRECTORIES(${GSL_INCLUDE_DIR} "src")
 set(COMMON_LIBRARIES ${GSL_LIBRARIES} )
@@ -23,56 +26,115 @@ else()
     message(STATUS "Logging for pgtunelib disabled")
 endif()
 
-set(OFFLINE_BUILD_MODE off CACHE BOOL "download a fresh copy of all dependencies")
+#set(OFFLINE_BUILD_MODE off CACHE BOOL "download a fresh copy of all dependencies")
 
-if(OPTION_ENABLE_CIRCULANTS)
-    set(GIT_SUBMODULES_CIRCULANTS GIT_SUBMODULES submodules/mpi_circulants)
-    set(PGTUNE_CMAKE_ARGS "-DOPTION_ENABLE_CIRCULANTS=ON ${PGTUNE_CMAKE_ARGS}")
-    message(STATUS "Enabling circulant collectives in pgtunelib")
-else()
-    set(GIT_SUBMODULES_CIRCULANTS "")
-    message(STATUS "Circulant collectives in pgtunelib disabled")
+#if(OPTION_ENABLE_CIRCULANTS)
+#    set(GIT_SUBMODULES_CIRCULANTS GIT_SUBMODULES submodules/mpi_circulants)
+#    set(PGTUNE_CMAKE_ARGS "-DOPTION_ENABLE_CIRCULANTS=ON ${PGTUNE_CMAKE_ARGS}")
+#    message(STATUS "Enabling circulant collectives in pgtunelib")
+#else()
+#    set(GIT_SUBMODULES_CIRCULANTS "")
+#    message(STATUS "Circulant collectives in pgtunelib disabled")
+#endif()
+
+#if (OFFLINE_BUILD_MODE)
+#    message(STATUS "disable git pull")
+#    ExternalProject_Add(pgtunelib
+#            GIT_REPOSITORY https://github.com/hunsa/pgmpitunelib
+#            GIT_TAG master
+#            #GIT_SUBMODULES submodules/mpi-lane-collectives
+#            #${GIT_SUBMODULES_CIRCULANTS}
+#            CMAKE_ARGS -DINCLUDE_PLATFORM_CONFIG_FILE=${ABS_INCLUDE_PLATFORM_CONFIG_FILE} ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
+#            PREFIX ${CMAKE_SOURCE_DIR}/external/
+#            DOWNLOAD_COMMAND ""
+#            UPDATE_DISCONNECTED 1
+#    )
+#else()
+#    message(STATUS "enable git pull")
+
+#FetchContent_Declare(
+#        MPI_LANE_COLLECTIVES
+#        GIT_REPOSITORY https://github.com/parlab-tuwien/mpi-lane-collectives.git
+#        GIT_TAG main
+#)
+#
+#FetchContent_MakeAvailable(MPI_LANE_COLLECTIVES)
+#
+#FetchContent_Declare(
+#        MPI_CIRCULANTS
+#        GIT_REPOSITORY git@github.com:parlab-tuwien/mpi-circulant-collectives.git
+#        GIT_TAG main
+#)
+#
+#FetchContent_MakeAvailable(MPI_CIRCULANTS)
+#
+##    ExternalProject_Add(pgtunelib
+##            GIT_REPOSITORY https://github.com/hunsa/pgmpitunelib
+##            GIT_TAG master
+##            #GIT_SUBMODULES submodules/mpi-lane-collectives
+##            #${GIT_SUBMODULES_CIRCULANTS}
+##            CMAKE_ARGS -DINCLUDE_PLATFORM_CONFIG_FILE=${ABS_INCLUDE_PLATFORM_CONFIG_FILE} ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
+##            PREFIX ${CMAKE_SOURCE_DIR}/external/
+##    )
+#
+#export(EXPORT mpicirc-targets FILE "${PROJECT_BINARY_DIR}/mpicirc-targets.cmake")
+#set(MPICIRC_CONFIG ${CMAKE_INSTALL_PREFIX}/share/cmake/mpicirc/mpicirc-config.cmake)
+#set(PATH_CIRCULANTS ${CIRC_INSTALL_LIBDIR})  # Library target for MPI_CIRCULANTS
+#message(STATUS "PATH_CIRCULANTS: ${PATH_CIRCULANTS}")
+##add_definitions(-DPATH_CIRCULANTS=${PATH_CIRCULANTS})
+
+#FetchContent_Declare(
+#        PGTUNELIB
+#        GIT_REPOSITORY https://github.com/hunsa/pgmpitunelib
+#        #GIT_TAG master
+#        GIT_TAG fetchcontent
+#)
+#
+#
+#FetchContent_MakeAvailable(PGTUNELIB)
+#message(STATUS "PGTUNELIB available: ${PGTUNELIB}")
+#
+#
+#set(PGTUNE_CONFIG_CSV ${install_dir}/src/pgtunelib-build/pgmpi_conf.csv)
+#add_custom_target(config
+#        COMMAND  bash -c "exec ./bin/pgmpi_info > ${PGTUNE_CONFIG_CSV}"
+#        VERBATIM
+#)
+
+set(PGTUNELIB_PATH "" CACHE STRING "Path to pgmpicli library")
+find_path(PGTUNELIB_INCLUDE_DIR pgmpi_tune.h PATHS ${PGTUNELIB_PATH}/include)
+find_library(PGTUNELIB_LIB NAMES pgmpicli PATHS ${PGTUNELIB_PATH}/lib)
+
+#message(STATUS "foo: ${PGTUNELIB_PATH}/share/cmake/pgmpi/PGMPITargets.cmake")
+#export(EXPORT pgmpicli-targets FILE "${PGTUNELIB_PATH}/share/cmake/pgmpi/PGMPITargets.cmake")
+#include("${PGTUNELIB_PATH}/share/cmake/pgmpi/PGMPITargets.cmake")
+
+#set(PGMPICLI_DIR "${PGTUNELIB_PATH}/share/cmake/pgmpi/")
+#list(APPEND CMAKE_MODULE_PATH "${PGTUNELIB_PATH}/share/cmake/")
+#list(APPEND CMAKE_PREFIX_PATH "${PGTUNELIB_PATH}/share/cmake/")
+#find_package(PGMPICLI CONFIG REQUIRED PATHS "${PGTUNELIB_PATH}/share/cmake/pgmpi/")
+#find_package(PGMPICLI REQUIRED PATHS "${PGTUNELIB_PATH}/share/cmake/pgmpi/")
+
+#find_library(PGMPICLI NAMES pgmpicli)
+
+#if (NOT TARGET PGMPICLI::pgmpicli)
+#    message(FATAL_ERROR "FAILED TO FIND PGMPI")
+#endif()
+
+
+if(NOT PGTUNELIB_INCLUDE_DIR)
+	message(FATAL_ERROR "pgmpi_tune.h not found. Please set PGTUNELIB_PATH to enable this library.")
+else(NOT PGTUNELIB_INCLUDE_DIR)
+    message(STATUS "pgmpi_tune.h found in ${PGTUNELIB_PATH}/include.")
 endif()
 
-if (OFFLINE_BUILD_MODE)
-    message(STATUS "disable git pull")
-    ExternalProject_Add(pgtunelib
-            GIT_REPOSITORY https://github.com/hunsa/pgmpitunelib
-            GIT_TAG master
-            #GIT_SUBMODULES submodules/mpi-lane-collectives
-            #${GIT_SUBMODULES_CIRCULANTS}
-            CMAKE_ARGS -DINCLUDE_PLATFORM_CONFIG_FILE=${ABS_INCLUDE_PLATFORM_CONFIG_FILE} ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
-            PREFIX ${CMAKE_SOURCE_DIR}/external/
-            DOWNLOAD_COMMAND ""
-            UPDATE_DISCONNECTED 1
-    )
-else()
-    message(STATUS "enable git pull")
-    ExternalProject_Add(pgtunelib
-            GIT_REPOSITORY https://github.com/hunsa/pgmpitunelib
-            GIT_TAG master
-            #GIT_SUBMODULES submodules/mpi-lane-collectives
-            #${GIT_SUBMODULES_CIRCULANTS}
-            CMAKE_ARGS -DINCLUDE_PLATFORM_CONFIG_FILE=${ABS_INCLUDE_PLATFORM_CONFIG_FILE} ${PGTUNE_CMAKE_ARGS} -DOPTION_ENABLE_ALGID_STORING=OFF
-            PREFIX ${CMAKE_SOURCE_DIR}/external/
-    )
+if(NOT PGTUNELIB_LIB)
+    message(FATAL_ERROR "pgmpicl not found. Please set PGTUNELIB_PATH to enable this library.")
+else(NOT PGTUNELIB_LIB)
+    message(STATUS "pgmpicli found: ${PGTUNELIB_LIBRARIES}.")
 endif()
 
-
-ExternalProject_Get_Property(pgtunelib install_dir)
-set(PGTUNE_LIB_DIR ${install_dir}/src/pgtunelib-build/lib)
-set(PGTUNE_INC_DIR ${install_dir}/src/pgtunelib-build/include)
-LINK_DIRECTORIES(${PGTUNE_LIB_DIR})
-INCLUDE_DIRECTORIES("${install_dir}/src/pgtunelib")
-
-#execute_process(COMMAND ./external/src/pgtunelib-build/bin/pgmpi_info OUTPUT_VARIABLE PGMPI_INFO_OUTPUT)
-#file(CONFIGURE OUTPUT "${install_dir}/src/pgtunelib-build/pgmpi_conf.csv"
-#     CONTENT "${PGMPI_INFO_OUTPUT}")
-set(PGTUNE_CONFIG_CSV ${install_dir}/src/pgtunelib-build/pgmpi_conf.csv)
-add_custom_target(config
-        COMMAND  bash -c "exec ${install_dir}/src/pgtunelib-build/bin/pgmpi_info > ${PGTUNE_CONFIG_CSV}"
-        VERBATIM
-)
+list(APPEND CMAKE_BUILD_RPATH "${PGTUNELIB_PATH}/lib")
 
 add_executable(pgchecker
         pgchecker.cpp
@@ -123,9 +185,12 @@ add_executable(pgchecker
         # caches cleaning strategy
         ${CACHING_SRC_FILES}
 )
+
+target_include_directories(pgchecker PRIVATE ${PGTUNELIB_INCLUDE_DIR})
 SET_TARGET_PROPERTIES(pgchecker PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS} -I${PGTUNE_INC_DIR}")
 TARGET_LINK_LIBRARIES(pgchecker ${COMMON_LIBRARIES} synclib pgmpicli)
-SET_TARGET_PROPERTIES(pgchecker PROPERTIES LINK_FLAGS " -L${PGTUNE_LIB_DIR}")
+#target_include_directories(pgchecker PRIVATE ${pgmpitunelib_SOURCE_DIR}/include)
+SET_TARGET_PROPERTIES(pgchecker PROPERTIES LINK_FLAGS " -L${PGTUNELIB_PATH}/lib")
 SET_TARGET_PROPERTIES(pgchecker PROPERTIES LINKER_LANGUAGE CXX )
 
 

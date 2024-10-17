@@ -3,24 +3,28 @@ cmake_minimum_required(VERSION 3.22)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
 
-project(reprompi)
+project(reprompi
+        VERSION 1.0.0
+        LANGUAGES C CXX)
 
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}")
 
-set(INCLUDE_PLATFORM_CONFIG_FILE "${CMAKE_SOURCE_DIR}/platform_files/default.cmake"
-    CACHE STRING "Configure project to use a specific platform file")
-include(${INCLUDE_PLATFORM_CONFIG_FILE})
+#set(INCLUDE_PLATFORM_CONFIG_FILE "${CMAKE_SOURCE_DIR}/platform_files/default.cmake"
+#    CACHE STRING "Configure project to use a specific platform file")
+#include(${INCLUDE_PLATFORM_CONFIG_FILE})
 
-get_filename_component(ABS_INCLUDE_PLATFORM_CONFIG_FILE ${INCLUDE_PLATFORM_CONFIG_FILE} ABSOLUTE)
+#get_filename_component(ABS_INCLUDE_PLATFORM_CONFIG_FILE ${INCLUDE_PLATFORM_CONFIG_FILE} ABSOLUTE)
+
+find_package(MPI REQUIRED)
 
 find_package(GSL REQUIRED)
-if (GSL_INCLUDE_DIR)
-message (STATUS "GSL INCLUDES: ${GSL_INCLUDE_DIR}")
-else(GSL_INCLUDE_DIR)
+if (GSL_INCLUDE_DIRS)
+message (STATUS "GSL INCLUDES: ${GSL_INCLUDE_DIRS}")
+else(GSL_INCLUDE_DIRS)
 message (FATAL_ERROR "GSL libraries not found.")
-endif(GSL_INCLUDE_DIR)
+endif(GSL_INCLUDE_DIRS)
 
 
 INCLUDE_DIRECTORIES(${GSL_INCLUDE_DIR} "src")
@@ -302,7 +306,7 @@ ADD_SUBDIRECTORY(${SRC_DIR}/reprompi_bench/sync/clock_sync)
 add_executable(mpibenchmark
 ${REPROMPIBENCH_FILES}
 )
-TARGET_LINK_LIBRARIES(mpibenchmark ${COMMON_LIBRARIES} synclib)
+TARGET_LINK_LIBRARIES(mpibenchmark ${COMMON_LIBRARIES} synclib MPI::MPI_C)
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES LINKER_LANGUAGE CXX )
 

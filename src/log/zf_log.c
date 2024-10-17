@@ -37,7 +37,7 @@
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <pthread.h>
-int pthread_mach_thread_np(pthread_t); // fix annoying 'implicit declaration' warning
+//int pthread_mach_thread_np(pthread_t); // fix annoying 'implicit declaration' warning
 #endif
 
 /* When defined, OutputDebugString() will be used instead of stderr (ignored on
