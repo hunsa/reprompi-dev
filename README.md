@@ -27,7 +27,7 @@ statistically sound results.
 ## Components
 
 - `mpibenchmark`: actual MPI benchmark for collectives
-- [`pgchecker`](./pgcheck/): performance guideline checker
+- [`pgchecker`](https://github.com/hunsa/reprompi/tree/main/src/pgcheck/): performance guideline checker
 
 ## Installation
 
