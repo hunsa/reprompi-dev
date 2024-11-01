@@ -33,7 +33,7 @@ extern "C" {
 
 typedef struct sync_module_info {
   char* name;
-} sync_module_info_t;x
+} sync_module_info_t;
 
 
 typedef struct sync_type {
