@@ -5,9 +5,9 @@
 #include <getopt.h>
 #include <time.h>
 #include "mpi.h"
-
+#include "mpits.h"
 #include "reprompi_bench/misc.h"
-#include "reprompi_bench/sync/clock_sync/synchronization.h"
+//#include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "benchmark_job.h"
@@ -25,6 +25,8 @@
 #define MY_MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 static const int OUTPUT_ROOT_PROC = 0;
+
+static mpits_clocksync_t cs;
 
 static void print_initial_settings(const reprompib_options_t* opts, const reprompib_common_options_t* common_opts,
     //const reprompib_dictionary_t* dict,
@@ -134,7 +136,7 @@ void run_collective(int argc, char **argv) {
   time_t start_time, end_time;
   reprompib_bench_print_info_t print_info;
 
-  reprompib_sync_module_t clock_sync;
+  mpits_clocksync_t clock_sync;
   reprompib_proc_sync_module_t proc_sync;
   reprompib_sync_params_t sync_params;
   reprompib_timing_method_t runtime_type;
@@ -162,8 +164,9 @@ void run_collective(int argc, char **argv) {
   reprompib_init_caching_module(argc, argv, &caching_module);
 
   // initialize synchronization module
-  reprompib_init_sync_module(argc, argv, &clock_sync);
-  reprompib_init_proc_sync_module(argc, argv, &clock_sync, &proc_sync);
+  //reprompib_init_sync_module(argc, argv, &clock_sync);
+  MPITS_Init(MPI_COMM_WORLD, &cs);
+  reprompib_init_proc_sync_module(argc, argv, &cs, &proc_sync);
 
   if (common_opts.input_file == NULL && opts.n_rep <=0) { // make sure nrep is specified when there is no input file
     reprompib_print_error_and_exit("The number of repetitions is not defined (specify the \"--nrep\" command-line argument or provide an input file)\n");
@@ -186,9 +189,10 @@ void run_collective(int argc, char **argv) {
     sync_params.nrep  = job.n_rep;
     sync_params.count = job.count;
     proc_sync.init_sync(&sync_params);
-    clock_sync.init_sync();
+    //clock_sync.init_sync();
+    MPITS_Clocksync_init(&cs);
 
-    print_info.clock_sync = &clock_sync;
+    print_info.clock_sync = &cs;
     print_info.proc_sync  = &proc_sync;
     print_info.timing_method = runtime_type;
     if (jindex == 0) {
@@ -196,7 +200,8 @@ void run_collective(int argc, char **argv) {
       print_results_header(&print_info, &opts, common_opts.output_file, opts.verbose);
     }
 
-    clock_sync.sync_clocks();
+    //clock_sync.sync_clocks();
+    MPITS_Clocksync_sync(&cs);
     proc_sync.init_sync_round();         // broadcast first window
 
     i = 0;
@@ -232,7 +237,8 @@ void run_collective(int argc, char **argv) {
     //print summarized data
     reprompib_print_bench_output(job, tstart_sec, tend_sec, &opts, &common_opts, &print_info);
 
-    clock_sync.finalize_sync();
+    //clock_sync.finalize_sync();
+    MPITS_Clocksync_finalize(&cs);
     proc_sync.finalize_sync();
 
     free(tstart_sec);
@@ -248,7 +254,8 @@ void run_collective(int argc, char **argv) {
   reprompib_free_common_parameters(&common_opts);
   reprompib_free_parameters(&opts);
 
-  clock_sync.cleanup_module();
+  //clock_sync.cleanup_module();
+  MPITS_Finalize();
   proc_sync.cleanup_module();
   caching_module.cleanup_module();
 }

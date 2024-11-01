@@ -86,7 +86,7 @@ static void print_available_modules() {
 /**********************************************
  * Initialization/cleanup functions for the specified sync module
  **********************************************/
-void reprompib_init_proc_sync_module(int argc, char** argv, reprompib_sync_module_t* clock_sync,
+void reprompib_init_proc_sync_module(int argc, char** argv, mpits_clocksync_t* clock_sync,
     reprompib_proc_sync_module_t* sync_mod) {
   sync_module_info_t sync_module_info;
   int index;

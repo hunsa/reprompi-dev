@@ -32,11 +32,13 @@
 #include <filesystem>
 
 #include "mpi.h"
+#include "mpits.h"
 #include "pgmpi_tune.h"
 #include "constants.h"
 
 #include "reprompi_bench/misc.h"
-#include "reprompi_bench/sync/clock_sync/synchronization.h"
+//#include "reprompi_bench/sync/clock_sync/synchronization.h"
+//#include "reprompi_bench/sync/clock_sync/utils/communicator_utils.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "benchmark_job.h"
@@ -50,7 +52,6 @@
 #include "collective_ops/collectives.h"
 #include "reprompi_bench/utils/keyvalue_store.h"
 #include "reprompi_bench/caching/caching.h"
-#include "reprompi_bench/sync/clock_sync/utils/communicator_utils.h"
 #include "benchmarkCollective.h"
 
 #include "pgtunelib_interface.h"
@@ -72,6 +73,7 @@
 
 namespace fs = std::filesystem;
 const std::string PGCHECKER_ENV_CSV = "PGCHECKER_CSV";
+static mpits_clocksync_t cs;
 
 static double get_barrier_runtime(PGCheckOptions &options) {
   double avg_runtime = CONSTANTS::NO_BARRIER_TIME_VALUE;
@@ -144,7 +146,8 @@ int main(int argc, char *argv[]) {
     printer->set_options(options);
   }
 
-  reprompib_register_sync_modules();
+
+  MPITS_Init(MPI_COMM_WORLD, &cs);
   reprompib_register_proc_sync_modules();
   reprompib_register_caching_modules();
 
@@ -270,9 +273,9 @@ int main(int argc, char *argv[]) {
     delete printer;
   }
 
-  reprompib_deregister_sync_modules();
   reprompib_deregister_proc_sync_modules();
   reprompib_deregister_caching_modules();
+  MPITS_Finalize();
 
   MPI_Comm_free(&comm_intranode);
 

@@ -25,10 +25,11 @@
 #define REPROMPIB_BENCH_INFO_OUTPUT_H_
 
 #include <time.h>
+#include "mpits.h"
 #include "reprompi_bench/utils/keyvalue_store.h"
 #include "reprompi_bench/option_parser/parse_common_options.h"
 #include "reprompi_bench/option_parser/parse_timing_options.h"
-#include "reprompi_bench/sync/clock_sync/synchronization.h"
+//#include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
 
 #ifdef __cplusplus
@@ -36,7 +37,7 @@ extern "C" {
 #endif
 
 typedef struct bench_print_info {
-  reprompib_sync_module_t* clock_sync;
+  mpits_clocksync_t* clock_sync;
   reprompib_proc_sync_module_t* proc_sync;
   reprompib_timing_method_t timing_method;
 } reprompib_bench_print_info_t;

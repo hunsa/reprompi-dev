@@ -38,7 +38,7 @@ static void nosync(MPI_Comm comm) {
  // intentional
 }
 
-static void procsync_none_init_module(int argc, char** argv, reprompib_sync_module_t* clock_sync) {
+static void procsync_none_init_module(int argc, char** argv, mpits_clocksync_t* clock_sync) {
 }
 
 static void procsync_none_init_synchronization(const reprompib_sync_params_t* init_params) {

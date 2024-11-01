@@ -27,7 +27,7 @@
 #include <time.h>
 #include "mpi.h"
 
-#include "reprompi_bench/sync/clock_sync/synchronization.h"
+//#include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/option_parser/parse_common_options.h"
 #include "reprompi_bench/option_parser/parse_timing_options.h"

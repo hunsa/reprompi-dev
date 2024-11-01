@@ -24,7 +24,8 @@
 #ifndef REPROMPIB_PROCESS_SYNCHRONIZATION_H_
 #define REPROMPIB_PROCESS_SYNCHRONIZATION_H_
 
-#include "reprompi_bench/sync/clock_sync/synchronization.h"
+//#include "reprompi_bench/sync/clock_sync/synchronization.h"
+#include "mpits.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,7 +56,7 @@ typedef struct reprompib_sync_params {
 typedef int *(*sync_errorcodes_t)(void);
 
 typedef struct reprompib_proc_sync_module {
-  void (*init_module)(int argc, char **argv, reprompib_sync_module_t *clock_sync);
+  void (*init_module)(int argc, char **argv, mpits_clocksync_t *clock_sync);
   void (*cleanup_module)(void);
 
   void (*init_sync)(const reprompib_sync_params_t *init_params);
@@ -78,7 +79,7 @@ void reprompib_deregister_proc_sync_modules(void);
 
 void reprompib_init_proc_sync_module(int argc,
                                      char **argv,
-                                     reprompib_sync_module_t *clock_sync,
+                                     mpits_clocksync_t *clock_sync,
                                      reprompib_proc_sync_module_t *sync_mod);
 void reprompib_cleanup_proc_sync_module(reprompib_proc_sync_module_t *sync_mod);
 

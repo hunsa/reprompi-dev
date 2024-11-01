@@ -26,7 +26,7 @@
 #include "mpi.h"
 
 #include "runtimes_computation.h"
-#include "reprompi_bench/sync/clock_sync/synchronization.h"
+//#include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/misc.h"
 
 

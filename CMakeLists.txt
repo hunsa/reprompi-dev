@@ -7,6 +7,10 @@ project(reprompi
         VERSION 1.0.0
         LANGUAGES C CXX)
 
+include(GNUInstallDirs)
+include(FetchContent)
+include(CMakePackageConfigHelpers)
+
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}")
@@ -52,22 +56,22 @@ option(OPTION_ENABLE_LOGGING   "Enable logging" off)
 option(OPTION_ENABLE_DEBUGGING "Enable debugging" off)
 option(OPTION_ENABLE_PGCHECKER "Enable performance guidelines checking" off)
 
-####################################
-############ PGtune support ########
-####################################
-set(PGMPI_LIBRARY_DEFAULT_PATH "" CACHE STRING  "Specify the path of the PGMPI library")
-option(ENABLE_PGMPI "Use PGMPI" off)
-
-if (ENABLE_PGMPI)
-    find_package(PGMPI)
-
-    if(NOT PGMPI_FOUND)
-        message(STATUS "PGMPI not found. Skipping the generation of PGMPI-linked benchmark binaries.")
-    endif(NOT PGMPI_FOUND)
-else(ENABLE_PGMPI)
-    message(STATUS "PGMPI disabled.")
-endif(ENABLE_PGMPI)
-####################################
+#####################################
+############# PGtune support ########
+#####################################
+#set(PGMPI_LIBRARY_DEFAULT_PATH "" CACHE STRING  "Specify the path of the PGMPI library")
+#option(ENABLE_PGMPI "Use PGMPI" off)
+#
+#if (ENABLE_PGMPI)
+#    find_package(PGMPI)
+#
+#    if(NOT PGMPI_FOUND)
+#        message(STATUS "PGMPI not found. Skipping the generation of PGMPI-linked benchmark binaries.")
+#    endif(NOT PGMPI_FOUND)
+#else(ENABLE_PGMPI)
+#    message(STATUS "PGMPI disabled.")
+#endif(ENABLE_PGMPI)
+#####################################
 
 
 SET(MY_COMPILE_FLAGS "")
@@ -276,6 +280,20 @@ if(ENABLE_RDTSCP)
             )
 endif()
 
+FetchContent_Declare(
+        MPITS
+        GIT_REPOSITORY git@github.com:hunsa/mpi-time-sync.git
+        GIT_TAG main)
+
+FetchContent_MakeAvailable(MPITS)
+
+export(EXPORT mpits-targets FILE "${PROJECT_BINARY_DIR}/mpits-targets.cmake")
+set(MPITS_CONFIG ${CMAKE_INSTALL_PREFIX}/share/cmake/mpits/mpits-config.cmake)
+
+if (NOT TARGET MPITS::mpits)
+    message(FATAL "FAILED TO FIND MPITS")
+endif()
+
 
 set(REPROMPIBENCH_FILES
 ${SRC_DIR}/benchmarkMPIcalls.c
@@ -283,6 +301,7 @@ ${SRC_DIR}/benchmarkCollective.c
 ${SRC_DIR}/benchmark_job.c
 ${SRC_DIR}/reprompi_bench/misc.c
 ${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
+${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
 # synchronization methods
 ${SYNC_SRC_FILES}
 # output
@@ -301,33 +320,32 @@ ${CACHING_SRC_FILES}
 
 #find_library (synclib NAMES synclib)
 
-ADD_SUBDIRECTORY(${SRC_DIR}/reprompi_bench/sync/clock_sync)
+#ADD_SUBDIRECTORY(${SRC_DIR}/reprompi_bench/sync/clock_sync)
 
 add_executable(mpibenchmark
 ${REPROMPIBENCH_FILES}
 )
-TARGET_LINK_LIBRARIES(mpibenchmark ${COMMON_LIBRARIES} synclib MPI::MPI_C)
+TARGET_LINK_LIBRARIES(mpibenchmark ${COMMON_LIBRARIES} MPITS::mpits MPI::MPI_C)
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES LINKER_LANGUAGE CXX )
 
-if (ENABLE_PGMPI)
-    if (PGMPI_FOUND)
-        add_executable(mpibenchmark_pgmpicli
-        ${REPROMPIBENCH_FILES}
-        )
-        TARGET_LINK_LIBRARIES(mpibenchmark_pgmpicli ${PGMPI_CLI_LIBRARIES} ${COMMON_LIBRARIES} synclib)
-        SET_TARGET_PROPERTIES(mpibenchmark_pgmpicli PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
-        SET_TARGET_PROPERTIES(mpibenchmark_pgmpicli PROPERTIES LINKER_LANGUAGE CXX )
-
-        add_executable(mpibenchmark_pgmpituned
-        ${REPROMPIBENCH_FILES}
-        )
-        TARGET_LINK_LIBRARIES(mpibenchmark_pgmpituned ${PGMPI_TUNED_LIBRARIES} ${COMMON_LIBRARIES} synclib)
-        SET_TARGET_PROPERTIES(mpibenchmark_pgmpituned PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
-        SET_TARGET_PROPERTIES(mpibenchmark_pgmpituned PROPERTIES LINKER_LANGUAGE CXX )
-    endif(PGMPI_FOUND)
-
-endif (ENABLE_PGMPI)
+#if (ENABLE_PGMPI)
+#    if (PGMPI_FOUND)
+#        add_executable(mpibenchmark_pgmpicli
+#        ${REPROMPIBENCH_FILES}
+#        )
+#        TARGET_LINK_LIBRARIES(mpibenchmark_pgmpicli ${PGMPI_CLI_LIBRARIES} ${COMMON_LIBRARIES} synclib)
+#        SET_TARGET_PROPERTIES(mpibenchmark_pgmpicli PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
+#        SET_TARGET_PROPERTIES(mpibenchmark_pgmpicli PROPERTIES LINKER_LANGUAGE CXX )
+#
+#        add_executable(mpibenchmark_pgmpituned
+#        ${REPROMPIBENCH_FILES}
+#        )
+#        TARGET_LINK_LIBRARIES(mpibenchmark_pgmpituned ${PGMPI_TUNED_LIBRARIES} ${COMMON_LIBRARIES} synclib)
+#        SET_TARGET_PROPERTIES(mpibenchmark_pgmpituned PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
+#        SET_TARGET_PROPERTIES(mpibenchmark_pgmpituned PROPERTIES LINKER_LANGUAGE CXX )
+#    endif(PGMPI_FOUND)
+#endif (ENABLE_PGMPI)
 
 
 if (COMPILE_SANITY_CHECK_TESTS)

@@ -28,11 +28,11 @@
 #include <math.h>
 #include <getopt.h>
 #include <mpi.h>
-
+#include "mpits.h"
 #include "reprompi_bench/misc.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
-#include "reprompi_bench/sync/clock_sync/synchronization.h"
+//#include "reprompi_bench/sync/clock_sync/synchronization.h"
 
 typedef struct {
     long n_rep; /* --repetitions */
@@ -53,7 +53,7 @@ static double start_sync = 0;       /* current window start timestamp (global ti
 static int repetition_counter = 0;  /* current repetition index */
 static int* invalid;
 
-static reprompib_sync_module_t* clock_sync_mod; /* pointer to current clock synchronization module */
+static mpits_clocksync_t* clock_sync_mod; /* pointer to current clock synchronization module */
 
 // options specified from the command line
 static reprompi_winsync_params_t parameters;
@@ -195,10 +195,10 @@ static int window_stop_synchronization(MPI_Comm comm)
     return REPROMPI_CORRECT_MEASUREMENT;
 }
 
-static void window_init_module(int argc, char** argv, reprompib_sync_module_t* clock_sync) {
+static void window_init_module(int argc, char** argv, mpits_clocksync_t* clock_sync) {
   winsync_parse_options(argc, argv, &parameters);
 
-  if (clock_sync->clocksync == REPROMPI_CLOCKSYNC_NONE) {
+  if (clock_sync->clocksync == MPITS_CLOCKSYNC_NONE) {
     //reprompib_print_error_and_exit("Cannot use window-based process synchronization with the selected clock synchronization method (use \"--clock-sync\" to change it)");
     reprompib_print_warning("beware, window-based process synchronization only works with synchronized clocks, and no clocksync was selected");
   }

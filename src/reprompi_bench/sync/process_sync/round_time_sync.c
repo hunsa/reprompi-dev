@@ -35,7 +35,7 @@
 #include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
 #include "reprompi_bench/sync/process_sync/reprompi_collectives.h"
-#include "reprompi_bench/sync/clock_sync/synchronization.h"
+//#include "reprompi_bench/sync/clock_sync/synchronization.h"
 
 #include "round_sync_common.h"
 
@@ -49,7 +49,7 @@ typedef struct {
 } reprompi_roundtime_sync_params_t;
 
 
-static reprompib_sync_module_t* clock_sync_mod; /* pointer to current clock synchronization module */
+static mpits_clocksync_t* clock_sync_mod; /* pointer to current clock synchronization module */
 
 // options specified from the command line
 static reprompi_roundtime_sync_params_t roundtime_parameters;
@@ -193,7 +193,7 @@ static int roundtimesync_stop_synchronization(MPI_Comm comm) {
 }
 
 
-static void roundtimesync_init_module(int argc, char** argv, reprompib_sync_module_t* clock_sync) {
+static void roundtimesync_init_module(int argc, char** argv, mpits_clocksync_t* clock_sync) {
   roundtimesync_parse_options(argc, argv, &roundtime_parameters);
   roundsync_parse_bcast_options(argc, argv, &bcast_parameters);
 

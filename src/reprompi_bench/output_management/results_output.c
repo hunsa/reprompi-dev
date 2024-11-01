@@ -104,7 +104,7 @@ void print_results_header(const reprompib_bench_print_info_t* print_info,
       if (verbose == 1) {
 //#ifdef ENABLE_WINDOWSYNC
         //if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {
-        if ( print_info->clock_sync->clocksync != REPROMPI_CLOCKSYNC_NONE ) {
+        if ( print_info->clock_sync->clocksync != MPITS_CLOCKSYNC_NONE ) {
           fprintf(f, "%14s %14s %14s %14s \n", "loc_tstart_sec", "loc_tend_sec", "gl_tstart_sec", "gl_tend_sec");
         }
         else {
@@ -252,7 +252,7 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
           MPI_DOUBLE, OUTPUT_ROOT_PROC, MPI_COMM_WORLD);
 
       // gather global times in case global clocks are used
-      if (print_info->clock_sync->clocksync != REPROMPI_CLOCKSYNC_NONE) {
+      if (print_info->clock_sync->clocksync != MPITS_CLOCKSYNC_NONE) {
         if (my_rank == OUTPUT_ROOT_PROC) {
           global_start_sec = (double*) calloc(chunk_nrep * np, sizeof(double));
           global_end_sec = (double*) calloc(chunk_nrep * np, sizeof(double));
@@ -275,7 +275,7 @@ void print_measurement_results(FILE* f, job_t job, double* tstart_sec, double* t
           for (i = 0; i < chunk_nrep; i++) {
             current_rep_id = chunk_id * OUTPUT_NITERATIONS_CHUNK + i;
             //#ifdef ENABLE_WINDOWSYNC
-            if (print_info->clock_sync->clocksync != REPROMPI_CLOCKSYNC_NONE) {
+            if (print_info->clock_sync->clocksync != MPITS_CLOCKSYNC_NONE) {
               if (print_info->proc_sync->procsync == REPROMPI_PROCSYNC_WIN) {// we have error codes
                 fprintf(f, "%7d %50s %10d %12ld %10d %14.10f %14.10f %14.10f %14.10f\n", proc_id,
                     get_call_from_index(job.call_index), current_rep_id, msize_value,

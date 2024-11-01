@@ -27,9 +27,9 @@
 #include <getopt.h>
 #include <time.h>
 #include "mpi.h"
-
+#include "mpits.h"
 #include "reprompi_bench/misc.h"
-#include "reprompi_bench/sync/clock_sync/synchronization.h"
+//#include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
 #include "reprompi_bench/sync/time_measurement.h"
 #include "benchmark_job.h"
@@ -52,15 +52,15 @@ int main(int argc, char* argv[]) {
   // parse arguments and set-up benchmarking jobs
   print_command_line_args(argc, argv);
 
-  reprompib_register_sync_modules();
+  //reprompib_register_sync_modules();
   reprompib_register_proc_sync_modules();
   reprompib_register_caching_modules();
 
-    REPROMPI_init_timer();
+  REPROMPI_init_timer();
 
   run_collective(argc, argv);
 
-  reprompib_deregister_sync_modules();
+  //reprompib_deregister_sync_modules();
   reprompib_deregister_proc_sync_modules();
   reprompib_deregister_caching_modules();
 

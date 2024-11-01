@@ -25,6 +25,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "mpi.h"
+#include "mpits.h"
 
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
 
@@ -41,7 +42,7 @@ static int* barrier_get_errorcodes(void) {
 }
 
 
-static void barrier_init_module(int argc, char** argv, reprompib_sync_module_t* clock_sync) {
+static void barrier_init_module(int argc, char** argv, mpits_clocksync_t* clock_sync) {
 };
 
 static void barrier_init_synchronization(const reprompib_sync_params_t* init_params) {

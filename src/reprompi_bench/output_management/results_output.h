@@ -24,10 +24,11 @@
 #ifndef RESULTS_OUTPUT_H_
 #define RESULTS_OUTPUT_H_
 
+#include "mpits.h"
 #include "benchmark_job.h"
 #include "reprompi_bench/option_parser/parse_options.h"
 #include "reprompi_bench/option_parser/parse_timing_options.h"
-#include "reprompi_bench/sync/clock_sync/synchronization.h"
+//#include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/output_management/bench_info_output.h"
 
 #ifdef __cplusplus
