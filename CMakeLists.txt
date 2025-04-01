@@ -170,7 +170,7 @@ ${SRC_DIR}/reprompi_bench/sync/process_sync/round_sync_common.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/reprompi_collectives.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/process_synchronization.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/window_sync.c
-#${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
+${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
 )
 
 
@@ -301,7 +301,7 @@ ${SRC_DIR}/benchmarkCollective.c
 ${SRC_DIR}/benchmark_job.c
 ${SRC_DIR}/reprompi_bench/misc.c
 ${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
-${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
+#${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
 # synchronization methods
 ${SYNC_SRC_FILES}
 # output

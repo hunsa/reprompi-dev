@@ -100,7 +100,10 @@ static double get_barrier_runtime(PGCheckOptions &options) {
                                       &argc_test,
                                       &argv_test);
   pgtune_override_argv_parameter(argc_test, argv_test);
-  run_collective(argc_test, argv_test);
+//  for(int i=0; i<argc_test; i++) {
+//    std::cout << i << " : " << argv_test[i] << std::endl;
+//  }
+  run_collective(argc_test, argv_test, &cs);
   argv::free_argv_cstyle(argc_test, argv_test);
 
   if (rank == CONSTANTS::ROOT_PROCESS_RANK) {
@@ -112,6 +115,13 @@ static double get_barrier_runtime(PGCheckOptions &options) {
   MPI_Bcast(&avg_runtime, 1, MPI_DOUBLE, CONSTANTS::ROOT_PROCESS_RANK, MPI_COMM_WORLD);
   return avg_runtime;
 }
+
+static void create_intranode_communicator(MPI_Comm old_comm, MPI_Comm *new_comm) {
+  int my_rank;
+  MPI_Comm_rank(old_comm, &my_rank);
+  MPI_Comm_split_type(old_comm, MPI_COMM_TYPE_SHARED, my_rank, MPI_INFO_NULL, new_comm);
+}
+
 
 int main(int argc, char *argv[]) {
   int rank, ppn, nnodes, comm_size;
@@ -145,7 +155,6 @@ int main(int argc, char *argv[]) {
   if (rank == CONSTANTS::ROOT_PROCESS_RANK) {
     printer->set_options(options);
   }
-
 
   MPITS_Init(MPI_COMM_WORLD, &cs);
   reprompib_register_proc_sync_modules();
@@ -230,7 +239,7 @@ int main(int argc, char *argv[]) {
       pgtune_override_argv_parameter(argc_test, argv_test);
       Logger::INFO_VERBOSE(get_command_line_args_string(argc_test, argv_test));
 
-      run_collective(argc_test, argv_test);
+      run_collective(argc_test, argv_test, &cs);
       argv::free_argv_cstyle(argc_test, argv_test);
 
       if (rank == CONSTANTS::ROOT_PROCESS_RANK) {

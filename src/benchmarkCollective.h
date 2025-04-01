@@ -16,7 +16,7 @@ extern "C" {
  * @param argc
  * @param argv
  */
-void run_collective(int argc, char **argv);
+void run_collective(int argc, char **argv, mpits_clocksync_t *clock_sync);
 
 #ifdef __cplusplus
 }

@@ -45,6 +45,8 @@
 #include "reprompi_bench/caching/caching.h"
 #include "benchmarkCollective.h"
 
+static mpits_clocksync_t cs;
+
 int main(int argc, char* argv[]) {
 
   MPI_Init(&argc, &argv);
@@ -53,14 +55,18 @@ int main(int argc, char* argv[]) {
   print_command_line_args(argc, argv);
 
   //reprompib_register_sync_modules();
+  MPITS_Init(MPI_COMM_WORLD, &cs);
+
   reprompib_register_proc_sync_modules();
   reprompib_register_caching_modules();
 
   REPROMPI_init_timer();
 
-  run_collective(argc, argv);
+  run_collective(argc, argv, &cs);
 
   //reprompib_deregister_sync_modules();
+  MPITS_Finalize();
+
   reprompib_deregister_proc_sync_modules();
   reprompib_deregister_caching_modules();
 

@@ -99,9 +99,10 @@ void reprompi_check_and_override_lib_env_params(int *argc, char ***argv) {
   char **argvnew;
 
   if( env != NULL ) {
+    char *env_copy = strdup(env);
     char *token;
     //printf("env:%s\n", env);
-    *argc = compute_argc(env) + 1;  // + 1 is for argv[0], which we'll copy
+    *argc = compute_argc(env_copy) + 1;  // + 1 is for argv[0], which we'll copy
     //printf("argc: %d\n", *argc);
 
 //    printf("(*argv)[0]=%s\n", (*argv)[0]);
@@ -113,7 +114,7 @@ void reprompi_check_and_override_lib_env_params(int *argc, char ***argv) {
 
 //    printf("argvnew[0]=%s\n", argvnew[0]);
 
-    token = strtok(env, " ");
+    token = strtok(env_copy, " ");
     if( token != NULL ) {
 //      printf("token: %s\n", token);
       argvnew[1] = token;

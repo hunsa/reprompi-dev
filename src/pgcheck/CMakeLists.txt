@@ -136,6 +136,13 @@ else(NOT PGTUNELIB_LIB)
     message(STATUS "pgmpicli found: ${PGTUNELIB_LIBRARIES}.")
 endif()
 
+set(PGTUNE_CONFIG_CSV ${CMAKE_INSTALL_PREFIX}/pgmpi_conf.csv)
+add_custom_target(config
+        COMMAND  bash -c "exec ${PGTUNELIB_PATH}/bin/pgmpi_info > ${PGTUNE_CONFIG_CSV}"
+        VERBATIM
+)
+
+
 list(APPEND CMAKE_BUILD_RPATH "${PGTUNELIB_PATH}/lib")
 
 add_executable(pgchecker
@@ -196,7 +203,7 @@ target_link_directories(pgchecker PRIVATE "${PGTUNELIB_PATH}/lib")
 
 #SET_TARGET_PROPERTIES(pgchecker PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS} -I${PGTUNE_INC_DIR}")
 #SET_TARGET_PROPERTIES(pgchecker PROPERTIES LINK_FLAGS " -L${PGTUNELIB_PATH}/lib")
-TARGET_LINK_LIBRARIES(pgchecker ${GSL_LIBRARIES} synclib pgmpicli MPI::MPI_CXX)
+TARGET_LINK_LIBRARIES(pgchecker ${GSL_LIBRARIES} pgmpicli MPITS::mpits MPI::MPI_CXX)
 #target_include_directories(pgchecker PRIVATE ${pgmpitunelib_SOURCE_DIR}/include)
 #SET_TARGET_PROPERTIES(pgchecker PROPERTIES LINKER_LANGUAGE CXX )
 
