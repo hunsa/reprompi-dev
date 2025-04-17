@@ -104,8 +104,10 @@ endif()
 #)
 
 set(PGTUNELIB_PATH "" CACHE STRING "Path to pgmpicli library")
-find_path(PGTUNELIB_INCLUDE_DIR pgmpi_tune.h PATHS ${PGTUNELIB_PATH}/include)
-find_library(PGTUNELIB_LIB NAMES pgmpicli PATHS ${PGTUNELIB_PATH}/lib)
+find_path(PGTUNELIB_INCLUDE_DIR pgmpi_tune.h PATHS ${PGTUNELIB_PATH}/include NO_DEFAULT_PATH)
+find_library(PGTUNELIB_LIB NAMES pgmpicli PATHS ${PGTUNELIB_PATH}/lib NO_DEFAULT_PATH)
+
+message(STATUS "PGTUNELIB_INCLUDE_DIR: ${PGTUNELIB_INCLUDE_DIR}")
 
 #message(STATUS "foo: ${PGTUNELIB_PATH}/share/cmake/pgmpi/PGMPITargets.cmake")
 #export(EXPORT pgmpicli-targets FILE "${PGTUNELIB_PATH}/share/cmake/pgmpi/PGMPITargets.cmake")
@@ -126,14 +128,14 @@ find_library(PGTUNELIB_LIB NAMES pgmpicli PATHS ${PGTUNELIB_PATH}/lib)
 
 if(NOT PGTUNELIB_INCLUDE_DIR)
 	message(FATAL_ERROR "pgmpi_tune.h not found. Please set PGTUNELIB_PATH to enable this library.")
-else(NOT PGTUNELIB_INCLUDE_DIR)
-    message(STATUS "pgmpi_tune.h found in ${PGTUNELIB_PATH}/include.")
+else()
+    message(STATUS "pgmpi_tune.h found in ${PGTUNELIB_PATH}/include")
 endif()
 
 if(NOT PGTUNELIB_LIB)
     message(FATAL_ERROR "pgmpicl not found. Please set PGTUNELIB_PATH to enable this library.")
-else(NOT PGTUNELIB_LIB)
-    message(STATUS "pgmpicli found: ${PGTUNELIB_LIBRARIES}.")
+else()
+    message(STATUS "pgmpicli found: ${PGTUNELIB_LIB}.")
 endif()
 
 set(PGTUNE_CONFIG_CSV ${CMAKE_INSTALL_PREFIX}/pgmpi_conf.csv)
@@ -207,4 +209,6 @@ TARGET_LINK_LIBRARIES(pgchecker ${GSL_LIBRARIES} pgmpicli MPITS::mpits MPI::MPI_
 #target_include_directories(pgchecker PRIVATE ${pgmpitunelib_SOURCE_DIR}/include)
 #SET_TARGET_PROPERTIES(pgchecker PROPERTIES LINKER_LANGUAGE CXX )
 
-
+install(TARGETS pgchecker
+        RUNTIME DESTINATION bin
+)

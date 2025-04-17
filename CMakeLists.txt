@@ -13,7 +13,7 @@ include(CMakePackageConfigHelpers)
 
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}")
+#set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}")
 
 #set(INCLUDE_PLATFORM_CONFIG_FILE "${CMAKE_SOURCE_DIR}/platform_files/default.cmake"
 #    CACHE STRING "Configure project to use a specific platform file")
@@ -329,6 +329,10 @@ TARGET_LINK_LIBRARIES(mpibenchmark ${COMMON_LIBRARIES} MPITS::mpits MPI::MPI_C)
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES LINKER_LANGUAGE CXX )
 
+install(TARGETS mpibenchmark
+        RUNTIME DESTINATION bin
+)
+
 #if (ENABLE_PGMPI)
 #    if (PGMPI_FOUND)
 #        add_executable(mpibenchmark_pgmpicli
@@ -371,7 +375,6 @@ if(OPTION_ENABLE_PGCHECKER)
 else()
     message(STATUS "Disabled: performance guidelines checker." )
 endif()
-
 
 set(CPACK_PACKAGE_VERSION_MAJOR "2")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
