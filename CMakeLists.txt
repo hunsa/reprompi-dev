@@ -329,27 +329,16 @@ TARGET_LINK_LIBRARIES(mpibenchmark ${COMMON_LIBRARIES} MPITS::mpits MPI::MPI_C)
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
 SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES LINKER_LANGUAGE CXX )
 
+# set the rpath for the executable
+set_target_properties(mpibenchmark PROPERTIES
+        INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib"
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH_USE_LINK_PATH TRUE
+)
+
 install(TARGETS mpibenchmark
         RUNTIME DESTINATION bin
 )
-
-#if (ENABLE_PGMPI)
-#    if (PGMPI_FOUND)
-#        add_executable(mpibenchmark_pgmpicli
-#        ${REPROMPIBENCH_FILES}
-#        )
-#        TARGET_LINK_LIBRARIES(mpibenchmark_pgmpicli ${PGMPI_CLI_LIBRARIES} ${COMMON_LIBRARIES} synclib)
-#        SET_TARGET_PROPERTIES(mpibenchmark_pgmpicli PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
-#        SET_TARGET_PROPERTIES(mpibenchmark_pgmpicli PROPERTIES LINKER_LANGUAGE CXX )
-#
-#        add_executable(mpibenchmark_pgmpituned
-#        ${REPROMPIBENCH_FILES}
-#        )
-#        TARGET_LINK_LIBRARIES(mpibenchmark_pgmpituned ${PGMPI_TUNED_LIBRARIES} ${COMMON_LIBRARIES} synclib)
-#        SET_TARGET_PROPERTIES(mpibenchmark_pgmpituned PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
-#        SET_TARGET_PROPERTIES(mpibenchmark_pgmpituned PROPERTIES LINKER_LANGUAGE CXX )
-#    endif(PGMPI_FOUND)
-#endif (ENABLE_PGMPI)
 
 
 if (COMPILE_SANITY_CHECK_TESTS)
