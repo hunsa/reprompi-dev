@@ -209,6 +209,15 @@ TARGET_LINK_LIBRARIES(pgchecker ${GSL_LIBRARIES} pgmpicli MPITS::mpits MPI::MPI_
 #target_include_directories(pgchecker PRIVATE ${pgmpitunelib_SOURCE_DIR}/include)
 #SET_TARGET_PROPERTIES(pgchecker PROPERTIES LINKER_LANGUAGE CXX )
 
+
+# set the rpath for the executable
+# but take care of mpits
+set_target_properties(pgchecker PROPERTIES
+        INSTALL_RPATH "${PGTUNELIB_PATH}/lib;${CMAKE_INSTALL_PREFIX}/lib"
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH_USE_LINK_PATH TRUE
+)
+
 install(TARGETS pgchecker
         RUNTIME DESTINATION bin
 )
