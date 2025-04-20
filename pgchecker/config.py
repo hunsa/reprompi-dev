@@ -13,15 +13,15 @@ REPOS["pgmpitunelib"] = {}
 REPOS["pgmpitunelib"]["REPO_GIT"]     = "git@github.com:hunsa/pgmpitunelib.git"
 REPOS["pgmpitunelib"]["REPO_CHECKOUT_NAME"] = "pgmpitunelib"
 REPOS["pgmpitunelib"]["REPO_SHA1"]    = "c795331783c053e9fca612318570fbf50ea97ce1"
-REPOS["pgmpitunelib"]["CHECKOUT_DIR"] = os.path.join(PG_BUILD_DIR, REPOS["pgmpitunelib"]["REPO_CHECKOUT_NAME"])
-REPOS["pgmpitunelib"]["BUILD_DIR"]    = os.path.join(REPOS["pgmpitunelib"]["CHECKOUT_DIR"], "build")
-REPOS["pgmpitunelib"]["INSTALL_DIR"]  = os.path.join(REPOS["pgmpitunelib"]["CHECKOUT_DIR"], "install")
-REPOS["pgmpitunelib"]["BUILD_CMD"] = f"cmake -DCMAKE_BUILD_TYPE=Release -B {REPOS["pgmpitunelib"]["BUILD_DIR"]}/ -DCMAKE_INSTALL_PREFIX={REPOS["pgmpitunelib"]["INSTALL_DIR"]}; cmake --build {REPOS["pgmpitunelib"]["BUILD_DIR"]}/ --parallel; cmake --install {REPOS["pgmpitunelib"]["BUILD_DIR"]}/"
+REPOS["pgmpitunelib"]["CHECKOUT_DIR"] = os.path.join(PG_BUILD_DIR, REPOS['pgmpitunelib']['REPO_CHECKOUT_NAME'])
+REPOS["pgmpitunelib"]["BUILD_DIR"]    = os.path.join(REPOS['pgmpitunelib']['CHECKOUT_DIR'], "build")
+REPOS["pgmpitunelib"]["INSTALL_DIR"]  = os.path.join(REPOS['pgmpitunelib']['CHECKOUT_DIR'], "install")
+REPOS["pgmpitunelib"]["BUILD_CMD"] = f"cmake -DCMAKE_BUILD_TYPE=Release -B {REPOS['pgmpitunelib']['BUILD_DIR']}/ -DCMAKE_INSTALL_PREFIX={REPOS['pgmpitunelib']['INSTALL_DIR']}; cmake --build {REPOS['pgmpitunelib']['BUILD_DIR']}/ --parallel; cmake --install {REPOS['pgmpitunelib']['BUILD_DIR']}/"
 
 
 # pgchecker
 PG_SOURCE_DIR  = os.path.join(os.path.dirname(__file__), "..")
-PG_BUILD_CMD  = f"cmake -DCMAKE_BUILD_TYPE=Release -S {PG_SOURCE_DIR} -B {PG_BUILD_DIR} -DOPTION_ENABLE_PGCHECKER=ON -DPGTUNELIB_PATH={REPOS["pgmpitunelib"]["INSTALL_DIR"]} -DCMAKE_INSTALL_PREFIX={PG_INSTALL_DIR}; cmake --build {PG_BUILD_DIR} --parallel; cmake --install {PG_BUILD_DIR}"
+PG_BUILD_CMD  = f"cmake -DCMAKE_BUILD_TYPE=Release -S {PG_SOURCE_DIR} -B {PG_BUILD_DIR} -DOPTION_ENABLE_PGCHECKER=ON -DPGTUNELIB_PATH={REPOS['pgmpitunelib']['INSTALL_DIR']} -DCMAKE_INSTALL_PREFIX={PG_INSTALL_DIR}; cmake --build {PG_BUILD_DIR} --parallel; cmake --install {PG_BUILD_DIR}"
 
 PG_EXP_CONFIG_DIR = "config"
 PG_EXP_DATA_DIR   = "data"
