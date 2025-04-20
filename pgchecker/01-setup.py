@@ -9,19 +9,19 @@ def checkout_and_build(repo):
     # Check if the repository is already cloned
     if not os.path.exists(repo["CHECKOUT_DIR"]):
         os.makedirs(cfg.PG_BUILD_DIR, exist_ok=True)
-        print(f"Cloning {repo["REPO_GIT"]} into {repo["CHECKOUT_DIR"]}...")
+        print(f"Cloning {repo['REPO_GIT']} into {repo['CHECKOUT_DIR']}...")
         os.chdir(cfg.PG_BUILD_DIR)
-        os.system(f"git clone {repo["REPO_GIT"]} {repo["REPO_CHECKOUT_NAME"]}")
+        os.system(f"git clone {repo['REPO_GIT']} {repo['REPO_CHECKOUT_NAME']}")
     else:
-        print(f"Directory {repo["CHECKOUT_DIR"]} already exists. Skipping clone.")
+        print(f"Directory {repo['CHECKOUT_DIR']} already exists. Skipping clone.")
     
     # Checkout the specific SHA1
-    os.chdir(f"{repo["CHECKOUT_DIR"]}")
-    os.system(f"git checkout {repo["REPO_SHA1"]}")
+    os.chdir(f"{repo['CHECKOUT_DIR']}")
+    os.system(f"git checkout {repo['REPO_SHA1']}")
 
     # build the repository
-    print(f"Building {repo["REPO_CHECKOUT_NAME"]}\n{repo["BUILD_CMD"]}")
-    os.system(repo["BUILD_CMD"])
+    print(f"Building {repo['REPO_CHECKOUT_NAME']}\n{repo['BUILD_CMD']}")
+    os.system(repo['BUILD_CMD'])
 
 
 def build_dependencies():
