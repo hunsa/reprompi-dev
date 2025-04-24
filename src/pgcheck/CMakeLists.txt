@@ -108,7 +108,7 @@ target_include_directories(pgchecker PRIVATE
         ${PGTUNELIB_INCLUDE_DIR})
 target_link_directories(pgchecker PRIVATE "${PGTUNELIB_PATH}/lib")
 
-TARGET_LINK_LIBRARIES(pgchecker ${GSL_LIBRARIES} {PGTUNELIB_LIB} MPITS::mpits MPI::MPI_CXX)
+TARGET_LINK_LIBRARIES(pgchecker ${GSL_LIBRARIES} ${PGTUNELIB_LIB} MPITS::mpits MPI::MPI_CXX)
 
 # set the rpath for the executable
 # but take care of mpits
