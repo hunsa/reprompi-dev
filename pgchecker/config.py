@@ -10,7 +10,7 @@ REPOS = {}
 
 # pgtunelib
 REPOS["pgmpitunelib"] = {}
-REPOS["pgmpitunelib"]["REPO_GIT"]     = "git@github.com:hunsa/pgmpitunelib.git"
+REPOS["pgmpitunelib"]["REPO_GIT"]     = "https://github.com/hunsa/pgmpitunelib.git"
 REPOS["pgmpitunelib"]["REPO_CHECKOUT_NAME"] = "pgmpitunelib"
 REPOS["pgmpitunelib"]["REPO_SHA1"]    = "c795331783c053e9fca612318570fbf50ea97ce1"
 REPOS["pgmpitunelib"]["CHECKOUT_DIR"] = os.path.join(PG_BUILD_DIR, REPOS['pgmpitunelib']['REPO_CHECKOUT_NAME'])
