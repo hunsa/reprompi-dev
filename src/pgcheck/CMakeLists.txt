@@ -27,7 +27,7 @@ endif()
 
 set(PGTUNELIB_PATH "" CACHE STRING "Path to pgmpicli library")
 find_path(PGTUNELIB_INCLUDE_DIR pgmpi_tune.h PATHS ${PGTUNELIB_PATH}/include NO_DEFAULT_PATH)
-find_library(PGTUNELIB_LIB NAMES pgmpicli PATHS ${PGTUNELIB_PATH}/lib NO_DEFAULT_PATH)
+find_library(PGTUNELIB_LIB NAMES pgmpicli PATHS ${PGTUNELIB_PATH}/lib ${PGTUNELIB_PATH}/lib64 NO_DEFAULT_PATH)
 
 message(STATUS "PGTUNELIB_INCLUDE_DIR: ${PGTUNELIB_INCLUDE_DIR}")
 
@@ -41,6 +41,7 @@ if(NOT PGTUNELIB_LIB)
     message(FATAL_ERROR "pgmpicl not found. Please set PGTUNELIB_PATH to enable this library.")
 else()
     message(STATUS "pgmpicli found: ${PGTUNELIB_LIB}.")
+    get_filename_component(PGMPICLI_LIB_DIR ${PGTUNELIB_LIB} DIRECTORY)
 endif()
 
 set(PGTUNE_CONFIG_CSV ${CMAKE_INSTALL_PREFIX}/pgmpi_conf.csv)
@@ -50,7 +51,7 @@ add_custom_target(config
 )
 
 
-list(APPEND CMAKE_BUILD_RPATH "${PGTUNELIB_PATH}/lib")
+list(APPEND CMAKE_BUILD_RPATH "${PGMPICLI_LIB_DIR}")
 
 add_executable(pgchecker
         pgchecker.cpp
@@ -106,14 +107,14 @@ add_executable(pgchecker
 target_include_directories(pgchecker PRIVATE
         ${GSL_INCLUDE_DIRS}
         ${PGTUNELIB_INCLUDE_DIR})
-target_link_directories(pgchecker PRIVATE "${PGTUNELIB_PATH}/lib")
+target_link_directories(pgchecker PRIVATE "${PGMPICLI_LIB_DIR}")
 
 TARGET_LINK_LIBRARIES(pgchecker ${GSL_LIBRARIES} ${PGTUNELIB_LIB} MPITS::mpits MPI::MPI_CXX)
 
 # set the rpath for the executable
 # but take care of mpits
 set_target_properties(pgchecker PROPERTIES
-        INSTALL_RPATH "${PGTUNELIB_PATH}/lib;${CMAKE_INSTALL_PREFIX}/lib"
+        INSTALL_RPATH "${PGMPICLI_LIB_DIR};${CMAKE_INSTALL_PREFIX}/lib"
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH_USE_LINK_PATH TRUE
 )
