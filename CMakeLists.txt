@@ -282,7 +282,7 @@ endif()
 
 FetchContent_Declare(
         MPITS
-        GIT_REPOSITORY git@github.com:hunsa/mpi-time-sync.git
+        GIT_REPOSITORY https://github.com/hunsa/mpi-time-sync.git
         GIT_TAG main)
 
 FetchContent_MakeAvailable(MPITS)
