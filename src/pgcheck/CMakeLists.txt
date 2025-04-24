@@ -114,7 +114,7 @@ TARGET_LINK_LIBRARIES(pgchecker ${GSL_LIBRARIES} ${PGTUNELIB_LIB} MPITS::mpits M
 # set the rpath for the executable
 # but take care of mpits
 set_target_properties(pgchecker PROPERTIES
-        INSTALL_RPATH "${PGMPICLI_LIB_DIR};${CMAKE_INSTALL_PREFIX}/lib"
+        INSTALL_RPATH "${PGMPICLI_LIB_DIR};$<TARGET_FILE_DIR:MPITS::mpits>"
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH_USE_LINK_PATH TRUE
 )
