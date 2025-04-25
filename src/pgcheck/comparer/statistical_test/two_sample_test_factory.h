@@ -31,6 +31,12 @@
 
 class TwoSampleTestFactory {
  public:
+  enum TwoSampleTestType {
+    TTEST,
+    WILCOXON_RANK_SUM,
+    WILCOXON_MANN_WHITNEY
+  };
+
   static TwoSampleTest *create_two_sample_test(int test_id);
 };
 
