@@ -27,8 +27,8 @@ AbsRuntimeComparer::AbsRuntimeComparer(const std::string &mpi_coll_name, int nno
     PGDataComparer(mpi_coll_name, nnodes, ppn) {}
 
 PGDataTable AbsRuntimeComparer::get_results() {
-  std::vector <std::string> col_names = {"message_size", "mockup", "median_ms"};
-  std::vector<int> col_widths = {15, 50, 10};
+  std::vector <std::string> col_names = {"message_size", "mockup", "median_ms", "mean_ms"};
+  std::vector<int> col_widths = {15, 50, 10, 10};
   PGDataTable res(mpi_coll_name, col_names);
   StatisticsUtils<double> statisticsUtils;
 
@@ -39,7 +39,8 @@ PGDataTable AbsRuntimeComparer::get_results() {
       std::unordered_map <std::string, std::string> row;
       row["message_size"] = std::to_string(count);
       row["mockup"] = mockup_data.first;
-      row["median_ms"] = std::to_string(statisticsUtils.mean(rts) * 1000);
+      row["median_ms"] = std::to_string(statisticsUtils.median(rts) * 1000);
+      row["mean_ms"] = std::to_string(statisticsUtils.mean(rts) * 1000);
       res.add_row(row);
     }
   }

@@ -36,13 +36,12 @@ class ComparerData {
  private:
   bool violation = false;            // indicates if this object is affected by a guideline violation
   double fastest_mockup_median = 0;  // median of the fastest mockup which violates the guidelines
+  double fastest_mockup_mean = 0;    // mean of the fastest mockup which violates the guidelines
   std::string fastest_mockup;        // name of the fastest mockup
   std::vector<double> runtimes;      // a vector of runtimes
   TwoSampleTest *two_sample_test;    // the test object
-  double get_mean();
-  double get_variance();
 
- public:
+  public:
   explicit ComparerData(const std::vector<double>& rts);
   ComparerData(const std::vector<double>& rts, int test_id);
   bool is_violated();
@@ -51,6 +50,8 @@ class ComparerData {
    */
   bool get_violation(ComparerData alt);
   int get_size();
+  double get_mean();
+  double get_variance();
   double get_mean_ms();
   double get_median();
   double get_median_ms();
@@ -59,6 +60,7 @@ class ComparerData {
    */
   double get_critical_value(ComparerData alt);
   double get_fastest_mockup_median_ms();
+  double get_fastest_mockup_mean_ms();
   double get_slowdown();
   /**
    * @return slowdown between this and mockup_median
@@ -72,7 +74,7 @@ class ComparerData {
   /**
    * overwrites fastest mockup if mockup_median is smaller than current
    */
-  void set_fastest_mockup(const std::string& mockup, double mockup_median);
+  void set_fastest_mockup(const std::string& mockup, double mockup_median, double mockup_mean);
 };
 
 #endif  // SRC_PGCHECK_COMPARER_COMPARER_DATA_H_

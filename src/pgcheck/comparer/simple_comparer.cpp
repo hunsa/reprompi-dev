@@ -29,7 +29,7 @@ SimpleComparer::SimpleComparer(const std::string& mpi_coll_name, int nnodes, int
     PGDataComparer(mpi_coll_name, nnodes, ppn) {}
 
 PGDataTable SimpleComparer::get_results() {
-  std::vector <std::string> col_names = {"mockup", "count", "runtime"};
+  std::vector <std::string> col_names = {"mockup", "count", "mean_ms"};
   PGDataTable res(mpi_coll_name, col_names);
   StatisticsUtils<double> statisticsUtils;
   for (auto &mockup_data : mockup2data) {
@@ -39,7 +39,7 @@ PGDataTable SimpleComparer::get_results() {
       std::unordered_map <std::string, std::string> row;
       row["mockup"] = mockup_data.first;
       row["count"] = std::to_string(count);
-      row["runtime"] = std::to_string(statisticsUtils.mean(rts) * 1000);
+      row["mean_ms"] = std::to_string(statisticsUtils.mean(rts) * 1000);
       res.add_row(row);
     }
   }
