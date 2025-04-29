@@ -139,9 +139,9 @@ int PGCheckOptions::parse(int argc, char *argv[], bool is_root) {
   optind = 1;
   opterr = 1;
 
-  // comparer 5 is default
+  // set default comparer if none is given
   if (comparer_list.size() < 1) {
-    comparer_list.push_back(5);
+    comparer_list.push_back(ComparerFactory::DEFAULT_COMPARER);
   }
 
   // unique and sorted comparer list if list has multiple entries
@@ -179,17 +179,21 @@ std::string PGCheckOptions::get_usage_string() {
   usage << "OPTIONS:" << std::endl;
   usage << std::setw(36) << std::left << "  ?, -h, --help" << "Display this information." << std::endl;
   usage << std::setw(36) << std::left << "  -c, --comp-list={0|1|2|3|4|5|6}"
-        << "Specify the comparer type ("
-        << "0=Simple|"
-        << "1=Absolute Median|"
-        << "2=Relative Median|"
-        << "3=Violation-Test|"
-        << "4=Detailed Violation-Test|"
-        << "5=Grouped Violation-Test|"
-        << "6=Raw Data)."
+        << "Specify the comparer type: "
+        << "0=Simple | "
+        << "1=Absolute Median | "
+        << "2=Relative Median | "
+        << "3=Violation-Test | "
+        << "4=Detailed Violation-Test | "
+        << "5=Grouped Violation-Test (default) | "
+        << "6=Raw Data."
         << std::endl;
   usage << std::setw(36) << std::left << "  -t, --test {0|1|2}"
-        << "Specify the test type (0=T-Test|1=Wilcoxon-Rank-Sum-Test|2=Wilcoxon-Mann-Whitney)." << std::endl;
+        << "Specify the test type: "
+        << "0=T-Test | "
+        << "1=Wilcoxon-Rank-Sum-Test | "
+        << "2=Wilcoxon-Mann-Whitney (default)."
+        << std::endl;
   usage << std::setw(36) << std::left << "  -o, --output <path>" << "Specify an existing output folder."
         << std::endl;
   usage << std::setw(36) << std::left << "  -m, --merge"

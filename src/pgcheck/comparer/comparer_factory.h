@@ -38,6 +38,19 @@
 
 class ComparerFactory {
  public:
+  enum ComparerType {
+    SIMPLE,
+    ABS_RUNTIME,
+    REL_RUNTIME,
+    VIOLATION,
+    DETAILED_VIOLATION,
+    GROUPED_VIOLATION,
+    RAW,
+    NUM_COMPARERS
+  };
+
+  static constexpr auto DEFAULT_COMPARER = ComparerType::GROUPED_VIOLATION;
+
   static std::unique_ptr <PGDataComparer>
   create_comparer(int comparer_id, int test_type, std::string mpi_coll_name, int nnodes, int ppn);
   static int get_number_of_comparers();

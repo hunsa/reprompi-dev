@@ -70,6 +70,10 @@ double ComparerData::get_fastest_mockup_median_ms() {
   return fastest_mockup_median * 1000;
 }
 
+double ComparerData::get_fastest_mockup_mean_ms() {
+  return fastest_mockup_mean * 1000;
+}
+
 double ComparerData::get_slowdown() {
   return get_median() / fastest_mockup_median;
 }
@@ -82,11 +86,12 @@ std::string ComparerData::get_fastest_mockup() {
   return fastest_mockup;
 }
 
-void ComparerData::set_fastest_mockup(const std::string& mockup, double mockup_median) {
+void ComparerData::set_fastest_mockup(const std::string& mockup, double mockup_median, double mockup_mean) {
   if (fastest_mockup_median == 0 || mockup_median < fastest_mockup_median) {
     violation = true;
     fastest_mockup = mockup;
     fastest_mockup_median = mockup_median;
+    fastest_mockup_mean = mockup_mean;
   }
 }
 

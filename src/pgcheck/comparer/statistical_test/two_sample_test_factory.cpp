@@ -26,14 +26,14 @@
 TwoSampleTest *TwoSampleTestFactory::create_two_sample_test(int test_id) {
   TwoSampleTest *two_sample_test;
   switch (test_id) {
-    default:
-    case 0:
+    case TwoSampleTestType::TTEST:
       two_sample_test = new TTest();
       break;
-    case 1:
+    case TwoSampleTestType::WILCOXON_RANK_SUM:
       two_sample_test = new WilcoxonRankSum();
       break;
-    case 2:
+    default:
+    case TwoSampleTestType::WILCOXON_MANN_WHITNEY:
       two_sample_test = new WilcoxonMannWhitney();
       break;
   }

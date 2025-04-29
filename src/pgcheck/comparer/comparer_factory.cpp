@@ -27,32 +27,32 @@ std::unique_ptr<PGDataComparer>
 ComparerFactory::create_comparer(int comparer_id, int test_type, std::string mpi_coll_name, int nnodes, int ppn) {
   std::unique_ptr<PGDataComparer> comparer;
   switch (comparer_id) {
-    case 0:
+    case ComparerType::SIMPLE:
       comparer = std::make_unique<SimpleComparer>(mpi_coll_name, nnodes, ppn);
       break;
-    case 1:
+    case ComparerType::ABS_RUNTIME:
       comparer = std::make_unique<AbsRuntimeComparer>(mpi_coll_name, nnodes, ppn);
       break;
-    case 2:
+    case ComparerType::REL_RUNTIME:
       comparer = std::make_unique<RelRuntimeComparer>(mpi_coll_name, nnodes, ppn);
       break;
-    case 3:
+    case ComparerType::VIOLATION:
       comparer = std::make_unique<ViolationComparer>(test_type, mpi_coll_name, nnodes, ppn);
       break;
-    case 4:
+    case ComparerType::DETAILED_VIOLATION:
       comparer = std::make_unique<DetailedViolationComparer>(test_type, mpi_coll_name, nnodes, ppn);
       break;
-    case 5:
-      comparer = std::make_unique<GroupedViolationComparer>(test_type, mpi_coll_name, nnodes, ppn);
+    case ComparerType::RAW:
+      comparer = std::make_unique<RawComparer>(mpi_coll_name, nnodes, ppn);
       break;
     default:
-    case 6:
-      comparer = std::make_unique<RawComparer>(mpi_coll_name, nnodes, ppn);
+    case ComparerType::GROUPED_VIOLATION:
+      comparer = std::make_unique<GroupedViolationComparer>(test_type, mpi_coll_name, nnodes, ppn);
       break;
   }
   return comparer;
 }
 
 int ComparerFactory::get_number_of_comparers() {
-  return 7;
+  return ComparerType::NUM_COMPARERS;
 }
