@@ -86,9 +86,9 @@ std::string ComparerData::get_fastest_mockup() {
   return fastest_mockup;
 }
 
-void ComparerData::set_fastest_mockup(const std::string& mockup, double mockup_median, double mockup_mean) {
+void ComparerData::set_fastest_mockup(const std::string& mockup, double mockup_median, double mockup_mean, bool violation) {
   if (fastest_mockup_median == 0 || mockup_median < fastest_mockup_median) {
-    violation = true;
+    this->violation = violation;
     fastest_mockup = mockup;
     fastest_mockup_median = mockup_median;
     fastest_mockup_mean = mockup_mean;
