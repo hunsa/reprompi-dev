@@ -32,6 +32,7 @@ static std::vector<int> col_widths = {
   15, // default_median
   15, // default_mean
   10, // slowdown
+  15, // stat_violation
   50, // fastest_mockup
   15, // mockup_median
   15  // mockup_mean
@@ -45,7 +46,8 @@ GroupedViolationComparer::GroupedViolationComparer(int test_type,
 
 PGDataTable GroupedViolationComparer::get_results() {
   std::vector <std::string> col_names = {"collective", "count", "N", "ppn", "n",
-                                         "default_median", "default_mean", "slowdown",
+                                         "default_median", "default_mean",
+                                         "slowdown", "stat_violation",
                                          "fastest_mockup",
                                          "mockup_median", "mockup_mean"};
   PGDataTable res(mpi_coll_name, col_names);
@@ -67,9 +69,10 @@ PGDataTable GroupedViolationComparer::get_results() {
       auto rts = data->get_runtimes_for_count(count);
       ComparerData alt_res(rts);
 
-      if (def_res.at(count).get_violation(alt_res)) {
-        def_res.at(count).set_fastest_mockup(mockup_data.first, alt_res.get_median(), alt_res.get_mean());
-      }
+      const auto stat_violation = def_res.at(count).get_violation(alt_res);
+
+      def_res.at(count).set_fastest_mockup(mockup_data.first, alt_res.get_median(),
+                                           alt_res.get_mean(), stat_violation);
     }
   }
 
@@ -84,8 +87,9 @@ PGDataTable GroupedViolationComparer::get_results() {
     row["default_median"] = std::to_string(data.get_median_ms());
     row["default_mean"] = std::to_string(data.get_mean_ms());
 
-    if (data.is_violated()) {
+    if (data.get_slowdown() > 1.0 or data.is_violated()) {
       row["slowdown"] = std::to_string(data.get_slowdown());
+      row["stat_violation"] = data.is_violated() ? "True" : "False";
       row["fastest_mockup"] = data.get_fastest_mockup();
       row["mockup_median"] = std::to_string(data.get_fastest_mockup_median_ms());
       row["mockup_mean"] = std::to_string(data.get_fastest_mockup_mean_ms());
@@ -97,6 +101,7 @@ PGDataTable GroupedViolationComparer::get_results() {
       }
     } else {
       row["slowdown"] = "";
+      row["stat_violation"] = "";
       row["fastest_mockup"] = "";
       row["mockup_median"] = "";
       row["mockup_mean"] = "";

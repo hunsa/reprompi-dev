@@ -74,7 +74,7 @@ class ComparerData {
   /**
    * overwrites fastest mockup if mockup_median is smaller than current
    */
-  void set_fastest_mockup(const std::string& mockup, double mockup_median, double mockup_mean);
+  void set_fastest_mockup(const std::string& mockup, double mockup_median, double mockup_mean, bool violation);
 };
 
 #endif  // SRC_PGCHECK_COMPARER_COMPARER_DATA_H_
