@@ -331,7 +331,7 @@ SET_TARGET_PROPERTIES(mpibenchmark PROPERTIES LINKER_LANGUAGE CXX )
 
 # set the rpath for the executable
 set_target_properties(mpibenchmark PROPERTIES
-        INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib"
+        INSTALL_RPATH "$<TARGET_FILE_DIR:MPITS::mpits>"
         BUILD_WITH_INSTALL_RPATH TRUE
         INSTALL_RPATH_USE_LINK_PATH TRUE
 )
