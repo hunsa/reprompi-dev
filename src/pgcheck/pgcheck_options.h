@@ -36,6 +36,7 @@
 #include <algorithm>
 
 #include "comparer/comparer_factory.h"
+#include "comparer/statistical_test/two_sample_test_factory.h"
 #include "logger/logger.h"
 #include "constants.h"
 
@@ -46,7 +47,7 @@ class PGCheckOptions {
   bool verbose = false;                 // write information and results to console
   bool allow_mkdir = false;             // allow pgchecker to make directories
   std::vector<int> comparer_list = {};  // grouped comparer is default
-  int test_type = 0;                    // default is t-test
+  int test_type = TwoSampleTestFactory::TwoSampleTestType::WILCOXON_MANN_WHITNEY;
   std::string input_file = "";
   std::string output_directory = "";
   std::string config_message = "";
