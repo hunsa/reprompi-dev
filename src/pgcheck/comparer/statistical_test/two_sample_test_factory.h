@@ -37,6 +37,8 @@ class TwoSampleTestFactory {
     WILCOXON_MANN_WHITNEY
   };
 
+  static constexpr auto DEFAULT_TWO_SAMPLE_TEST = TwoSampleTestType::WILCOXON_MANN_WHITNEY;
+
   static TwoSampleTest *create_two_sample_test(int test_id);
 };
 
