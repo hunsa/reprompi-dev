@@ -342,7 +342,6 @@ install(TARGETS mpibenchmark
         RUNTIME DESTINATION bin
 )
 
-
 if (COMPILE_SANITY_CHECK_TESTS)
     ADD_SUBDIRECTORY(${SRC_DIR}/sanity_check)
 endif()
@@ -366,38 +365,3 @@ if(OPTION_ENABLE_PGCHECKER)
 else()
     message(STATUS "Disabled: performance guidelines checker." )
 endif()
-
-set(CPACK_PACKAGE_VERSION_MAJOR "2")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
-set(CPACK_PACKAGE_VERSION_PATCH "1")
-set(CPACK_SOURCE_GENERATOR "TBZ2")
-
-
-set(BENCHMARK_NAME ${CMAKE_PROJECT_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH})
-set(CPACK_SOURCE_PACKAGE_FILE_NAME "${BENCHMARK_NAME}-src")
-set(DIST_ARCHIVE "${BENCHMARK_NAME}-dist")
-
-SET(CPACK_SOURCE_IGNORE_FILES
-"/CMakeFiles/"
-"/_CPack_Packages/"
-"/bin/"
-"/include/"
-"/lib/"
-"/scripts/"
-"/create_package.sh"
-"/Makefile"
-"\\\\.tar\\\\.bz2$"
-"/\\\\.git/"
-"/\\\\.settings/"
-"/\\\\..*"
-"CMakeCache.txt"
-"cmake_install\\\\.cmake"
-"CPackConfig\\\\.cmake"
-"CPackSourceConfig\\\\.cmake"
-"sources\\\\.org"
-"${CPACK_SOURCE_IGNORE_FILES}"
-)
-
-INCLUDE(CPack)
-
-add_custom_target(pack COMMAND ${CMAKE_MAKE_PROGRAM} package_source)

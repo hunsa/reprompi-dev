@@ -1,31 +1,25 @@
-# ReproMPI Benchmark (Development Version)
-
+# ReproMPI Benchmark
 
 ## Introduction
 
 The ReproMPI Benchmark is a tool designed to accurately measure the
-run-time of MPI blocking collective operations.
+run-time of **MPI blocking collective** operations such as `MPI_Bcast`,
+`MPI_Allgather`, `MPI_Reduce`, etc. 
 
 # References 
 
 1. Sascha Hunold, Alexandra Carpen-Amarie:
-   On the Impact of Synchronizing Clocks and Processes on Benchmarking MPI Collectives. EuroMPI 2015: 8:1-8:10
-   https://doi.org/10.1145/2802658.2802662
+   On the Impact of Synchronizing Clocks and Processes on Benchmarking MPI Collectives. EuroMPI 2015: 8:1-8:10. https://doi.org/10.1145/2802658.2802662
 2. Sascha Hunold, Alexandra Carpen-Amarie, Jesper Larsson Träff:
-   Reproducible MPI Micro-Benchmarking Isn't As Easy As You Think. EuroMPI/ASIA 2014: 69
-   https://doi.org/10.1145/2642769.2642785
+   Reproducible MPI Micro-Benchmarking Isn't As Easy As You Think. EuroMPI/ASIA 2014: 69. https://doi.org/10.1145/2642769.2642785
 3. Sascha Hunold, Alexandra Carpen-Amarie:
-   Reproducible MPI Benchmarking is Still Not as Easy as You Think. IEEE Trans. Parallel Distributed Syst. 27(12): 3617-3630 (2016)
-   https://doi.org/10.1109/TPDS.2016.2539167
+   Reproducible MPI Benchmarking is Still Not as Easy as You Think. IEEE Trans. Parallel Distributed Syst. 27(12): 3617-3630 (2016). https://doi.org/10.1109/TPDS.2016.2539167
 4. Sascha Hunold, Alexandra Carpen-Amarie:
-   Hierarchical Clock Synchronization in MPI. CLUSTER 2018: 325-336
-   https://doi.org/10.1109/CLUSTER.2018.00050
+   Hierarchical Clock Synchronization in MPI. CLUSTER 2018: 325-336. https://doi.org/10.1109/CLUSTER.2018.00050
 5. Sascha Hunold, Alexandra Carpen-Amarie:
-   Autotuning MPI Collectives using Performance Guidelines. HPC Asia 2018: 64-74
-   https://doi.org/10.1145/3149457.3149461
+   Autotuning MPI Collectives using Performance Guidelines. HPC Asia 2018: 64-74. https://doi.org/10.1145/3149457.3149461
 6. Joseph Schuchart, Sascha Hunold, George Bosilca:
-   Synchronizing MPI Processes in Space and Time. EuroMPI 2023: 7:1-7:11
-   https://doi.org/10.1145/3615318.3615325
+   Synchronizing MPI Processes in Space and Time. EuroMPI 2023: 7:1-7:11. https://doi.org/10.1145/3615318.3615325
    
 ## Components
 
@@ -34,16 +28,19 @@ run-time of MPI blocking collective operations.
 
 ## Installation
 
-- Prerequisites
-  - an MPI library 
-  - CMake (version >= 3.22)  
-  - GSL libraries 
+For installing `pgchecker`, check the [README](https://github.com/hunsa/reprompi/tree/main/src/pgcheck/README.md)
+
+Prerequisites for installing the ReproMPI benchmark:
+- an MPI library 
+- CMake (version >= 3.22)  
+- GSL libraries 
 
 ## Basic installation
 
 ```
-  cd $BENCHMARK_PATH
-  cmake -B build 
+  git clone https://github.com/hunsa/reprompi-dev
+  cd reprompi-dev
+  cmake -B build
   cmake --build build
 ```
 
@@ -212,36 +209,30 @@ This is the full list of compilation flags that can be used to control
 all the previously detailed configuration parameters.
 
 ```
- CALIBRATE_RDTSC                  OFF   
+ COMPILE_BENCH_LIBRARY            OFF
  COMPILE_BENCH_TESTS              OFF                 
  COMPILE_SANITY_CHECK_TESTS       OFF               
- ENABLE_BENCHMARK_BARRIER         OFF             
  ENABLE_DOUBLE_BARRIER            OFF             
- ENABLE_GLOBAL_TIMES              OFF             
- ENABLE_LOGP_SYNC                 OFF             
+ ENABLE_GETTIME_MONOTONIC         OFF
+ ENABLE_GETTIME_REALTIME          OFF
  ENABLE_RDTSC                     OFF             
  ENABLE_RDTSCP                    OFF           
- ENABLE_WINDOWSYNC_HCA            OFF            
- ENABLE_WINDOWSYNC_JK             OFF        
- ENABLE_WINDOWSYNC_SK             OFF      
- FREQUENCY_MHZ                    2300    
+ FREQUENCY_MHZ                    2300
+ OPTION_BUFFER_ALIGNMENT 
+ OPTION_ENABLE_DEBUGGING          OFF
+ OPTION_ENABLE_LOGGING            OFF
+ OPTION_PRINT_MSIZES_BYTES        OFF
+ RDTSC_CALIBRATION                OFF
 ```
+- `OPTION_ENABLE_DEBUGGING`: adds the `-g` compiler flag to include debug symbols in the binary
+
+- `OPTION_ENABLE_LOGGING`
+
+- `OPTION_BUFFER_ALIGNMENT`: set the buffer alignment in bytes for collective operations. Typically, use
+the cache line size of the CPU, e.g., 64 bytes for x86-64 architectures.
+
+- `OPTION_PRINT_MSIZES_BYTES`: print message sizes in bytes in the benchmark output. By default, ReproMPI print the count of MPI datatypes used by collective operations.
 
 ## Clock Synchronization Algorithms
 
-### HCA [1]
-
-### HCA2 [1]
-
-### HCA3 [4]
-
-### Topo1 [4]
-
-### Topo2 [4]
-
-- two-level hierarchical clock-sync
-  - top level for sync between nodes
-  - bottom level on compute node
-- default
-  - top: HCA3
-  - bottom: ClockPropagation
+The ReproMPI benchmark uses the [mpi-time-sync](https://github.com/hunsa/mpi-time-sync/) library to synchronize processes and to obtain global clocks.
