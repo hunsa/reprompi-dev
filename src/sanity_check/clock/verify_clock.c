@@ -27,9 +27,7 @@
 #include <time.h>
 #include <math.h>
 #include "mpi.h"
-
-#include "reprompi_bench/sync/time_measurement.h"
-
+#include "mpits.h"
 static const double MAX_TIMER_THRESHOLD_PERCENT = 1;
 
 int main(int argc, char* argv[]) {
@@ -104,9 +102,9 @@ int main(int argc, char* argv[]) {
   }
 
   for (step = 0; step < nreps; step++) {
-    start_time = REPROMPI_get_time();
+    start_time = MPITS_get_time();
     nanosleep(&sleep_time, NULL);
-    local_runtimes[step] = REPROMPI_get_time() - start_time;
+    local_runtimes[step] = MPITS_get_time() - start_time;
   }
 
   if (print_all && my_rank == master_rank) {

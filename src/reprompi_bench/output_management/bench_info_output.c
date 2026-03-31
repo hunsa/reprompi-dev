@@ -28,7 +28,6 @@
 #include "mpi.h"
 
 //#include "reprompi_bench/sync/clock_sync/synchronization.h"
-#include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/option_parser/parse_common_options.h"
 #include "reprompi_bench/option_parser/parse_timing_options.h"
 #include "collective_ops/collectives.h"
@@ -84,7 +83,6 @@ void print_common_settings_to_file(FILE* f, const reprompib_bench_print_info_t* 
 
       fprintf(f, "#@reproMPIcommitSHA1=%s\n", git_commit);
       fprintf(f, "#@nprocs=%d\n", np);
-      print_time_parameters(f);
       print_info->clock_sync->print_sync_info(f);
       print_info->proc_sync->print_sync_info(f);
     }

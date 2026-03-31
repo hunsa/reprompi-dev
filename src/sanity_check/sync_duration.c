@@ -28,9 +28,8 @@
 #include <math.h>
 #include <getopt.h>
 #include "mpi.h"
+#include "mpits.h"
 
-#include "reprompi_bench/sync/clock_sync/synchronization.h"
-#include "reprompi_bench/sync/time_measurement.h"
 #include "parse_test_options.h"
 
 static const int OUTPUT_ROOT_PROC = 0;

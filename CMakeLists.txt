@@ -56,33 +56,11 @@ option(OPTION_ENABLE_LOGGING   "Enable logging" off)
 option(OPTION_ENABLE_DEBUGGING "Enable debugging" off)
 option(OPTION_ENABLE_PGCHECKER "Enable performance guidelines checking" off)
 
-#####################################
-############# PGtune support ########
-#####################################
-#set(PGMPI_LIBRARY_DEFAULT_PATH "" CACHE STRING  "Specify the path of the PGMPI library")
-#option(ENABLE_PGMPI "Use PGMPI" off)
-#
-#if (ENABLE_PGMPI)
-#    find_package(PGMPI)
-#
-#    if(NOT PGMPI_FOUND)
-#        message(STATUS "PGMPI not found. Skipping the generation of PGMPI-linked benchmark binaries.")
-#    endif(NOT PGMPI_FOUND)
-#else(ENABLE_PGMPI)
-#    message(STATUS "PGMPI disabled.")
-#endif(ENABLE_PGMPI)
-#####################################
-
-
 SET(MY_COMPILE_FLAGS "")
 
 ######################################
 ############ Set timing flags ########
 ######################################
-if(RDTSC_CALIBRATION)
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DRDTSC_CALIBRATION")
-endif()
-
 if(ENABLE_GETTIME_REALTIME)
     SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_GETTIME_REALTIME")
 endif()
@@ -90,11 +68,6 @@ endif()
 if(ENABLE_GETTIME_MONOTONIC)
     SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_GETTIME_MONOTONIC")
 endif()
-
-if(FREQUENCY_MHZ)
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DFREQUENCY_MHZ=${FREQUENCY_MHZ}")
-endif()
-
 
 #################################
 ############ Other flags ########
@@ -105,10 +78,6 @@ endif()
 
 if(OPTION_PRINT_MSIZES_BYTES)
     SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DOPTION_PRINT_MSIZES_BYTES=${OPTION_PRINT_MSIZES_BYTES}")
-endif()
-
-if(OPTION_ENABLE_LOGGING)
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DUSE_LOGGING")
 endif()
 
 if(OPTION_ENABLE_DEBUGGING)
@@ -151,14 +120,6 @@ ${SRC_DIR}/reprompi_bench/option_parser/option_parser_helpers.c
 
 
 set(SYNC_SRC_FILES
-${SRC_DIR}/reprompi_bench/sync/time_measurement.c
-#${SRC_DIR}/reprompi_bench/sync/clock_sync/synchronization.c
-#${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/sync_info.c
-#${SRC_DIR}/reprompi_bench/sync/clock_sync/hca_sync.c
-#${SRC_DIR}/reprompi_bench/sync/clock_sync/hca3_sync.c
-#${SRC_DIR}/reprompi_bench/sync/clock_sync/sk_sync.c
-#${SRC_DIR}/reprompi_bench/sync/clock_sync/jk_sync.c
-#${SRC_DIR}/reprompi_bench/sync/clock_sync/no_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/barrier_sync.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/barrier_sync_common.c
 ${SRC_DIR}/reprompi_bench/sync/process_sync/dissem_barrier_impl.c
@@ -203,59 +164,6 @@ ${SRC_DIR}/reprompi_bench/output_management/bench_info_output.c
 ${SRC_DIR}/reprompi_bench/output_management/runtimes_computation.c
 )
 
-set(CLOCKSYNC_SRC_FILES
-${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/GlobalClock.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/GlobalClockLM.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/GlobalClockOffset.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/MPIClock.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/GettimeClock.cpp
-
-${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_offset_algs/ClockOffset.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_offset_algs/ClockOffsetAlg.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_offset_algs/PingpongClockOffsetAlg.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_offset_algs/SKaMPIClockOffsetAlg.cpp
-
-${SRC_DIR}/reprompi_bench/sync/clock_sync/hca_sync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sk_sync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/jk_sync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_sync_common.cpp
-${SRC_DIR}/reprompi_bench/sync/common/sync_module_helpers.c
-${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_sync_loader.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/synchronization.c
-${SRC_DIR}/reprompi_bench/sync/clock_sync/no_sync.c
-${SRC_DIR}/reprompi_bench/sync/clock_sync/topo_aware_2l_sync.cpp
-
-${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/communicator_utils.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/sync_utils.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/sync_errors.cpp
-
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/ClockPropagationSync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCAAbstractClockSync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCAClockSync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCA2ClockSync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/HCA3ClockSync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/JKClockSync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/TwoLevelClockSync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/offset/SKaMPIClockSync.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/offset/HCA3OffsetClockSync.cpp
-
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/LinearModelFitterStandard.cpp
-${SRC_DIR}/reprompi_bench/sync/clock_sync/sync_methods/LinearModelFitterDebug.cpp
-
-${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
-${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
-
-#${SRC_DIR}/reprompi_bench/option_parser/parse_options.c
-#${SRC_DIR}/reprompi_bench/option_parser/parse_timing_options.c
-
-${SRC_DIR}/log/zf_log.c
-#${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
-
-#${SRC_DIR}/reprompi_bench/sync/time_measurement.c
-#${SRC_DIR}/reprompi_bench/sync/clock_sync/utils/sync_info.c
-#${SRC_DIR}/reprompi_bench/misc.c
-)
-
 set(CLOCKSYNC_HEADER_FILES
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_sync_common.h
 ${SRC_DIR}/reprompi_bench/sync/clock_sync/clock_sync_lib.h
@@ -263,22 +171,6 @@ ${SRC_DIR}/reprompi_bench/sync/clock_sync/synchronization.h
 )
 
 set(CLOCKSYNC_HEADER_DIR ${SRC_DIR})
-
-if(ENABLE_RDTSC)
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_RDTSC")
-    set(CLOCKSYNC_SRC_FILES
-        ${CLOCKSYNC_SRC_FILES}
-        ${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/RdtscClock.cpp
-        )
-endif()
-
-if(ENABLE_RDTSCP)
-    SET(MY_COMPILE_FLAGS "${MY_COMPILE_FLAGS} -DENABLE_RDTSCP")
-    set(CLOCKSYNC_SRC_FILES
-            ${CLOCKSYNC_SRC_FILES}
-            ${SRC_DIR}/reprompi_bench/sync/clock_sync/clocks/RdtscpClock.cpp
-            )
-endif()
 
 FetchContent_Declare(
         MPITS
@@ -352,11 +244,6 @@ endif()
 
 if (COMPILE_SANITY_CHECK_CLOCK)
     ADD_SUBDIRECTORY(${SRC_DIR}/sanity_check/clock)
-endif()
-
-if (COMPILE_BENCH_LIBRARY)
-    ADD_SUBDIRECTORY(${SRC_DIR}/reprompi_bench/benchmark_lib)
-    ADD_SUBDIRECTORY(${SRC_DIR}/sanity_check/libtests)
 endif()
 
 if(OPTION_ENABLE_PGCHECKER)

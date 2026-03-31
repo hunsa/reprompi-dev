@@ -47,11 +47,9 @@
 #include <math.h>
 #include <time.h>
 #include "mpi.h"
-
+#include "mpits.h"
 #include <getopt.h>
 
-//#include "reprompi_bench/sync/clock_sync/synchronization.h"
-#include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/misc.h"
 
 //#define ZF_LOG_LEVEL ZF_LOG_VERBOSE

@@ -27,9 +27,9 @@
 #include <time.h>
 #include <math.h>
 #include "mpi.h"
-
+#include "mpits.h"
 #include "reprompi_bench/misc.h"
-#include "reprompi_bench/sync/time_measurement.h"
+
 
 const int WARMUP_ROUNDS = 10;
 
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
                 {
                     double tmp;
 
-                    tmp = REPROMPI_get_time();
+                    tmp = MPITS_get_time();
                     MPI_Send(&tmp, 1, MPI_DOUBLE, p, 0, MPI_COMM_WORLD);
                     MPI_Recv(&tmp, 1, MPI_DOUBLE, p, 0, MPI_COMM_WORLD, &stat);
                 }
@@ -84,12 +84,12 @@ int main(int argc, char* argv[]) {
             if (p!=root) {
                 for (i = 0; i < nrep; i++)
                 {
-                    t_start = REPROMPI_get_time();
+                    t_start = MPITS_get_time();
 
                     MPI_Send(&t_start, 1, MPI_DOUBLE, p, 0, MPI_COMM_WORLD);
                     MPI_Recv(&t_remote, 1, MPI_DOUBLE, p, 0, MPI_COMM_WORLD, &stat);
 
-                    rtt_list[i] = REPROMPI_get_time() - t_start;
+                    rtt_list[i] = MPITS_get_time() - t_start;
                 }
 
                 for (i = 0; i < nrep; i++)
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
         {
             double tmp;
             MPI_Recv(&tmp, 1, MPI_DOUBLE, root, 0, MPI_COMM_WORLD, &stat);
-            tmp = REPROMPI_get_time();
+            tmp = MPITS_get_time();
             MPI_Send(&tmp, 1, MPI_DOUBLE, root, 0, MPI_COMM_WORLD);
         }
 

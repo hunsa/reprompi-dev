@@ -30,11 +30,9 @@
 #include <time.h>
 #include <math.h>
 #include "mpi.h"
-
+#include "mpits.h"
 #include <getopt.h>
 
-#include "reprompi_bench/sync/clock_sync/synchronization.h"
-#include "reprompi_bench/sync/time_measurement.h"
 #include "reprompi_bench/misc.h"
 
 #include <gsl/gsl_statistics.h>

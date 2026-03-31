@@ -9,7 +9,6 @@
 #include "reprompi_bench/misc.h"
 //#include "reprompi_bench/sync/clock_sync/synchronization.h"
 #include "reprompi_bench/sync/process_sync/process_synchronization.h"
-#include "reprompi_bench/sync/time_measurement.h"
 #include "benchmark_job.h"
 #include "reprompi_bench/option_parser/option_parser_helpers.h"
 #include "reprompi_bench/option_parser/parse_options.h"
@@ -205,9 +204,9 @@ void run_collective(int argc, char **argv, mpits_clocksync_t *cs) {
     while(1) {
       proc_sync.start_sync(MPI_COMM_WORLD);
 
-      tstart_sec[i] = REPROMPI_get_time();
+      tstart_sec[i] = MPITS_get_time();
       collective_calls[job.call_index].collective_call(&coll_params);
-      tend_sec[i] = REPROMPI_get_time();
+      tend_sec[i] = MPITS_get_time();
 
       is_invalid = proc_sync.stop_sync(MPI_COMM_WORLD);
       if (is_invalid == REPROMPI_INVALID_MEASUREMENT) {
