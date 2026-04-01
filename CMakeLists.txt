@@ -29,8 +29,6 @@ set(COMMON_LIBRARIES ${GSL_LIBRARIES} )
 
 option(ENABLE_DOUBLE_BARRIER "Call barrier twice for synchronization [default: disabled]" off)
 
-option(ENABLE_SANITY_CHECK_TESTS "Enable sanity check tests" off)
-option(ENABLE_SANITY_CHECK_CLOCK "Enable clock sanity checks" off)
 set(SET_BUFFER_ALIGNMENT "" CACHE STRING "Alignment to use for buffer allocation [default: no alignment(allocation with calloc)]")
 option(SET_PRINT_MSIZES_BYTES "Print message sizes in the output instead of MPI call counts [default: counts]" off)
 
@@ -191,10 +189,6 @@ set_target_properties(mpibenchmark PROPERTIES
 install(TARGETS mpibenchmark
         RUNTIME DESTINATION bin
 )
-
-if (ENABLE_SANITY_CHECK_TESTS)
-    ADD_SUBDIRECTORY(${SRC_DIR}/sanity_check)
-endif()
 
 if (ENABLE_BENCH_TESTS)
     ADD_SUBDIRECTORY(${SRC_DIR}/test)

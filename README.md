@@ -209,7 +209,7 @@ This is the full list of compilation flags that can be used to control
 all the previously detailed configuration parameters.
 
 ```
- BENCH_TESTS                      OFF                 
+ ENABLE_BENCH_TESTS               OFF                 
  COMPILE_SANITY_CHECK_TESTS       OFF               
  ENABLE_DOUBLE_BARRIER            OFF             
  ENABLE_GETTIME_MONOTONIC         OFF
@@ -219,6 +219,11 @@ all the previously detailed configuration parameters.
  OPTION_ENABLE_LOGGING            OFF
  OPTION_PRINT_MSIZES_BYTES        OFF
  ``
+
+- `ENABLE_SANITY_CHECK_TESTS`
+
+- `ENABLE_BENCH_TESTS`: enable the compilation of benchmark tests (e.g., for testing the dictionary implementation)
+
 - `OPTION_ENABLE_DEBUGGING`: adds the `-g` compiler flag to include debug symbols in the binary
 
 - `OPTION_ENABLE_LOGGING`
