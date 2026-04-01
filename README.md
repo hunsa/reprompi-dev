@@ -209,21 +209,16 @@ This is the full list of compilation flags that can be used to control
 all the previously detailed configuration parameters.
 
 ```
- COMPILE_BENCH_LIBRARY            OFF
- COMPILE_BENCH_TESTS              OFF                 
+ BENCH_TESTS                      OFF                 
  COMPILE_SANITY_CHECK_TESTS       OFF               
  ENABLE_DOUBLE_BARRIER            OFF             
  ENABLE_GETTIME_MONOTONIC         OFF
  ENABLE_GETTIME_REALTIME          OFF
- ENABLE_RDTSC                     OFF             
- ENABLE_RDTSCP                    OFF           
- FREQUENCY_MHZ                    2300
  OPTION_BUFFER_ALIGNMENT 
  OPTION_ENABLE_DEBUGGING          OFF
  OPTION_ENABLE_LOGGING            OFF
  OPTION_PRINT_MSIZES_BYTES        OFF
- RDTSC_CALIBRATION                OFF
-```
+ ``
 - `OPTION_ENABLE_DEBUGGING`: adds the `-g` compiler flag to include debug symbols in the binary
 
 - `OPTION_ENABLE_LOGGING`

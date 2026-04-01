@@ -27,14 +27,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "mpi.h"
-
-#include "reprompi_bench/sync/clock_sync/synchronization.h"
-#include "reprompi_bench/sync/time_measurement.h"
+#include "mpits.h"
 
 int main(int argc, char* argv[]) {
     int rank, size;
     int master_rank = 0;
-    reprompib_sync_module_t clock_sync;
+    mpits_clocksync_t cs;
     int rep = 100;
     int time_reps = 10000;
 
@@ -55,24 +53,22 @@ int main(int argc, char* argv[]) {
         //printf("%d: rep=%d time_reps=%d\n", rank, rep, time_reps);
     }
 
-    reprompib_register_sync_modules();
-
-    reprompib_init_sync_module(argc, argv, &clock_sync);
+    MPITS_Init(MPI_COMM_WORLD, &cs);
+    MPITS_Clocksync_init(&cs);
 
     if( rank == master_rank ) {
         printf("init sync\n");
         fflush(stdout);
     }
-    clock_sync.init_sync();
 
     for(int i=0; i<rep; i++) {
         if( rank == master_rank ) {
             printf("s");
             fflush(stdout);
         }
-        clock_sync.sync_clocks();
+        MPITS_Clocksync_sync(&cs);
         for(int j=0; j<time_reps; j++) {
-            clock_sync.get_global_time(REPROMPI_get_time());
+            MPITS_Clocksync_get_time(&cs);
 //            if( rank == master_rank ) {
 //                printf(".");
 //                fflush(stdout);
@@ -95,8 +91,8 @@ int main(int argc, char* argv[]) {
         printf("cleanup sync\n");
         fflush(stdout);
     }
-    clock_sync.cleanup_module();
-    reprompib_deregister_sync_modules();
+
+    MPITS_Clocksync_finalize(&cs);
     MPI_Finalize();
     return 0;
 }

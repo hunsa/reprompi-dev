@@ -29,6 +29,8 @@
  * This program should help us to determine the clock drift between
  * different MPI processes over time.
  *
+ * It does not rely on a clock synchronization method.
+ *
  * It will repeat the following
  *  - perform X ping-pongs with each participating process
  *  - compute the minimum offset and store it for this timestamp
@@ -187,8 +189,6 @@ void print_initial_settings(int argc, char* argv[], reprompib_drift_test_opts_t 
     fprintf(f, "#@nwaits=%d\n", opts.nwaits);
     fprintf(f, "#@wait_ms=%d\n", opts.wait_ms);
     fprintf(f, "#@timerres=%14.9f\n", MPI_Wtick());
-
-    print_time_parameters(f);
   }
 }
 
@@ -210,8 +210,6 @@ int main(int argc, char* argv[]) {
     master_rank = 0;
 
     parse_drift_test_options(&opts, argc, argv);
-
-    REPROMPI_init_timer();
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -239,7 +237,7 @@ int main(int argc, char* argv[]) {
         for(p=0; p<nprocs; p++) {
           if( p != master_rank ) {
             for (i = 0; i < WARMUP_ROUNDS; i++) {
-              tmp = REPROMPI_get_time();
+              tmp = MPITS_get_time();
               MPI_Send(&tmp, 1, MPI_DOUBLE, p, 0, MPI_COMM_WORLD);
               MPI_Recv(&tmp, 1, MPI_DOUBLE, p, 0, MPI_COMM_WORLD, &stat);
             }
@@ -249,7 +247,7 @@ int main(int argc, char* argv[]) {
 
         for (i = 0; i < WARMUP_ROUNDS; i++) {
           MPI_Recv(&tmp, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, &stat);
-          tmp = REPROMPI_get_time();
+          tmp = MPITS_get_time();
           MPI_Send(&tmp, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
         }
       }
@@ -267,7 +265,7 @@ int main(int argc, char* argv[]) {
 
             res_pointer->rank = p;
             res_pointer->rep  = i;
-            res_pointer->time_at_root = REPROMPI_get_time();
+            res_pointer->time_at_root = MPITS_get_time();
             res_pointer->offset_to_rank = cur_offset;
 
           } else {
@@ -350,10 +348,10 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
    to define the initial td_min and td_max with INFINITY and NINFINITY */
   if (my_rank == ref_rank) {
 
-    s_last = REPROMPI_get_time();
+    s_last = MPITS_get_time();
     MPI_Send(&s_last, 1, MPI_DOUBLE, client_rank, pp_tag, comm);
     MPI_Recv(&t_last, 1, MPI_DOUBLE, client_rank, pp_tag, comm, &status);
-    s_now = REPROMPI_get_time();
+    s_now = MPITS_get_time();
     MPI_Send(&s_now, 1, MPI_DOUBLE, client_rank, pp_tag, comm);
 
     td_min = t_last - s_now;
@@ -363,10 +361,10 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
     //other_global_id = ref_rank;
 
     MPI_Recv(&s_last, 1, MPI_DOUBLE, ref_rank, pp_tag, comm, &status);
-    t_last = REPROMPI_get_time();
+    t_last = MPITS_get_time();
     MPI_Send(&t_last, 1, MPI_DOUBLE, ref_rank, pp_tag, comm);
     MPI_Recv(&s_now, 1, MPI_DOUBLE, ref_rank, pp_tag, comm, &status);
-    t_now = REPROMPI_get_time();
+    t_now = MPITS_get_time();
 
     td_min = s_last - t_last;
     td_min = repro_max(td_min, s_now - t_now);
@@ -383,7 +381,7 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
       }
 
       s_last = s_now;
-      s_now = REPROMPI_get_time();
+      s_now = MPITS_get_time();
 
       td_min = repro_max(td_min, t_last - s_now);
       td_max = repro_min(td_max, t_last - s_last);
@@ -407,7 +405,7 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
       MPI_Send(&t_now, 1, MPI_DOUBLE, ref_rank, pp_tag, comm);
       MPI_Recv(&s_last, 1, MPI_DOUBLE, ref_rank, pp_tag, comm, &status);
       t_last = t_now;
-      t_now = REPROMPI_get_time();
+      t_now = MPITS_get_time();
 
       if (s_last < 0.0) {
         break;

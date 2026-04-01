@@ -71,17 +71,10 @@ int main(int argc, char* argv[]) {
 
     parse_test_options(&opts, argc, argv);
 
-    reprompib_register_sync_modules();
-    reprompib_init_sync_module(argc, argv, &clock_sync);
-
-    REPROMPI_init_timer();
+    MPITS_Init(MPI_COMM_WORLD, &cs);
+    MPITS_Clocksync_init(&cs);
 
     MPI_Comm_rank(MPI_COMM_WORLD,&my_rank);
-    //MPI_Comm_size(MPI_COMM_WORLD,&nprocs);
-
-//    if (my_rank == OUTPUT_ROOT_PROC) {
-//        max_runtimes = (double*) calloc(nprocs * opts.n_rep, sizeof(double));
-//    }
 
     print_initial_settings(argc, argv, clock_sync.print_sync_info);
 
@@ -92,9 +85,9 @@ int main(int argc, char* argv[]) {
 
     for(int i=0; i<opts.n_rep; i++) {
         MPI_Barrier(MPI_COMM_WORLD);
-        start_time = REPROMPI_get_time();
+        start_time = MPITS_get_time();
         clock_sync.sync_clocks();
-        runtimes[i] = REPROMPI_get_time() - start_time;
+        runtimes[i] = MPITS_get_time() - start_time;
         //printf("%d: time[%d]=%g\n", my_rank, i, runtimes[i]);
     }
 
@@ -117,8 +110,8 @@ int main(int argc, char* argv[]) {
 
     free(runtimes);
 
-    clock_sync.cleanup_module();
-    reprompib_deregister_sync_modules();
+    MPITS_Clocksync_finalize(&cs);
+    MPITS_Finalize();
     MPI_Finalize();
     return 0;
 }

@@ -1,20 +1,8 @@
 
 
 add_executable(measure_rtt
-measure_rtt.c
+rtt/measure_rtt.c
 ${SRC_DIR}/reprompi_bench/misc.c
-)
-
-set(MEASURE_CLOCK_DRIFT
-clock_drift/measure_clock_drift.c
-${SRC_DIR}/reprompi_bench/misc.c
-${SRC_DIR}/reprompi_bench/utils/keyvalue_store.c
-${SRC_DIR}/reprompi_bench/option_parser/option_parser_helpers.c
-${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
-)
-
-add_executable(measure_clock_drift
-    ${MEASURE_CLOCK_DRIFT}
 )
 
 add_executable(measure_clock_drift_new
@@ -58,21 +46,17 @@ ${SRC_DIR}/reprompi_bench/option_parser/parse_extra_key_value_options.c
 # )
 
 
-SET_TARGET_PROPERTIES(measure_clock_drift PROPERTIES LINKER_LANGUAGE CXX )
-SET_TARGET_PROPERTIES(measure_clock_drift PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
-TARGET_LINK_LIBRARIES(measure_clock_drift ${COMMON_LIBRARIES} synclib MPITS::mpits MPI::MPI_C)
-
 SET_TARGET_PROPERTIES(measure_clock_drift_new PROPERTIES LINKER_LANGUAGE CXX )
 SET_TARGET_PROPERTIES(measure_clock_drift_new PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
-TARGET_LINK_LIBRARIES(measure_clock_drift_new ${COMMON_LIBRARIES} synclib MPITS::mpits MPI::MPI_C)
+TARGET_LINK_LIBRARIES(measure_clock_drift_new ${COMMON_LIBRARIES} MPITS::mpits MPI::MPI_C)
 
 SET_TARGET_PROPERTIES(measure_clock_drift_rep PROPERTIES LINKER_LANGUAGE CXX )
 SET_TARGET_PROPERTIES(measure_clock_drift_rep PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
-TARGET_LINK_LIBRARIES(measure_clock_drift_rep ${COMMON_LIBRARIES} synclib)
+TARGET_LINK_LIBRARIES(measure_clock_drift_rep ${COMMON_LIBRARIES} MPITS::mpits MPI::MPI_C)
 
 SET_TARGET_PROPERTIES(measure_real_clock_drift PROPERTIES LINKER_LANGUAGE CXX )
 SET_TARGET_PROPERTIES(measure_real_clock_drift PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
-TARGET_LINK_LIBRARIES(measure_real_clock_drift ${COMMON_LIBRARIES} synclib MPITS::mpits MPI::MPI_C)
+TARGET_LINK_LIBRARIES(measure_real_clock_drift ${COMMON_LIBRARIES} MPITS::mpits MPI::MPI_C)
 
 # TARGET_LINK_LIBRARIES(sync_duration ${COMMON_LIBRARIES} synclib MPITS::mpits MPI::MPI_C)
 # SET_TARGET_PROPERTIES(sync_duration PROPERTIES LINKER_LANGUAGE CXX )
@@ -80,7 +64,6 @@ TARGET_LINK_LIBRARIES(measure_real_clock_drift ${COMMON_LIBRARIES} synclib MPITS
 
 TARGET_LINK_LIBRARIES(measure_rtt ${COMMON_LIBRARIES} MPITS::mpits MPI::MPI_C)
 SET_TARGET_PROPERTIES(measure_rtt PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
-
 
 
 add_executable(clock_sync_stress_test
@@ -93,4 +76,4 @@ add_executable(clock_sync_stress_test
 
 SET_TARGET_PROPERTIES(clock_sync_stress_test PROPERTIES LINKER_LANGUAGE CXX )
 SET_TARGET_PROPERTIES(clock_sync_stress_test PROPERTIES COMPILE_FLAGS "${MY_COMPILE_FLAGS}")
-TARGET_LINK_LIBRARIES(clock_sync_stress_test ${COMMON_LIBRARIES} synclib)
+TARGET_LINK_LIBRARIES(clock_sync_stress_test ${COMMON_LIBRARIES} MPITS::mpits MPI::MPI_C)

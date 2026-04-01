@@ -161,7 +161,6 @@ void print_initial_settings(int argc, char* argv[], reprompib_drift_test_opts_t 
         fprintf(f, "#@npp=%d\n", opts.npp);
         fprintf(f, "#@timerres=%.9f\n", MPI_Wtick());
 
-        print_time_parameters(f);
         print_sync_info(f);
     }
 
@@ -172,7 +171,7 @@ int main(int argc, char* argv[]) {
     reprompib_drift_test_opts_t opts;
     int master_rank;
     FILE* f;
-    reprompib_sync_module_t clock_sync;
+    mpits_clocksync_t cs;
 
     double  min_drift;
     double *all_global_times = NULL;
@@ -185,12 +184,11 @@ int main(int argc, char* argv[]) {
     MPI_Init(&argc, &argv);
     master_rank = 0;
 
-    reprompib_register_sync_modules();
 
     parse_drift_test_options(&opts, argc, argv);
 
-    reprompib_init_sync_module(argc, argv, &clock_sync);
-    REPROMPI_init_timer();
+    MPITS_Init(MPI_COMM_WORLD, &cs);
+    MPITS_Clocksync_init(&cs);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -201,14 +199,13 @@ int main(int argc, char* argv[]) {
       all_global_times = (double*) calloc(ntestprocs * opts.reps, sizeof(double));
     }
 
-    print_initial_settings(argc, argv, opts, clock_sync.print_sync_info);
-
-    clock_sync.init_sync();
+    print_initial_settings(argc, argv, opts, cs.print_sync_info);
 
     Number_ping_pongs = opts.npp;
+    MPITS_Clocksync_sync(&cs);
 
     for (int i = 0; i < opts.reps; i++) {
-      clock_sync.sync_clocks();
+      MPITS_Clocksync_resync(&cs);  
 
       if (my_rank == master_rank) {
 
@@ -217,7 +214,7 @@ int main(int argc, char* argv[]) {
           p = testprocs_list[index];    // select the process to exchange pingpongs with
           if (p != master_rank) {
             all_global_times[i * ntestprocs + index] = SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p,
-                                                                                        &clock_sync);
+                                                                                        &cs);
           }
         }
 
@@ -225,14 +222,14 @@ int main(int argc, char* argv[]) {
         for (index = 0; index < ntestprocs; index++) {
           p = testprocs_list[index];    // make sure the current rank is in the test list
           if (my_rank == p) {
-            SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &clock_sync);
+            SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &cs);
           }
         }
       }
 
     }
 
-    clock_sync.finalize_sync() ;
+    MPITS_Clocksync_finalize(&cs);
 
     f = stdout;
     if (my_rank == master_rank) {
@@ -251,8 +248,7 @@ int main(int argc, char* argv[]) {
     }
 
     free(testprocs_list);
-    clock_sync.cleanup_module();
-    reprompib_deregister_sync_modules();
+    MPITS_Finalize();
     MPI_Finalize();
     return 0;
 }

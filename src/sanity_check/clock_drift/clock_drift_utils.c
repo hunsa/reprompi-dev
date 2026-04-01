@@ -7,9 +7,9 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "mpits.h"
 #include "clock_drift_utils.h"
 #include "reprompi_bench/misc.h"
-#include "reprompi_bench/sync/time_measurement.h"
 
 //#define ZF_LOG_LEVEL ZF_LOG_VERBOSE
 #define ZF_LOG_LEVEL ZF_LOG_WARN
@@ -121,7 +121,7 @@ void generate_test_process_list(double process_ratio, int **testprocs_list_p, in
 #endif
 }
 
-double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_rank, reprompib_sync_module_t *clock_sync) {
+double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_rank, mpits_clocksync_t *clock_sync) {
   // SKaMPI pingpongs
   int i; //, other_global_id;
   double s_now, s_last, t_last, t_now;
@@ -170,10 +170,10 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
    to define the initial td_min and td_max with INFINITY and NINFINITY */
   if (my_rank == ref_rank) {
 
-    s_last = clock_sync->get_global_time(REPROMPI_get_time());
+    s_last = clock_sync->get_global_time(MPITS_get_time());
     MPI_Send(&s_last, 1, MPI_DOUBLE, client_rank, pp_tag, comm);
     MPI_Recv(&t_last, 1, MPI_DOUBLE, client_rank, pp_tag, comm, &status);
-    s_now = clock_sync->get_global_time(REPROMPI_get_time());
+    s_now = clock_sync->get_global_time(MPITS_get_time());
     MPI_Send(&s_now, 1, MPI_DOUBLE, client_rank, pp_tag, comm);
 
     td_min = t_last - s_now;
@@ -183,10 +183,10 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
     //other_global_id = ref_rank;
 
     MPI_Recv(&s_last, 1, MPI_DOUBLE, ref_rank, pp_tag, comm, &status);
-    t_last = clock_sync->get_global_time(REPROMPI_get_time());
+    t_last = clock_sync->get_global_time(MPITS_get_time());
     MPI_Send(&t_last, 1, MPI_DOUBLE, ref_rank, pp_tag, comm);
     MPI_Recv(&s_now, 1, MPI_DOUBLE, ref_rank, pp_tag, comm, &status);
-    t_now = clock_sync->get_global_time(REPROMPI_get_time());
+    t_now = clock_sync->get_global_time(MPITS_get_time());
 
     td_min = s_last - t_last;
     td_min = repro_max(td_min, s_now - t_now);
@@ -203,7 +203,7 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
       }
 
       s_last = s_now;
-      s_now = clock_sync->get_global_time(REPROMPI_get_time());
+      s_now = clock_sync->get_global_time(MPITS_get_time());
 
       td_min = repro_max(td_min, t_last - s_now);
       td_max = repro_min(td_max, t_last - s_last);
@@ -227,7 +227,7 @@ double SKaMPIClockOffset_measure_offset(MPI_Comm comm, int ref_rank, int client_
       MPI_Send(&t_now, 1, MPI_DOUBLE, ref_rank, pp_tag, comm);
       MPI_Recv(&s_last, 1, MPI_DOUBLE, ref_rank, pp_tag, comm, &status);
       t_last = t_now;
-      t_now = clock_sync->get_global_time(REPROMPI_get_time());
+      t_now = clock_sync->get_global_time(MPITS_get_time());
 
       if (s_last < 0.0) {
         break;

@@ -164,7 +164,6 @@ void print_initial_settings(int argc, char* argv[], reprompib_drift_test_opts_t 
         fprintf(f, "#@steps=%d\n", opts.steps);
         fprintf(f, "#@timerres=%.9f\n", MPI_Wtick());
 
-        print_time_parameters(f);
         print_sync_info(f);
     }
 
@@ -175,7 +174,7 @@ int main(int argc, char* argv[]) {
     reprompib_drift_test_opts_t opts;
     int master_rank;
     FILE* f;
-    reprompib_sync_module_t clock_sync;
+    mpits_clocksync_t cs;
 
     double  min_drift;
     double *all_global_times = NULL;
@@ -192,14 +191,12 @@ int main(int argc, char* argv[]) {
     /* start up MPI */
     MPI_Init(&argc, &argv);
     master_rank = 0;
-
-    reprompib_register_sync_modules();
+    MPITS_Init(MPI_COMM_WORLD, &cs);
 
     parse_drift_test_options(&opts, argc, argv);
 
-    reprompib_init_sync_module(argc, argv, &clock_sync);
-    REPROMPI_init_timer();
-
+    MPITS_Clocksync_init(&cs);
+    
     n_wait_steps = 2;
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
@@ -210,18 +207,16 @@ int main(int argc, char* argv[]) {
       all_global_times = (double*) calloc(ntestprocs * n_wait_steps, sizeof(double));
     }
 
-    print_initial_settings(argc, argv, opts, clock_sync.print_sync_info);
+    print_initial_settings(argc, argv, opts, cs.print_sync_info);
 
-    runtime_s = REPROMPI_get_time();
-    clock_sync.init_sync();
-
-    clock_sync.sync_clocks();
-    runtime_s = REPROMPI_get_time() - runtime_s;
+    runtime_s = MPITS_get_time();
+    MPITS_Clocksync_sync(&cs);
+    runtime_s = MPITS_get_time() - runtime_s;
 
     Number_ping_pongs = opts.npp;
 
     if (my_rank == master_rank) {
-      double target_time = REPROMPI_get_time() + ((double)opts.steps);
+      double target_time =  MPITS_get_time() + ((double)opts.steps);
       int first_iter = 1;
 
       printf ("#@sync_duration=%.9f\n", runtime_s);
@@ -232,14 +227,14 @@ int main(int argc, char* argv[]) {
       for (index = 0; index < ntestprocs; index++) {
         p = testprocs_list[index];    // select the process to exchange pingpongs with
         if (p != master_rank) {
-          all_global_times[offset * ntestprocs + index] = SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &clock_sync);
+          all_global_times[offset * ntestprocs + index] = SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &cs);
         }
       }
 
       //printf("target_time=%14.9f, cur_time=%14.9f\n", target_time, REPROMPI_get_time());
       // wait until 's' seconds are done
       do {
-        double cur_time = REPROMPI_get_time();
+        double cur_time = MPITS_get_time();
         if( cur_time >= target_time ) {
           if( first_iter == 1 ) {
             // we were late.. report a warning
@@ -256,7 +251,7 @@ int main(int argc, char* argv[]) {
       for (index = 0; index < ntestprocs; index++) {
         p = testprocs_list[index];    // select the process to exchange pingpongs with
         if (p != master_rank) {
-          all_global_times[offset * ntestprocs + index] = SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &clock_sync);
+          all_global_times[offset * ntestprocs + index] = SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &cs);
         }
       }
 
@@ -269,12 +264,12 @@ int main(int argc, char* argv[]) {
         for (index = 0; index < ntestprocs; index++) {
           p = testprocs_list[index];    // make sure the current rank is in the test list
           if (my_rank == p) {
-            SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &clock_sync);
+            SKaMPIClockOffset_measure_offset(MPI_COMM_WORLD, master_rank, p, &cs);
           }
         }
       }
     }
-    clock_sync.finalize_sync();
+    MPITS_Clocksync_finalize(&cs) ;
 
     f = stdout;
     if (my_rank == master_rank) {
@@ -299,8 +294,7 @@ int main(int argc, char* argv[]) {
     }
 
     free(testprocs_list);
-    clock_sync.cleanup_module();
-    reprompib_deregister_sync_modules();
+    MPITS_Finalize();
     MPI_Finalize();
     return 0;
 }
